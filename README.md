@@ -1,0 +1,201 @@
+# Ethan's Web Template
+
+This repository serves as a jumping point for building a web application. The tech stack is already configured for you - just follow the setup steps below and start developing your application.
+
+## Tech Stack
+
+- **Frontend**: React 19 + TypeScript + Vite
+- **Backend**: Express.js + TypeScript + TypeORM
+- **Database**: PostgreSQL 17
+- **Development**: Docker Compose for containerized development
+
+## Prerequisites
+
+- Node.js (v18 or higher recommended)
+- npm (comes with Node.js)
+- Docker and Docker Compose
+- Git
+
+## Quick Start
+
+### 1. Clone the Repository
+
+```bash
+git clone <your-repo-url>
+cd web-template
+```
+
+### 2. Set Up Environment Variables
+
+Copy the example environment file and configure it:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with your preferred values. The defaults work out of the box:
+
+```env
+NODE_ENV=development
+API_PORT=86
+DB_PORT=5432
+DB_HOST=localhost
+DB_USERNAME=myuser
+DB_PASSWORD=password
+DB_NAME=app_db
+```
+
+### 3. Install Dependencies
+
+```bash
+npm install --workspaces
+```
+
+This will install dependencies for both frontend and backend workspaces.
+
+### 4. Start the Application
+
+```bash
+docker-compose up
+```
+
+This will:
+- Start PostgreSQL database on port 5431 (mapped from container port 5432)
+- Start the backend API on port 86
+- Start the frontend dev server on port 3000 (mapped from container port 5173)
+
+### 5. Access the Application
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:86
+- **Database**: localhost:5431
+
+## Development
+
+### Running Locally (Without Docker)
+
+If you prefer to run the services locally:
+
+1. Make sure PostgreSQL is running locally
+2. Update `.env` to point to your local database:
+   ```env
+   DB_HOST=localhost
+   DB_PORT=5432
+   ```
+3. Run the backend:
+   ```bash
+   npm run dev:backend
+   ```
+4. In another terminal, run the frontend:
+   ```bash
+   npm run dev:frontend
+   ```
+
+### Project Structure
+
+```
+web-template/
+├── backend/              # Express.js backend
+│   ├── src/
+│   │   ├── entities/    # TypeORM entities
+│   │   ├── routes/      # API routes
+│   │   ├── middleware/  # Express middleware
+│   │   ├── utils/       # Utility functions
+│   │   └── index.ts     # Entry point
+│   ├── Dockerfile
+│   └── package.json
+├── frontend/            # React frontend
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── Dockerfile
+│   └── package.json
+├── docker-compose.yml
+├── .env.example
+└── README.md
+```
+
+## Available Scripts
+
+### Root Level
+
+- `npm install` - Install all dependencies (frontend + backend)
+- `npm run verify` - Verify setup is complete and ready
+- `npm run dev` - Run both frontend and backend locally
+- `npm run dev:backend` - Run only backend locally
+- `npm run dev:frontend` - Run only frontend locally
+- `npm run clean` - Clean Docker system (use with caution)
+
+### Backend (`backend/` directory)
+
+- `npm run dev` - Start backend in development mode with hot reload
+- `npm run build` - Build backend for production
+- `npm start` - Start production build
+
+### Frontend (`frontend/` directory)
+
+- `npm run dev` - Start frontend dev server
+- `npm run build` - Build frontend for production
+- `npm run lint` - Run ESLint
+- `npm run preview` - Preview production build
+
+## Troubleshooting
+
+### Docker Issues
+
+If you encounter issues with Docker:
+
+```bash
+# Stop all containers
+docker-compose down
+
+# Remove volumes (WARNING: This will delete your database data)
+docker-compose down -v
+
+# Rebuild containers
+docker-compose up --build
+```
+
+### Port Conflicts
+
+If ports 86, 3000, or 5431 are already in use, you can change them in `docker-compose.yml`:
+
+```yaml
+services:
+  backend:
+    ports:
+      - "YOUR_PORT:86"  # Change YOUR_PORT
+  frontend:
+    ports:
+      - "YOUR_PORT:5173"  # Change YOUR_PORT
+  postgres:
+    ports:
+      - "YOUR_PORT:5432"  # Change YOUR_PORT
+```
+
+### Database Connection Issues
+
+If the backend can't connect to the database:
+
+1. Ensure Docker containers are running: `docker ps`
+2. Check database logs: `docker logs db`
+3. Verify environment variables in `.env` match `docker-compose.yml`
+
+## Using This Template
+
+This repository is configured as a GitHub template. To create your own project:
+
+1. Click "Use this template" on GitHub
+2. Create your new repository
+3. Clone and follow the setup steps above
+
+[Learn more about template repositories](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-template-repository)
+
+## Contributing
+
+Feel free to open issues or submit pull requests if you find bugs or have suggestions for improvements!
+
+## License
+
+MIT

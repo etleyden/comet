@@ -1,0 +1,1 @@
+This directory contains example requests that can be made to the API for this application. 

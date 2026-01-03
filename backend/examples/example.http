@@ -1,0 +1,14 @@
+GET http://localhost:86/api/posts
+
+###
+
+POST http://localhost:86/api/users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "jdoe@example.com"
+}
+
+### paste your own user id here
+GET http://localhost:86/api/users/1

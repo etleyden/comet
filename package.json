@@ -1,0 +1,15 @@
+{
+  "name": "web-template",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev:backend & npm run dev:frontend",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "clean": "docker system prune --all -f && docker volume prune --all -f"
+  }
+}
