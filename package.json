@@ -11,5 +11,8 @@
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
     "clean": "docker system prune --all -f && docker volume prune --all -f"
+  },
+  "dependencies": {
+    "@fontsource/roboto": "^5.2.9"
   }
 }

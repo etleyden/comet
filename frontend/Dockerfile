@@ -4,11 +4,8 @@ FROM node:22
 # Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package.json
 COPY package.json ./
-
-# Remove node_modules and package-lock.json to avoid caching issues
-RUN rm -rf node_modules package-lock.json
 
 # Install dependencies
 RUN npm install
