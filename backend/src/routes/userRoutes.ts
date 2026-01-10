@@ -35,7 +35,7 @@ export function userRoutes(app: Express) {
       const userId = req.params.id;
       // Your business logic here
       const db = getDB();
-      const user = await db.findOneBy(User, { id: parseInt(userId) });
+      const user = await db.findOneBy(User, { id: userId });
       if (!user) {
         throw new Error('User not found');
       }

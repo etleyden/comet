@@ -2,6 +2,8 @@ import "reflect-metadata";
 import { DataSource } from "typeorm";
 import * as dotenv from "dotenv";
 import { User } from "./entities/User";
+import { Account } from "./entities/Account";
+import { Transaction } from "./entities/Transaction";
 
 // Load environment variables from .env file at root or use environment variables
 dotenv.config({ path: process.env.NODE_ENV === 'production' ? '.env' : '../.env' });
@@ -16,7 +18,7 @@ export const AppDataSource = new DataSource({
     database: process.env.DB_NAME,
     synchronize: true, // Set to false in production
     logging: true,
-    entities: [User],
+    entities: [User, Account, Transaction],
     migrations: ["src/migrations/**/*.ts"],
     subscribers: ["src/subscribers/**/*.ts"],
 });
