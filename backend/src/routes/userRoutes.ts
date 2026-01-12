@@ -1,7 +1,7 @@
 import { Express } from 'express';
 import { z } from 'zod';
 import { createEndpoint } from '../utils/createEndpoint';
-import { User } from '../entities/User';
+import User from "../entities/User";
 import { getDB } from '../data-source';
 
 const CreateUserSchema = z.object({

@@ -1,8 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToMany } from "typeorm";
-import { User } from "./User";
+import User from "./User";
 
 @Entity()
-export class Account {
+export default class Account {
     @PrimaryGeneratedColumn("uuid")
     id!: string;
 
