@@ -1,6 +1,7 @@
 import { Express } from 'express';
 import { z } from 'zod';
 import { createEndpoint } from '../utils/createEndpoint';
+import { UserService } from '../services/userService';
 import User from "../entities/User";
 import { getDB } from '../data-source';
 
@@ -9,15 +10,12 @@ const CreateUserSchema = z.object({
   email: z.string().email(),
 });
 
-const GetUserSchema = z.object({
-  id: z.string()
-});
 
 export function userRoutes(app: Express) {
+  const userService = new UserService();
+
   // POST /api/users - Create user
   app.post('/api/users', createEndpoint({
-    method: 'post',
-    path: '/api/users',
     schema: CreateUserSchema,
     handler: async (input) => {
       // Your business logic here
@@ -27,10 +25,18 @@ export function userRoutes(app: Express) {
     }
   }));
 
+  // GET /api/users/test - MUST come before /:id route
+  app.get('/api/users/test', createEndpoint({
+    inputSource: 'query',
+    handler: async () => {
+      const session = await userService.createSession();
+      return session;
+    }
+  }));
+
   // GET /api/users/:id - Get user by ID
   app.get('/api/users/:id', createEndpoint({
-    method: 'get',
-    path: '/api/users/:id',
+    inputSource: 'query',
     handler: async (input, req) => {
       const userId = req.params.id;
       // Your business logic here

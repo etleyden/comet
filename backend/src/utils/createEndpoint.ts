@@ -8,11 +8,12 @@ export function createEndpoint<TInput, TOutput>(
     try {
       // Validate input if schema provided
       let input: TInput;
+      const dataSource = config.inputSource === 'query' ? req.query : req.body;
+      
       if (config.schema) {
-        const dataSource = config.method === 'get' ? req.query : req.body;
         input = config.schema.parse(dataSource);
       } else {
-        input = (config.method === 'get' ? req.query : req.body) as TInput;
+        input = dataSource as TInput;
       }
 
       // Execute handler

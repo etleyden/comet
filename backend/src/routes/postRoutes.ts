@@ -11,8 +11,6 @@ const CreatePostSchema = z.object({
 export function postRoutes(app: Express) {
   // POST /api/posts - Create post
   app.post('/api/posts', createEndpoint({
-    method: 'post',
-    path: '/api/posts',
     schema: CreatePostSchema,
     handler: async (input) => {
       const post = {
@@ -26,8 +24,7 @@ export function postRoutes(app: Express) {
 
   // GET /api/posts - Get all posts
   app.get('/api/posts', createEndpoint({
-    method: 'get',
-    path: '/api/posts',
+    inputSource: 'query',
     handler: async () => {
       return [
         {

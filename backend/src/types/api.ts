@@ -8,9 +8,9 @@ export type ApiHandler<TInput = any, TOutput = any> = (
 ) => Promise<TOutput> | TOutput;
 
 export interface EndpointConfig<TInput = any, TOutput = any> {
-  method: 'get' | 'post' | 'put' | 'patch' | 'delete';
-  path: string;
   schema?: z.ZodSchema<TInput>;
   handler: ApiHandler<TInput, TOutput>;
   description?: string;
+  // Optionally specify where to read input from (defaults to body)
+  inputSource?: 'body' | 'query';
 }
