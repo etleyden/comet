@@ -17,7 +17,7 @@ RUN npm ci || npm install
 COPY . .
 
 # Expose the backend port
-EXPOSE 86
+EXPOSE 86 9229
 
 # Default command for development
-CMD ["npx", "nodemon", "--watch", "src/**/*.ts", "--exec", "npx", "ts-node", "src/index.ts"]
+CMD ["npx", "nodemon", "--watch", "src/**/*.ts", "--exec", "node", "--inspect=0.0.0.0:9229", "-r", "ts-node/register", "src/index.ts"]
