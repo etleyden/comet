@@ -1,7 +1,7 @@
+# get all posts
 GET http://localhost:86/api/posts
 
-###
-
+### create a new user
 POST http://localhost:86/api/users
 Content-Type: application/json
 
@@ -10,5 +10,8 @@ Content-Type: application/json
   "email": "jdoe@example.com"
 }
 
-### paste your own user id here
+### get a user with id of 1
 GET http://localhost:86/api/users/1
+
+### create a user session
+GET http://localhost:86/api/users/test

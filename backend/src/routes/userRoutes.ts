@@ -10,7 +10,6 @@ const CreateUserSchema = z.object({
   email: z.string().email(),
 });
 
-
 export function userRoutes(app: Express) {
   const userService = new UserService();
 
@@ -28,9 +27,15 @@ export function userRoutes(app: Express) {
   // GET /api/users/test - MUST come before /:id route
   app.get('/api/users/test', createEndpoint({
     inputSource: 'query',
-    handler: async () => {
+    handler: async (input, req, res) => {
       const session = await userService.createSession();
-      return session;
+      res.cookie('session', session.token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000 // 1 day
+      });
+      return session.token;
     }
   }));
 
@@ -49,3 +54,24 @@ export function userRoutes(app: Express) {
     }
   }));
 }
+/**
+ * TODO: Consider CSRF protection for state-changing operations.
+ * Referenced from: https://lucia-auth.com/sessions/basic
+ * function verifyRequestOrigin(method: string, originHeader: string): boolean {
+ * 	if (method === "GET" || method === "HEAD") {
+ * 		return true;
+ * 	}
+ * 	return originHeader === "example.com";
+ * }
+ * 
+ * // Enable strict origin check only on production environments.
+ * function verifyRequestOrigin(method: string, originHeader: string): boolean {
+ * 	if (env !== ENV.PROD) {
+ * 		return true;
+ * 	}
+ * 	if (method === "GET" || method === "HEAD") {
+ * 		return true;
+ * 	}
+ * 	return originHeader === "example.com";
+ * }
+ */

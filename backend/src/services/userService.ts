@@ -46,25 +46,20 @@ export class UserService {
 
 
     async createSession(): Promise<SessionWithToken> {
-        const now = new Date();
-
         const id = this.generateSecureRandomString();
         const secret = this.generateSecureRandomString();
         const secretHash = await this.hashSecret(secret);
 
-        const token = id + "." + secret;
+        const db = getDB();
+        const savedSession = await db.save(Session, {
+            id: id,
+            secretHash: Buffer.from(secretHash).toString('base64'),
+        });
 
         const session: SessionWithToken = {
-            id,
-            secretHash: Buffer.from(secretHash),
-            createdAt: now,
-            token
+            ...savedSession,
+            token: `${savedSession.id}.${secret}`
         };
-
-        const db = getDB();
-        await db.save(Session, {
-            secretHash: session.secretHash,
-        });
 
         return session;
     }
@@ -82,7 +77,7 @@ export class UserService {
         }
 
         const tokenSecretHash = await this.hashSecret(sessionSecret);
-        const validSecret = this.constantTimeEqual(tokenSecretHash, session.secretHash);
+        const validSecret = this.constantTimeEqual(tokenSecretHash, new Uint8Array(Buffer.from(session.secretHash, 'base64')));
         if (!validSecret) {
             return null;
         }
@@ -94,18 +89,13 @@ export class UserService {
         const now = new Date();
         const db = getDB();
 
-        const sessionEntity = await db.findOne(Session, {
+        const session = await db.findOne(Session, {
             where: { id: sessionId }
         });
 
-        if (!sessionEntity) {
+        if (!session) {
             return null;
         }
-        const session: Session = {
-            id: sessionEntity.id,
-            secretHash: sessionEntity.secretHash,
-            createdAt: sessionEntity.createdAt
-        };
 
         // Check expiration
         if (now.getTime() - session.createdAt.getTime() >= SESSION_TIMEOUT_SEC * 1000) {

@@ -1,12 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from "typeorm";
+import { Entity, Column, CreateDateColumn, PrimaryColumn } from "typeorm";
 
 @Entity()
 export default class Session {
-    @PrimaryGeneratedColumn("uuid")
-    id!: string; // Changed to string to match UUID type
+    @PrimaryColumn()
+    id!: string; // Secure random string
 
-    @Column({ type: "bytea" })
-    secretHash!: Buffer;
+    @Column() // 24 bytes encoded as a base64 string
+    secretHash!: string;
 
     @CreateDateColumn()
     createdAt!: Date;
