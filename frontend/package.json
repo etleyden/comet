@@ -17,7 +17,8 @@
     "@mui/material": "^7.3.6",
     "@tanstack/react-table": "^8.21.3",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "shared": "*"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "4.9.5"

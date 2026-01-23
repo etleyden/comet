@@ -17,7 +17,6 @@ export function userRoutes(app: Express) {
   app.post('/api/users', createEndpoint({
     schema: CreateUserSchema,
     handler: async (input) => {
-      // Your business logic here
       const db = getDB();
       const user = await db.save(User, input);
       return user.id;
@@ -25,7 +24,7 @@ export function userRoutes(app: Express) {
   }));
 
   // GET /api/users/test - MUST come before /:id route
-  app.get('/api/users/test', createEndpoint({
+  app.get('/api/users/login', createEndpoint({
     inputSource: 'query',
     handler: async (input, req, res) => {
       const session = await userService.createSession();
@@ -44,13 +43,20 @@ export function userRoutes(app: Express) {
     inputSource: 'query',
     handler: async (input, req) => {
       const userId = req.params.id;
-      // Your business logic here
       const db = getDB();
       const user = await db.findOneBy(User, { id: userId });
       if (!user) {
         throw new Error('User not found');
       }
       return user;
+    }
+  }));
+
+  // GET /api/users - List all users
+  app.get('/api/users', createEndpoint({
+    handler: async () => {
+      const users = await userService.listUsers();
+      return users;
     }
   }));
 }

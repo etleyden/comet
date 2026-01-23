@@ -1,11 +1,11 @@
 import './App.css';
-import TransactionTable from './components/TransactionTable';
+import Login from './components/Login';
 
 function App() {
 
   return (
     <>
-      <TransactionTable />
+      <Login />
     </>
   )
 }

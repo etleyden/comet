@@ -1,5 +1,6 @@
 import Session from "../entities/Session";
 import { getDB } from "../data-source";
+import User from "../entities/User";
 
 interface SessionWithToken extends Session {
     token: string;
@@ -43,26 +44,6 @@ export class UserService {
         }
         return c === 0;
     }
-
-
-    async createSession(): Promise<SessionWithToken> {
-        const id = this.generateSecureRandomString();
-        const secret = this.generateSecureRandomString();
-        const secretHash = await this.hashSecret(secret);
-
-        const db = getDB();
-        const savedSession = await db.save(Session, {
-            id: id,
-            secretHash: Buffer.from(secretHash).toString('base64'),
-        });
-
-        const session: SessionWithToken = {
-            ...savedSession,
-            token: `${savedSession.id}.${secret}`
-        };
-
-        return session;
-    }
     async validateSessionToken(token: string): Promise<Session | null> {
         const tokenParts = token.split(".");
         if (tokenParts.length !== 2) {
@@ -84,7 +65,24 @@ export class UserService {
 
         return session;
     }
+    async createSession(): Promise<SessionWithToken> {
+        const id = this.generateSecureRandomString();
+        const secret = this.generateSecureRandomString();
+        const secretHash = await this.hashSecret(secret);
 
+        const db = getDB();
+        const savedSession = await db.save(Session, {
+            id: id,
+            secretHash: Buffer.from(secretHash).toString('base64'),
+        });
+
+        const session: SessionWithToken = {
+            ...savedSession,
+            token: `${savedSession.id}.${secret}`
+        };
+
+        return session;
+    }
     async getSession(sessionId: string): Promise<Session | null> {
         const now = new Date();
         const db = getDB();
@@ -105,10 +103,14 @@ export class UserService {
 
         return session;
     }
-
     async deleteSession(sessionId: string): Promise<void> {
         const db = getDB();
         await db.delete(Session, { id: sessionId });
+    }
+    async listUsers(): Promise<User[]> {
+        const db = getDB();
+        const users = await db.find(User);
+        return users;
     }
 
 }
