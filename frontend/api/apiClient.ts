@@ -1,11 +1,4 @@
 // API Routes constants
-export const API_ROUTES = {
-    LIST_USERS: '/api/users',
-    USER_LOGIN: '/api/users/login',
-    TRANSACTIONS: '/api/transactions',
-    ACCOUNTS: '/api/accounts',
-} as const;
-
 interface RequestOptions {
     params?: Record<string, string | number>;
     headers?: Record<string, string>;

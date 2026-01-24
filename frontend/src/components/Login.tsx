@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import Button from "@mui/material/Button";
 import type { User } from "shared";
-import ApiClient, { API_ROUTES } from "../../api/apiClient";
+import ApiClient from "../../api/apiClient";
+import Register from "./Register";
 
 export default function Login() {
     const [users, setUsers] = useState<User[]>([]);
+    const [isRegistering, setIsRegistering] = useState(false);
 
     useEffect(() => {
-        ApiClient.get<User[]>(API_ROUTES.LIST_USERS).then(setUsers);
+        ApiClient.get<User[]>("/users").then(setUsers);
     }, []);
 
     return (
@@ -17,7 +19,9 @@ export default function Login() {
                     <li key={user.id}>{user.name} ({user.email})</li>
                 ))}
             </ul>
-            <Button>Create User</Button>
+            {(isRegistering) ? (<Register onCancel={() => setIsRegistering(false)} />) :
+                <Button onClick={() => setIsRegistering(true)}>Create User</Button>
+            }
         </>
     )
 }

@@ -65,15 +65,27 @@ export class UserService {
 
         return session;
     }
-    async createSession(): Promise<SessionWithToken> {
+    async createSession(user: Partial<User>): Promise<SessionWithToken> {
+        // validate user
+        if (!user.email) {
+            throw new Error('Invalid login credentials');
+        }
+
+        const db = getDB();
+        const validatedUser = await db.findOneBy(User, { email: user.email });
+        if (!validatedUser) {
+            throw new Error('Invalid login credentials');
+        }
+
+        // create a session for the user
         const id = this.generateSecureRandomString();
         const secret = this.generateSecureRandomString();
         const secretHash = await this.hashSecret(secret);
 
-        const db = getDB();
         const savedSession = await db.save(Session, {
             id: id,
             secretHash: Buffer.from(secretHash).toString('base64'),
+            user: validatedUser
         });
 
         const session: SessionWithToken = {

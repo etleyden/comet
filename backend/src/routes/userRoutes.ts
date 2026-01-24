@@ -10,6 +10,10 @@ const CreateUserSchema = z.object({
   email: z.string().email(),
 });
 
+const UserLoginSchema = z.object({
+  email: z.string().email()
+})
+
 export function userRoutes(app: Express) {
   const userService = new UserService();
 
@@ -19,13 +23,22 @@ export function userRoutes(app: Express) {
     handler: async (input) => {
       const db = getDB();
       const user = await db.save(User, input);
+      const token = await userService.createSession(user);
       return user.id;
     }
   }));
 
+  // GET /api/users - List all users
+  app.get('/api/users', createEndpoint({
+    handler: async () => {
+      const users = await userService.listUsers();
+      return users;
+    }
+  }));
+
   // GET /api/users/test - MUST come before /:id route
-  app.get('/api/users/login', createEndpoint({
-    inputSource: 'query',
+  app.post('/api/users/login', createEndpoint({
+    schema: UserLoginSchema,
     handler: async (input, req, res) => {
       const session = await userService.createSession();
       res.cookie('session', session.token, {
@@ -52,13 +65,7 @@ export function userRoutes(app: Express) {
     }
   }));
 
-  // GET /api/users - List all users
-  app.get('/api/users', createEndpoint({
-    handler: async () => {
-      const users = await userService.listUsers();
-      return users;
-    }
-  }));
+
 }
 /**
  * TODO: Consider CSRF protection for state-changing operations.
