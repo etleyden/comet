@@ -23,8 +23,8 @@ export function userRoutes(app: Express) {
     handler: async (input) => {
       const db = getDB();
       const user = await db.save(User, input);
-      const token = await userService.createSession(user);
-      return user.id;
+      const session = await userService.createSession(user);
+      return session.token;
     }
   }));
 
@@ -40,7 +40,7 @@ export function userRoutes(app: Express) {
   app.post('/api/users/login', createEndpoint({
     schema: UserLoginSchema,
     handler: async (input, req, res) => {
-      const session = await userService.createSession();
+      const session = await userService.createSession({ email: input.email });
       res.cookie('session', session.token, {
         httpOnly: true,
         secure: true,

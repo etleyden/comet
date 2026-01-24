@@ -10,8 +10,13 @@ Content-Type: application/json
   "email": "jdoe@example.com"
 }
 
+### login as a user
+POST http://localhost:86/api/users/login
+Content-Type: application/json
+
+{
+  "email": "jdoe@example.com"
+}
+
 ### get a user with id of 1
 GET http://localhost:86/api/users/1
-
-### create a user session
-GET http://localhost:86/api/users/test

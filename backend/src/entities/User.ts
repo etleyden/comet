@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, ManyToOne } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToMany, JoinTable, OneToMany } from "typeorm";
 import Account from "./Account";
 import Session from "./Session";
 
@@ -13,8 +13,8 @@ export default class User {
     @Column({ unique: true })
     email!: string; // Added definite assignment assertion
 
-    @ManyToOne(() => Session, session => session.user)
-    sessions!: Session;
+    @OneToMany(() => Session, session => session.user)
+    sessions?: Session[];
 
     @ManyToMany(() => Account, account => account.users)
     @JoinTable()

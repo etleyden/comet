@@ -1,4 +1,4 @@
-import { Entity, Column, CreateDateColumn, PrimaryColumn, OneToMany } from "typeorm";
+import { Entity, Column, CreateDateColumn, PrimaryColumn, ManyToOne } from "typeorm";
 import User from "./User";
 
 @Entity()
@@ -12,6 +12,6 @@ export default class Session {
     @CreateDateColumn()
     createdAt!: Date;
 
-    @OneToMany(() => User, user => user.sessions)
+    @ManyToOne(() => User, user => user.sessions)
     user!: User;
 }
