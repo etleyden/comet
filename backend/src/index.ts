@@ -13,12 +13,19 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.API_PORT || 86;
-const USE_HTTPS = process.env.USE_HTTPS === 'true';
+const USE_HTTPS = process.env.USE_HTTPS !== 'false'; // Default to true
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://localhost:3000',
+  origin: [
+    'https://localhost:3000',
+    'http://localhost:3000',
+    'https://localhost:5173',
+    process.env.FRONTEND_URL || 'https://localhost:3000'
+  ],
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
 
@@ -46,7 +53,7 @@ AppDataSource.initialize()
         console.log(`Server running on https://localhost:${PORT}`);
       });
     } else {
-      // Start HTTP server (fallback for non-HTTPS environments)
+      // Start HTTP server
       app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
       });

@@ -46,63 +46,31 @@ if (fs.existsSync(keyPath) && fs.existsSync(certPath)) {
   process.exit(0);
 }
 
-// Step 3: Generate SSL certificates using openssl
-console.log('Generating self-signed SSL certificates...');
+// Step 3: Generate SSL certificates using mkcert
+console.log('Generating locally-trusted SSL certificates with mkcert...');
 
 try {
-  // Check if openssl is available
+  // Check if mkcert is available
   try {
-    execSync('openssl version', { stdio: 'ignore' });
+    execSync('mkcert -version', { stdio: 'ignore' });
   } catch (error) {
-    console.error('\n❌ Error: OpenSSL is not installed or not in PATH');
-    console.error('Please install OpenSSL:');
-    console.error('  - Windows: https://slproweb.com/products/Win32OpenSSL.html');
-    console.error('  - macOS: brew install openssl');
-    console.error('  - Linux: sudo apt-get install openssl (or equivalent)');
+    console.error('\n❌ Error: mkcert is not installed or not in PATH');
+    console.error('\nmkcert creates locally-trusted development certificates.');
+    console.error('Install mkcert:');
+    console.error('  - Windows: choco install mkcert (then run: mkcert -install)');
+    console.error('  - Windows (manual): https://github.com/FiloSottile/mkcert/releases');
+    console.error('  - macOS: brew install mkcert (then run: mkcert -install)');
+    console.error('  - Linux: See https://github.com/FiloSottile/mkcert#installation');
+    console.error('\nAfter installing, run: mkcert -install');
+    console.error('Then run this setup script again.');
     process.exit(1);
   }
 
-  // Create OpenSSL config file
-  const configContent = `[req]
-default_bits = 2048
-prompt = no
-default_md = sha256
-distinguished_name = dn
-req_extensions = v3_req
-
-[dn]
-C = US
-ST = Development
-L = Local
-O = Development
-OU = Development
-CN = localhost
-
-[v3_req]
-subjectAltName = @alt_names
-
-[alt_names]
-DNS.1 = localhost
-DNS.2 = backend
-DNS.3 = frontend
-DNS.4 = *.localhost
-IP.1 = 127.0.0.1
-IP.2 = 0.0.0.0
-`;
-
-  const configPath = path.join(certsDir, 'localhost.conf');
-  fs.writeFileSync(configPath, configContent);
-
-  // Generate private key
+  // Generate certificates for localhost
+  console.log('Generating certificates...');
   execSync(
-    `openssl genrsa -out "${keyPath}" 2048`,
-    { stdio: 'inherit' }
-  );
-
-  // Generate certificate
-  execSync(
-    `openssl req -new -x509 -key "${keyPath}" -out "${certPath}" -days 365 -config "${configPath}" -extensions v3_req`,
-    { stdio: 'inherit' }
+    `mkcert -key-file "${keyPath}" -cert-file "${certPath}" localhost 127.0.0.1 ::1 backend frontend`,
+    { cwd: certsDir, stdio: 'inherit' }
   );
 
   console.log('\n✓ SSL certificates generated successfully!');
@@ -120,8 +88,8 @@ IP.2 = 0.0.0.0
   fs.writeFileSync(path.join(certsDir, '.gitignore'), gitignoreContent);
 
   console.log('\n✅ Setup complete!');
-  console.log('\nNote: Your browser will show a security warning for self-signed certificates.');
-  console.log('This is expected for local development - you can safely proceed past the warning.');
+  console.log('\nYour development certificates are now trusted by your system.');
+  console.log('No browser security warnings! 🎉');
 
 } catch (error) {
   console.error('\n❌ Error generating certificates:', error.message);

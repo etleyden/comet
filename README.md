@@ -15,6 +15,11 @@ This repository serves as a jumping point for building a web application. The te
 - npm (comes with Node.js)
 - Docker and Docker Compose
 - Git
+- **mkcert** - For locally-trusted development certificates
+  - Windows: `choco install mkcert` or [download from releases](https://github.com/FiloSottile/mkcert/releases)
+  - macOS: `brew install mkcert`
+  - Linux: See [mkcert installation guide](https://github.com/FiloSottile/mkcert#installation)
+  - After installing: Run `mkcert -install` to set up the local CA
 
 ## Quick Start
 
@@ -43,8 +48,10 @@ npm run setup
 
 This will:
 - Copy `.env.example` to `.env` (if it doesn't exist)
-- Generate self-signed SSL certificates for HTTPS development
-- Create the necessary certificate files in the `certs/` directory
+- Generate locally-trusted SSL certificates using mkcert
+- Create certificate files in the `certs/` directory
+
+**Important**: Make sure you've installed mkcert and run `mkcert -install` before running setup.
 
 After running setup, edit `.env` with your preferred values if needed. The defaults work out of the box:
 
@@ -77,7 +84,7 @@ This will:
 - **Backend API**: https://localhost:86
 - **Database**: localhost:5431
 
-**First-time setup**: Your browser will warn about the self-signed certificate. This is safe for local development - proceed to access the site.
+**Note**: The certificates are locally-trusted via mkcert, so you won't see browser security warnings! 🎉
 
 ## Development
 
