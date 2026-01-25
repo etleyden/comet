@@ -86,6 +86,8 @@ This will:
 
 **Note**: The certificates are locally-trusted via mkcert, so you won't see browser security warnings! 🎉
 
+**Important**: Before using the frontend application, you may need to first visit the backend URL directly in your browser (`https://localhost:86/health`) and accept the certificate. Even with mkcert installed, browsers require you to explicitly trust certificates for each port. If you skip this step, you'll see CORS errors like "CORS request did not succeed" because the browser blocks the HTTPS connection before CORS headers can be sent.
+
 ## Development
 
 ### Running Locally (Without Docker)
