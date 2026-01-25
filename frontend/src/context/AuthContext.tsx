@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const login = async (email: string, password: string) => {
         try {
-            const response = await ApiClient.post<User>('/auth/login', { email, password });
+            const response = await ApiClient.post<User>('/api/auth/login', { email, password });
             setUser(response);
         } catch (error) {
             console.error('Login failed:', error);
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const register = async (name: string, email: string, password: string) => {
         try {
-            const response = await ApiClient.post<User>('/auth/register', { name, email, password });
+            const response = await ApiClient.post<User>('/api/auth/register', { name, email, password });
             setUser(response);
         } catch (error) {
             console.error('Registration failed:', error);
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const logout = async () => {
         try {
-            await ApiClient.post('/auth/logout');
+            await ApiClient.post('/api/auth/logout');
             setUser(null);
         } catch (error) {
             console.error('Logout failed:', error);

@@ -1,12 +1,14 @@
 import Session from "../entities/Session";
 import { getDB } from "../data-source";
 import User from "../entities/User";
+import bcrypt from "bcrypt";
 
 interface SessionWithToken extends Session {
     token: string;
 }
 
 const SESSION_TIMEOUT_SEC = 60 * 60 * 24; // 1 day
+const BCRYPT_SALT_ROUNDS = 10;
 
 export class UserService {
     /**
@@ -65,16 +67,64 @@ export class UserService {
 
         return session;
     }
-    async createSession(user: Partial<User>): Promise<SessionWithToken> {
-        // validate user
-        if (!user.email) {
+    async hashPassword(password: string): Promise<string> {
+        return bcrypt.hash(password, BCRYPT_SALT_ROUNDS);
+    }
+
+    async verifyPassword(password: string, hash: string): Promise<boolean> {
+        return bcrypt.compare(password, hash);
+    }
+
+    async createUser(name: string, email: string, password: string): Promise<User> {
+        const db = getDB();
+        
+        // Check if user already exists
+        const existingUser = await db.findOneBy(User, { email });
+        if (existingUser) {
+            throw new Error('User with this email already exists');
+        }
+
+        const passwordHash = await this.hashPassword(password);
+        const user = await db.save(User, {
+            name,
+            email,
+            passwordHash
+        });
+
+        return user;
+    }
+
+    async authenticateUser(email: string, password: string): Promise<User> {
+        const db = getDB();
+        
+        // Need to explicitly select passwordHash since it's excluded by default
+        const user = await db.createQueryBuilder(User, "user")
+            .addSelect("user.passwordHash")
+            .where("user.email = :email", { email })
+            .getOne();
+
+        if (!user) {
             throw new Error('Invalid login credentials');
         }
 
-        const db = getDB();
-        const validatedUser = await db.findOneBy(User, { email: user.email });
-        if (!validatedUser) {
+        const isValidPassword = await this.verifyPassword(password, user.passwordHash);
+        if (!isValidPassword) {
             throw new Error('Invalid login credentials');
+        }
+
+        return user;
+    }
+
+    async createSession(user: Partial<User>): Promise<SessionWithToken> {
+        // validate user
+        if (!user.id) {
+            throw new Error('Invalid user');
+        }
+
+        const db = getDB();
+        const validatedUser = await db.findOneBy(User, { id: user.id });
+        if (!validatedUser) {
+            throw new Error('Invalid user');
         }
 
         // create a session for the user

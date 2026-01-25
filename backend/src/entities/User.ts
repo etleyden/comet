@@ -13,6 +13,9 @@ export default class User {
     @Column({ unique: true })
     email!: string; // Added definite assignment assertion
 
+    @Column({ select: false }) // Don't select password by default for security
+    passwordHash!: string;
+
     @OneToMany(() => Session, session => session.user)
     sessions?: Session[];
 

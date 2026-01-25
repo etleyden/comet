@@ -8,63 +8,68 @@ import { getDB } from '../data-source';
 const CreateUserSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
+  password: z.string().min(8, "Password must be at least 8 characters"),
 });
 
 const UserLoginSchema = z.object({
-  email: z.string().email()
+  email: z.string().email(),
+  password: z.string(),
 })
 
 export function userRoutes(app: Express) {
   const userService = new UserService();
 
   // POST /api/users - Create user
-  app.post('/api/users', createEndpoint({
+  app.post('/api/auth/register', createEndpoint({
     schema: CreateUserSchema,
-    handler: async (input) => {
-      const db = getDB();
-      const user = await db.save(User, input);
-      const session = await userService.createSession(user);
-      return session.token;
-    }
-  }));
-
-  // GET /api/users - List all users
-  app.get('/api/users', createEndpoint({
-    handler: async () => {
-      const users = await userService.listUsers();
-      return users;
-    }
-  }));
-
-  // GET /api/users/test - MUST come before /:id route
-  app.post('/api/users/login', createEndpoint({
-    schema: UserLoginSchema,
     handler: async (input, req, res) => {
-      const session = await userService.createSession({ email: input.email });
+      const user = await userService.createUser(input.name, input.email, input.password);
+      const session = await userService.createSession(user);
       res.cookie('session', session.token, {
         httpOnly: true,
         secure: true,
         sameSite: 'strict',
         maxAge: 24 * 60 * 60 * 1000 // 1 day
       });
-      return session.token;
+      return { id: user.id, name: user.name, email: user.email, token: session.token };
     }
   }));
 
-  // GET /api/users/:id - Get user by ID
-  app.get('/api/users/:id', createEndpoint({
-    inputSource: 'query',
-    handler: async (input, req) => {
-      const userId = req.params.id;
-      const db = getDB();
-      const user = await db.findOneBy(User, { id: userId });
-      if (!user) {
-        throw new Error('User not found');
+  // POST /api/auth/login - Login user
+  app.post('/api/auth/login', createEndpoint({
+    schema: UserLoginSchema,
+    handler: async (input, req, res) => {
+      const user = await userService.authenticateUser(input.email, input.password);
+      const session = await userService.createSession(user);
+      res.cookie('session', session.token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+        maxAge: 24 * 60 * 60 * 1000 // 1 day
+      });
+      return { id: user.id, name: user.name, email: user.email, token: session.token };
+    }
+  }));
+
+  // POST /api/auth/logout - Logout user
+  app.post('/api/auth/logout', createEndpoint({
+    handler: async (input, req, res) => {
+      const sessionToken = req.cookies?.session;
+      if (sessionToken) {
+        const tokenParts = sessionToken.split('.');
+        if (tokenParts.length === 2) {
+          const sessionId = tokenParts[0];
+          await userService.deleteSession(sessionId);
+        }
       }
-      return user;
+      res.clearCookie('session', {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+      });
+      return { success: true };
     }
   }));
-
 
 }
 /**
