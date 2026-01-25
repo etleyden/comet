@@ -4,6 +4,7 @@ import https from 'https';
 import fs from 'fs';
 import path from 'path';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import dotenv from 'dotenv';
 import { registerRoutes } from './routes/index';
 import { errorHandler } from './middleware/errorHandler';
@@ -28,6 +29,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json());
+app.use(cookieParser());
 
 // Register all routes
 registerRoutes(app);

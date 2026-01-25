@@ -150,7 +150,8 @@ export class UserService {
         const db = getDB();
 
         const session = await db.findOne(Session, {
-            where: { id: sessionId }
+            where: { id: sessionId },
+            relations: ['user']
         });
 
         if (!session) {

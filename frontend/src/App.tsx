@@ -19,10 +19,18 @@ function App() {
       setApiOutput(`API health check failed: ${error.message}`);
     });
   }
+  const authCheck = async () => {
+    ApiClient.get('/api/posts').then((response) => {
+      setApiOutput(`Auth check successful: ${JSON.stringify(response)}`);
+    }).catch((error) => {
+      setApiOutput(`Auth check failed: ${error.message}`);
+    });
+  }
 
   return (
     <Box sx={{ p: 3 }}>
       <Button onClick={apiCheck}>Check API Connection</Button>
+      <Button onClick={authCheck}>Check Auth Endpoint</Button>
       {apiOutput && (
         <Typography sx={{ mt: 2 }}>{apiOutput}</Typography>
       )}
