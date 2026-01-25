@@ -12,9 +12,14 @@
     "dev": "npm run dev:backend & npm run dev:frontend",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",
-    "clean": "docker system prune --all -f && docker volume prune --all -f"
+    "clean": "docker system prune --all -f && docker volume prune --all -f",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\""
   },
   "dependencies": {
     "@fontsource/roboto": "^5.2.9"
+  },
+  "devDependencies": {
+    "prettier": "^3.8.1"
   }
 }

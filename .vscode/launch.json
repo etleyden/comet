@@ -10,9 +10,7 @@
       "localRoot": "${workspaceFolder}/backend",
       "remoteRoot": "/app",
       "restart": true,
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
+      "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
       "protocol": "inspector"
     }

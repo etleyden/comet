@@ -19,18 +19,18 @@ export interface AuthOptions {
 
 /**
  * Authentication middleware that validates session tokens and attaches user to request.
- * 
+ *
  * @param options - Configuration options
  * @param options.required - If true, throws error when no valid session found (default: true)
  * @param options.roles - Array of allowed roles (for future RBAC implementation)
- * 
+ *
  * @example
  * // Require authentication
  * app.get('/api/protected', requireAuth(), handler);
- * 
+ *
  * // Optional authentication (user attached if logged in, but route is accessible without auth)
  * app.get('/api/public', requireAuth({ required: false }), handler);
- * 
+ *
  * // Future: Role-based access control
  * // app.get('/api/admin', requireAuth({ roles: ['admin'] }), handler);
  */
@@ -49,7 +49,7 @@ export function requireAuth(options: AuthOptions = {}) {
         if (required) {
           return res.status(401).json({
             success: false,
-            error: 'Authentication required'
+            error: 'Authentication required',
           });
         }
         return next();
@@ -57,12 +57,12 @@ export function requireAuth(options: AuthOptions = {}) {
 
       // Validate session token
       const session = await userService.validateSessionToken(token);
-      
+
       if (!session || !session.user) {
         if (required) {
           return res.status(401).json({
             success: false,
-            error: 'Invalid or expired session'
+            error: 'Invalid or expired session',
           });
         }
         return next();
@@ -72,7 +72,7 @@ export function requireAuth(options: AuthOptions = {}) {
       req.user = session.user;
       req.session = {
         id: session.id,
-        userId: session.user.id
+        userId: session.user.id,
       };
 
       // TODO: Future role-based access control
@@ -92,7 +92,7 @@ export function requireAuth(options: AuthOptions = {}) {
       if (required) {
         return res.status(401).json({
           success: false,
-          error: 'Authentication failed'
+          error: 'Authentication failed',
         });
       }
       next();

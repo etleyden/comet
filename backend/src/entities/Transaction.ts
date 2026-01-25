@@ -1,36 +1,43 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne } from "typeorm";
-import Account from "./Account";
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+} from 'typeorm';
+import Account from './Account';
 
 @Entity()
 export default class Transaction {
-    @PrimaryGeneratedColumn("uuid")
-    id!: string; 
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
 
-    @ManyToOne(() => Account, account => account.id)
-    account!: Account;
-    
-    @Column("decimal", { precision: 10, scale: 2 })
-    amount!: number; 
+  @ManyToOne(() => Account, account => account.id)
+  account!: Account;
 
-    @Column()
-    date!: Date;
+  @Column('decimal', { precision: 10, scale: 2 })
+  amount!: number;
 
-    @Column()
-    category!: string;
+  @Column()
+  date!: Date;
 
-    @Column()
-    notes?: string;
+  @Column()
+  category!: string;
 
-    @Column({
-        type: "enum",
-        enum: ["pending", "completed", "cancelled"],
-        default: "completed"
-    })
-    status!: "pending" | "completed" | "cancelled";
+  @Column()
+  notes?: string;
 
-    @CreateDateColumn()
-    createdAt!: Date;
-    
-    @UpdateDateColumn()
-    updatedAt!: Date;
+  @Column({
+    type: 'enum',
+    enum: ['pending', 'completed', 'cancelled'],
+    default: 'completed',
+  })
+  status!: 'pending' | 'completed' | 'cancelled';
+
+  @CreateDateColumn()
+  createdAt!: Date;
+
+  @UpdateDateColumn()
+  updatedAt!: Date;
 }

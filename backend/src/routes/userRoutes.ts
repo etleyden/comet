@@ -2,75 +2,99 @@ import { Express } from 'express';
 import { z } from 'zod';
 import { createEndpoint } from '../utils/createEndpoint';
 import { UserService } from '../services/userService';
-import User from "../entities/User";
+import User from '../entities/User';
 import { getDB } from '../data-source';
+import { requireAuth } from '../middleware/auth';
 
 const CreateUserSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 const UserLoginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
-})
+});
 
 export function userRoutes(app: Express) {
   const userService = new UserService();
 
-  // POST /api/users - Create user
-  app.post('/api/auth/register', createEndpoint({
-    schema: CreateUserSchema,
-    handler: async (input, req, res) => {
-      const user = await userService.createUser(input.name, input.email, input.password);
-      const session = await userService.createSession(user);
-      res.cookie('session', session.token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000 // 1 day
-      });
-      return { id: user.id, name: user.name, email: user.email, token: session.token };
-    }
-  }));
+  // POST /auth/register - Create user
+  app.post(
+    '/auth/register',
+    createEndpoint({
+      schema: CreateUserSchema,
+      handler: async (input, req, res) => {
+        const user = await userService.createUser(input.name, input.email, input.password);
+        const session = await userService.createSession(user);
+        res.cookie('session', session.token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+          maxAge: 24 * 60 * 60 * 1000, // 1 day
+        });
+        return { id: user.id, name: user.name, email: user.email, token: session.token };
+      },
+    })
+  );
 
   // POST /api/auth/login - Login user
-  app.post('/api/auth/login', createEndpoint({
-    schema: UserLoginSchema,
-    handler: async (input, req, res) => {
-      const user = await userService.authenticateUser(input.email, input.password);
-      const session = await userService.createSession(user);
-      res.cookie('session', session.token, {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-        maxAge: 24 * 60 * 60 * 1000 // 1 day
-      });
-      return { id: user.id, name: user.name, email: user.email, token: session.token };
-    }
-  }));
+  app.post(
+    '/api/auth/login',
+    createEndpoint({
+      schema: UserLoginSchema,
+      handler: async (input, req, res) => {
+        const user = await userService.authenticateUser(input.email, input.password);
+        const session = await userService.createSession(user);
+        res.cookie('session', session.token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+          maxAge: 24 * 60 * 60 * 1000, // 1 day
+        });
+        return { id: user.id, name: user.name, email: user.email, token: session.token };
+      },
+    })
+  );
 
   // POST /api/auth/logout - Logout user
-  app.post('/api/auth/logout', createEndpoint({
-    handler: async (input, req, res) => {
-      const sessionToken = req.cookies?.session;
-      if (sessionToken) {
-        const tokenParts = sessionToken.split('.');
-        if (tokenParts.length === 2) {
-          const sessionId = tokenParts[0];
-          await userService.deleteSession(sessionId);
+  app.post(
+    '/api/auth/logout',
+    createEndpoint({
+      handler: async (input, req, res) => {
+        const sessionToken = req.cookies?.session;
+        if (sessionToken) {
+          const tokenParts = sessionToken.split('.');
+          if (tokenParts.length === 2) {
+            const sessionId = tokenParts[0];
+            await userService.deleteSession(sessionId);
+          }
         }
-      }
-      res.clearCookie('session', {
-        httpOnly: true,
-        secure: true,
-        sameSite: 'strict',
-      });
-      return { success: true };
-    }
-  }));
+        res.clearCookie('session', {
+          httpOnly: true,
+          secure: true,
+          sameSite: 'strict',
+        });
+        return { success: true };
+      },
+    })
+  );
 
+  // GET /auth/me - Get current user
+  app.get(
+    '/auth/me',
+    requireAuth(),
+    createEndpoint({
+      handler: async (input, req) => {
+        return {
+          id: req.user!.id,
+          name: req.user!.name,
+          email: req.user!.email,
+        };
+      },
+    })
+  );
 }
 /**
  * TODO: Consider CSRF protection for state-changing operations.
@@ -81,7 +105,7 @@ export function userRoutes(app: Express) {
  * 	}
  * 	return originHeader === "example.com";
  * }
- * 
+ *
  * // Enable strict origin check only on production environments.
  * function verifyRequestOrigin(method: string, originHeader: string): boolean {
  * 	if (env !== ENV.PROD) {

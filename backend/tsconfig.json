@@ -13,15 +13,9 @@
     "experimentalDecorators": true,
     "sourceMap": true,
     "paths": {
-      "shared": [
-        "../shared/src/index.ts"
-      ]
+      "shared": ["../shared/src/index.ts"]
     }
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
 }

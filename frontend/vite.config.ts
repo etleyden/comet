@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
-import fs from 'fs'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import fs from 'fs';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -14,7 +14,7 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      'shared': path.resolve(__dirname, '../shared/src/index.ts'),
+      shared: path.resolve(__dirname, '../shared/src/index.ts'),
     },
   },
   server: {
@@ -27,4 +27,4 @@ export default defineConfig({
       usePolling: true, // Enable polling for file changes
     },
   },
-})
+});

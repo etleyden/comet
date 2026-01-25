@@ -90,7 +90,6 @@ try {
   console.log('\n✅ Setup complete!');
   console.log('\nYour development certificates are now trusted by your system.');
   console.log('No browser security warnings! 🎉');
-
 } catch (error) {
   console.error('\n❌ Error generating certificates:', error.message);
   process.exit(1);

@@ -1,55 +1,46 @@
-import { useState } from 'react';
-import ApiClient from '../api/apiClient';
-import Login from './components/Login';
-import { useAuth } from './context/AuthContext';
-import { Box, Typography, Button } from '@mui/material';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { LandingPage } from './pages/LandingPage';
+import { LoginPage } from './pages/LoginPage';
+import { HomePage } from './pages/HomePage';
 
 function App() {
-  const { user, isAuthenticated, isLoading, logout } = useAuth();
-  const [apiOutput, setApiOutput] = useState<string>('');
-
-  if (isLoading) {
-    return <Typography>Loading...</Typography>;
-  }
-  const apiCheck = async () => {
-    ApiClient.get('/health').then((response) => {
-      const data = response as { status: string };
-      setApiOutput(`API is healthy: ${data.status}`);
-    }).catch((error) => {
-      setApiOutput(`API health check failed: ${error.message}`);
-    });
-  }
-  const authCheck = async () => {
-    ApiClient.get('/api/posts').then((response) => {
-      setApiOutput(`Auth check successful: ${JSON.stringify(response)}`);
-    }).catch((error) => {
-      setApiOutput(`Auth check failed: ${error.message}`);
-    });
-  }
-
   return (
-    <Box sx={{ p: 3 }}>
-      <Button onClick={apiCheck}>Check API Connection</Button>
-      <Button onClick={authCheck}>Check Auth Endpoint</Button>
-      {apiOutput && (
-        <Typography sx={{ mt: 2 }}>{apiOutput}</Typography>
-      )}
-      {isAuthenticated && user ? (
-        <Box sx={{ mb: 3, p: 2, bgcolor: 'success.light', borderRadius: 1 }}>
-          <Typography variant="h6">✓ Logged in as {user.name}</Typography>
-          <Typography variant="body2" color="text.secondary">{user.email}</Typography>
-          <Button variant="outlined" size="small" sx={{ mt: 1 }} onClick={logout}>
-            Logout
-          </Button>
-        </Box>
-      ) : (
-        <Box sx={{ mb: 3, p: 2, bgcolor: 'warning.light', borderRadius: 1 }}>
-          <Typography variant="body1">Not authenticated</Typography>
-        </Box>
-      )}
-      <Login />
-    </Box>
-  )
+    <BrowserRouter>
+      <Routes>
+        {/* Public routes */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute isPublic>
+              <LandingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/login"
+          element={
+            <ProtectedRoute isPublic>
+              <LoginPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Protected routes */}
+        <Route
+          path="/home"
+          element={
+            <ProtectedRoute>
+              <HomePage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Catch-all redirect */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

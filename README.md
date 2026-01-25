@@ -47,6 +47,7 @@ npm run setup
 ```
 
 This will:
+
 - Copy `.env.example` to `.env` (if it doesn't exist)
 - Generate locally-trusted SSL certificates using mkcert
 - Create certificate files in the `certs/` directory
@@ -74,6 +75,7 @@ docker-compose up
 ```
 
 This will:
+
 - Start PostgreSQL database on port 5431 (mapped from container port 5432)
 - Start the backend API on port 86
 - Start the frontend dev server on port 3000 (mapped from container port 5173)
@@ -183,13 +185,13 @@ If ports 86, 3000, or 5431 are already in use, you can change them in `docker-co
 services:
   backend:
     ports:
-      - "YOUR_PORT:86"  # Change YOUR_PORT
+      - 'YOUR_PORT:86' # Change YOUR_PORT
   frontend:
     ports:
-      - "YOUR_PORT:5173"  # Change YOUR_PORT
+      - 'YOUR_PORT:5173' # Change YOUR_PORT
   postgres:
     ports:
-      - "YOUR_PORT:5432"  # Change YOUR_PORT
+      - 'YOUR_PORT:5432' # Change YOUR_PORT
 ```
 
 ### Database Connection Issues
