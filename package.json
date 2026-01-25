@@ -8,6 +8,7 @@
     "shared"
   ],
   "scripts": {
+    "setup": "node scripts/setup.js",
     "dev": "npm run dev:backend & npm run dev:frontend",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",

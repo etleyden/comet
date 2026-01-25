@@ -5,6 +5,7 @@
     "main": "./src/index.ts",
     "types": "./src/index.ts",
     "scripts": {
+        "build": "echo 'Shared package does not require building'",
         "type-check": "tsc --noEmit"
     },
     "devDependencies": {

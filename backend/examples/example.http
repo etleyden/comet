@@ -1,8 +1,11 @@
-# get all posts
-GET http://localhost:86/api/posts
+# Health check
+GET https://localhost:86/health
+
+### get all posts
+GET https://localhost:86/api/posts
 
 ### create a new user
-POST http://localhost:86/api/users
+POST https://localhost:86/api/users
 Content-Type: application/json
 
 {
@@ -11,7 +14,7 @@ Content-Type: application/json
 }
 
 ### login as a user
-POST http://localhost:86/api/users/login
+POST https://localhost:86/api/users/login
 Content-Type: application/json
 
 {
@@ -19,4 +22,4 @@ Content-Type: application/json
 }
 
 ### get a user with id of 1
-GET http://localhost:86/api/users/1
+GET https://localhost:86/api/users/1

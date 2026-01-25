@@ -2,7 +2,7 @@
   "name": "express-api-backend",
   "version": "1.0.0",
   "scripts": {
-    "dev": "nodemon --watch src/**/*.ts --exec ts-node src/index.ts",
+    "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js"
   },

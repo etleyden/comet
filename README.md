@@ -25,15 +25,28 @@ git clone <your-repo-url>
 cd web-template
 ```
 
-### 2. Set Up Environment Variables
-
-Copy the example environment file and configure it:
+### 2. Install Dependencies
 
 ```bash
-cp .env.example .env
+npm install --workspaces
 ```
 
-Edit `.env` with your preferred values. The defaults work out of the box:
+This will install dependencies for both frontend and backend workspaces.
+
+### 3. Run Setup Script
+
+Run the automated setup script to generate SSL certificates and create your `.env` file:
+
+```bash
+npm run setup
+```
+
+This will:
+- Copy `.env.example` to `.env` (if it doesn't exist)
+- Generate self-signed SSL certificates for HTTPS development
+- Create the necessary certificate files in the `certs/` directory
+
+After running setup, edit `.env` with your preferred values if needed. The defaults work out of the box:
 
 ```env
 NODE_ENV=development
@@ -45,13 +58,7 @@ DB_PASSWORD=password
 DB_NAME=app_db
 ```
 
-### 3. Install Dependencies
-
-```bash
-npm install --workspaces
-```
-
-This will install dependencies for both frontend and backend workspaces.
+**Note**: Your browser will show a security warning for self-signed certificates. This is expected - click "Advanced" and "Proceed to localhost" to continue.
 
 ### 4. Start the Application
 
@@ -66,9 +73,11 @@ This will:
 
 ### 5. Access the Application
 
-- **Frontend**: http://localhost:3000
-- **Backend API**: http://localhost:86
+- **Frontend**: https://localhost:3000
+- **Backend API**: https://localhost:86
 - **Database**: localhost:5431
+
+**First-time setup**: Your browser will warn about the self-signed certificate. This is safe for local development - proceed to access the site.
 
 ## Development
 

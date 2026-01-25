@@ -9,12 +9,15 @@ import '@fontsource/roboto/700.css';
 import App from './App.tsx'
 import { theme } from './theme.ts';
 import { CssBaseline } from '@mui/material';
+import { AuthProvider } from './context/AuthContext.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <App />
+      <AuthProvider>
+        <App />
+      </AuthProvider>
     </ThemeProvider>
   </StrictMode>,
 )

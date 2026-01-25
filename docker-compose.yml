@@ -16,7 +16,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}"]
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -29,7 +29,7 @@ services:
     container_name: backend
     restart: unless-stopped
     ports:
-      - "86:86" # requests
+      - "86:86" # HTTPS requests
       - "9229:9229" # debugger
     environment:
       - CHOKIDAR_USEPOLLING=true
@@ -38,12 +38,16 @@ services:
       - DB_USERNAME=${DB_USERNAME}
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=${DB_NAME}
+      - USE_HTTPS=true
+      - FRONTEND_URL=https://localhost:3000
     depends_on:
       postgres:
         condition: service_healthy
     volumes:
+      - .:/workspace
       - ./backend:/app
       - /app/node_modules
+      - ./certs:/app/certs:ro
     networks:
       - app_network
 
@@ -57,8 +61,10 @@ services:
     depends_on:
       - backend
     volumes:
+      - .:/workspace
       - ./frontend:/app
       - /app/node_modules
+      - ./certs:/app/certs:ro
     networks:
       - app_network
 

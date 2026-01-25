@@ -1,5 +1,8 @@
 import 'reflect-metadata';
 import express from 'express';
+import https from 'https';
+import fs from 'fs';
+import path from 'path';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { registerRoutes } from './routes/index';
@@ -10,9 +13,13 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.API_PORT || 86;
+const USE_HTTPS = process.env.USE_HTTPS === 'true';
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'https://localhost:3000',
+  credentials: true,
+}));
 app.use(express.json());
 
 // Register all routes
@@ -26,10 +33,24 @@ AppDataSource.initialize()
   .then(() => {
     console.log("Database connected successfully!");
 
-    // Start the server only after the database is connected
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
+    if (USE_HTTPS) {
+      // Load SSL certificates
+      const certPath = path.join(__dirname, '../../certs');
+      const httpsOptions = {
+        key: fs.readFileSync(path.join(certPath, 'localhost-key.pem')),
+        cert: fs.readFileSync(path.join(certPath, 'localhost-cert.pem')),
+      };
+
+      // Start HTTPS server
+      https.createServer(httpsOptions, app).listen(PORT, () => {
+        console.log(`Server running on https://localhost:${PORT}`);
+      });
+    } else {
+      // Start HTTP server (fallback for non-HTTPS environments)
+      app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+      });
+    }
   })
   .catch((error) => {
     console.error("Error during Data Source initialization", error);

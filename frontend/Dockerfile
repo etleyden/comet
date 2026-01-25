@@ -4,18 +4,10 @@ FROM node:22
 # Set working directory
 WORKDIR /app
 
-# Copy package.json
-COPY package.json ./
-
-# Install dependencies
-RUN npm install
-
-# Copy the rest of the application code
-COPY . .
-
-# Build the frontend application
-RUN npm run build
+# Install dependencies will happen via volume mounts
+# The entrypoint script will handle npm install
 
 EXPOSE 5173
-# Default command for development
-CMD ["npm", "run", "dev"]
+
+# Install dependencies and start dev server
+CMD ["sh", "-c", "cd /workspace && npm install --workspaces && npm run dev:frontend"]

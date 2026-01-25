@@ -5,7 +5,7 @@ interface RequestOptions {
 }
 
 class ApiClientClass {
-    private baseUrl = "http://localhost:86"; // TODO: read this from an env variable
+    private baseUrl = "https://localhost:86"; // Changed to HTTPS
 
     private async request<T>(
         route: string,
