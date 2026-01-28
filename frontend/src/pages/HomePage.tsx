@@ -32,26 +32,27 @@ export function HomePage() {
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
       <Paper sx={{ p: 4 }}>
-        <Typography variant="h4" gutterBottom>
-          Welcome, {user?.name}!
-        </Typography>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
+          <Typography variant="h4">
+            Welcome, {user?.name}!
+          </Typography>
+          <Typography variant="subtitle2" sx={{ color: "gray" }}>
+            {user?.email}
+          </Typography>
+        </Box>
         <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
           <Button onClick={apiCheck}>Check API Connection</Button>
-          <Button onClick={authCheck}>Check Auth Endpoint</Button>
+          <Button onClick={authCheck}>Check Auth Endpoint</Button><Button variant="outlined" onClick={logout}>
+            Logout
+          </Button>
         </Box>
         {apiOutput && (
           <Paper sx={{ mt: 2, p: 2, bgcolor: 'grey.700' }}>
             <Typography variant="body2">{apiOutput}</Typography>
           </Paper>
         )}
-        <Box sx={{ mb: 3, p: 2, bgcolor: 'success.main', borderRadius: 1 }}>
-          <Typography variant="h6">✓ Logged in</Typography>
-          <Typography variant="body2" color="text.secondary">
-            {user?.email}
-          </Typography>
-          <Button size="small" sx={{ mt: 1 }} onClick={logout}>
-            Logout
-          </Button>
+        <Box>
+          <Button href="/upload">Upload</Button>
         </Box>
       </Paper>
     </Container>

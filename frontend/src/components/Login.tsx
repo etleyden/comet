@@ -1,5 +1,14 @@
 import { useState } from 'react';
-import { Box, Button, FormGroup, TextField, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  FormGroup,
+  TextField,
+  Typography,
+  IconButton,
+  InputAdornment,
+} from '@mui/material';
+import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import Register from './Register';
 
@@ -11,6 +20,7 @@ export default function Login({ hideRegisterToggle = false }: { hideRegisterTogg
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const { login, isAuthenticated } = useAuth();
 
@@ -51,9 +61,23 @@ export default function Login({ hideRegisterToggle = false }: { hideRegisterTogg
           <TextField
             label="Password"
             variant="outlined"
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             value={password}
             onChange={e => setPassword(e.target.value)}
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton
+                    aria-label="toggle password visibility"
+                    onClick={() => setShowPassword(!showPassword)}
+                    onMouseDown={e => e.preventDefault()}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
           />
           {error && (
             <Typography color="error" variant="body2">
