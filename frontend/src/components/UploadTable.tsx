@@ -1,4 +1,6 @@
 import { useMemo } from 'react';
+import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
+import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import {
     useReactTable,
     getCoreRowModel,
@@ -31,18 +33,23 @@ import { useState } from 'react';
 
 interface UploadTableProps {
     data: any[];
-    columns: string[];
 }
 
-export default function UploadTable({ data, columns }: UploadTableProps) {
+export default function UploadTable({ data }: UploadTableProps) {
     const [sorting, setSorting] = useState<SortingState>([]);
     const [globalFilter, setGlobalFilter] = useState('');
     const [pagination, setPagination] = useState({
         pageIndex: 0,
-        pageSize: 10,
+        pageSize: 25,
     });
 
-    // Create column definitions from the CSV column names
+    // Automatically infer columns from the data
+    const columns = useMemo(() => {
+        if (!data || data.length === 0) return [];
+        return Object.keys(data[0]);
+    }, [data]);
+
+    // Create column definitions from the inferred column names
     const columnDefs = useMemo<ColumnDef<any>[]>(
         () =>
             columns.map((col) => ({
@@ -70,6 +77,10 @@ export default function UploadTable({ data, columns }: UploadTableProps) {
         getPaginationRowModel: getPaginationRowModel(),
     });
 
+    if(data.length === 0) {
+        return <div>No data to display</div>;
+    }
+
     return (
         <Box>
             <TextField
@@ -90,17 +101,17 @@ export default function UploadTable({ data, columns }: UploadTableProps) {
                                         key={header.id}
                                         onClick={header.column.getToggleSortingHandler()}
                                         sx={{ cursor: 'pointer', fontWeight: 'bold' }}
-                                    >
-                                        {header.isPlaceholder
-                                            ? null
-                                            : flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext()
-                                            )}
-                                        {{
-                                            asc: ' 🔼',
-                                            desc: ' 🔽',
-                                        }[header.column.getIsSorted() as string] ?? null}
+                                    ><Box sx={{ display: "flex", alignContent: "center" }}><Box>{{
+                                        asc: <ArrowDropUpIcon fontSize="small" />,
+                                        desc: <ArrowDropDownIcon fontSize="small" />,
+                                    }[header.column.getIsSorted() as string] ?? null}</Box>
+                                            <Box>{header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                    header.column.columnDef.header,
+                                                    header.getContext()
+                                                )}</Box>
+                                        </Box>
                                     </TableCell>
                                 ))}
                             </TableRow>
@@ -134,7 +145,7 @@ export default function UploadTable({ data, columns }: UploadTableProps) {
                         pageIndex: 0,
                     }))
                 }
-                rowsPerPageOptions={[5, 10, 25, 50]}
+                rowsPerPageOptions={[5, 25, 50, 100]}
             />
         </Box>
     );

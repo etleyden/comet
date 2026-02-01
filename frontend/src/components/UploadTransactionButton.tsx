@@ -1,7 +1,8 @@
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { Button, styled } from '@mui/material';
+import Papa from 'papaparse';
 
-const VisuallyHiddenInput = styled('input')({
+const HiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
     clipPath: 'inset(50%)',
     height: 1,
@@ -19,6 +20,20 @@ export default function UploadTransactionButton(props: {
     const handleUpload = (files: FileList | null) => {
         if (!files) return;
 
+        Array.from(files).forEach((file) => {
+            Papa.parse(file, {
+                header: true, // Use first row as keys
+                skipEmptyLines: true,
+                complete: (results) => {
+                    if (props.onFileUpload && results.data) {
+                        props.onFileUpload(results.data);
+                    }
+                },
+                error: (error) => {
+                    console.error('Error parsing CSV:', error);
+                }
+            });
+        });
     }
     return (<>
         <Button
@@ -29,7 +44,7 @@ export default function UploadTransactionButton(props: {
             startIcon={<CloudUploadIcon />}
         >
             Import CSV
-            <VisuallyHiddenInput
+            <HiddenInput
                 type="file"
                 onChange={(event) => handleUpload(event.target.files)}
                 multiple
