@@ -13,6 +13,33 @@
       "skipFiles": ["<node_internals>/**"],
       "sourceMaps": true,
       "protocol": "inspector"
+    },
+    {
+      "name": "Debug Frontend in Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "url": "https://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend/src",
+      "preLaunchTask": "Start Vite Dev Server",
+      "sourceMaps": true,
+      "sourceMapPathOverrides": {
+        "webpack:///*": "${webRoot}/*"
+      }
+    },
+    {
+      "name": "Debug Frontend (Server Running)",
+      "type": "chrome",
+      "request": "launch",
+      "url": "https://localhost:3000",
+      "webRoot": "${workspaceFolder}/frontend/src",
+      "sourceMaps": true
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Full Stack",
+      "configurations": ["Attach to Docker Backend", "Debug Frontend (Server Running)"],
+      "stopAll": true
     }
   ]
 }
