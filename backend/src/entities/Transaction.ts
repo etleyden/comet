@@ -7,6 +7,7 @@ import {
   ManyToOne,
 } from 'typeorm';
 import Account from './Account';
+import Category from './Category';
 
 @Entity()
 export default class Transaction {
@@ -16,14 +17,14 @@ export default class Transaction {
   @ManyToOne(() => Account, account => account.id)
   account!: Account;
 
-  @Column('decimal', { precision: 10, scale: 2 })
+  @Column('decimal', { precision: 20, scale: 2 })
   amount!: number;
 
   @Column()
   date!: Date;
 
-  @Column()
-  category!: string;
+  @ManyToOne(() => Category, { nullable: true })
+  category?: Category;
 
   @Column()
   notes?: string;
@@ -34,6 +35,9 @@ export default class Transaction {
     default: 'completed',
   })
   status!: 'pending' | 'completed' | 'cancelled';
+
+  @Column('jsonb')
+  raw!: Record<string, any>;
 
   @CreateDateColumn()
   createdAt!: Date;

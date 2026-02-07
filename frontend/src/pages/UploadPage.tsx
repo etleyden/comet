@@ -1,6 +1,7 @@
 import { useState } from "react";
 import UploadTransactionButton from "../components/UploadTransactionButton";
 import UploadTable from "../components/UploadTable";
+import TransactionMappingTable from "../components/TransactionMappingTable";
 
 export default function UploadPage() {
     const [data, setData] = useState<any[]>([]);
@@ -9,6 +10,7 @@ export default function UploadPage() {
         }
     return (<>
         <UploadTransactionButton onFileUpload={handleUpload} />
-        <UploadTable data={data} />
+        <TransactionMappingTable data={data} />
+        {/* <UploadTable data={data} /> */}
     </>)
 }
