@@ -1,5 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ProtectedRoute } from './components/ProtectedRoute';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { HomePage } from './pages/HomePage';
@@ -40,7 +40,7 @@ function App() {
           path="/upload"
           element={
             <ProtectedRoute>
-              <UploadPage/>
+              <UploadPage />
             </ProtectedRoute>
           }
         />
