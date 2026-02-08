@@ -14,7 +14,7 @@ const HiddenInput = styled('input')({
     width: 1,
 });
 
-export default function UploadTransactionButton(props: {
+export default function ImportCSVButton(props: {
     onFileUpload?: (data: any[]) => void;
 }) {
     const handleUpload = (files: FileList | null) => {

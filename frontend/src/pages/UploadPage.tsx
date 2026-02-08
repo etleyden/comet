@@ -1,16 +1,32 @@
 import { useState } from "react";
-import UploadTransactionButton from "../components/UploadTransactionButton";
-import UploadTable from "../components/UploadTable";
-import TransactionMappingTable from "../components/TransactionMappingTable";
+import TransactionMappingTable from "../components/upload/TransactionMappingTable";
+import Button from "@mui/material/Button";
+import ImportCSVButton from "../components/upload/UploadTransactionButton";
+
+type UploadPageState = "EMPTY" | "MAPPING" | "LOADING";
 
 export default function UploadPage() {
     const [data, setData] = useState<any[]>([]);
-    const handleUpload = (data: any[]) => {
+    const [columnMappings, setColumnMappings] = useState<Record<string, string>>({});
+    const [pageState, setPageState] = useState<UploadPageState>("EMPTY");
+
+    const handleCSVImport = (data: any[]) => {
         setData(data);
-        }
+        setPageState("MAPPING");
+    };
+
+    const handleFileUpload = () => {
+        setPageState("LOADING");
+
+    }
+
     return (<>
-        <UploadTransactionButton onFileUpload={handleUpload} />
-        <TransactionMappingTable data={data} />
-        {/* <UploadTable data={data} /> */}
+        {pageState === "EMPTY" && <ImportCSVButton onFileUpload={handleCSVImport} />}
+        {pageState === "MAPPING" && (<>
+            <Button onClick={handleFileUpload}>
+                Upload
+            </Button>
+            <TransactionMappingTable data={data} onMappingChange={setColumnMappings} />
+        </>)}
     </>)
 }
