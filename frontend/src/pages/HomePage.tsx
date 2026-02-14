@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Box, Typography, Button, Container, Paper } from '@mui/material';
-import { healthApi, postsApi } from '../../apiClient';
+import { healthApi, postsApi } from '../../api';
 
 /**
  * The page users see when they first log in.
