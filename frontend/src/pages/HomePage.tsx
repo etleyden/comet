@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Box, Typography, Button, Container, Paper } from '@mui/material';
-import ApiClient from '../../api/apiClient';
+import { healthApi, postsApi } from '../../apiClient';
 
 /**
  * The page users see when they first log in.
@@ -12,8 +12,7 @@ export function HomePage() {
 
   const apiCheck = async () => {
     try {
-      const response = await ApiClient.get('/health');
-      const data = response as { status: string };
+      const data = await healthApi.check();
       setApiOutput(`API is healthy: ${data.status}`);
     } catch (error) {
       setApiOutput(`API health check failed: ${(error as Error).message}`);
@@ -22,7 +21,7 @@ export function HomePage() {
 
   const authCheck = async () => {
     try {
-      const response = await ApiClient.get('/api/posts');
+      const response = await postsApi.list();
       setApiOutput(`Auth check successful: ${JSON.stringify(response)}`);
     } catch (error) {
       setApiOutput(`Auth check failed: ${(error as Error).message}`);

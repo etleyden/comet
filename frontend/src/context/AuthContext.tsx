@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { User } from 'shared';
-import ApiClient from '../../api/apiClient';
+import { authApi } from '../../apiClient';
 
 interface AuthContextType {
   user: User | null;
@@ -9,11 +9,6 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
-}
-
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,11 +24,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkAuth = async () => {
     try {
-      // Try to get current user from session
-      const response = await ApiClient.get<ApiResponse<User>>('/auth/me');
-      setUser(response.data);
+      const response = await authApi.getMe();
+      if (response.success) {
+        setUser(response.data);
+      } else {
+        setUser(null);
+      }
     } catch (error) {
-      // User is not logged in
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -42,11 +39,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await ApiClient.post<ApiResponse<User>>('/api/auth/login', {
-        email,
-        password,
-      });
-      setUser(response.data);
+      const response = await authApi.login({ email, password });
+      if (response.success) {
+        setUser(response.data);
+      } else {
+        throw new Error(response.error);
+      }
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -55,12 +53,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const register = async (name: string, email: string, password: string) => {
     try {
-      const response = await ApiClient.post<ApiResponse<User>>('/auth/register', {
-        name,
-        email,
-        password,
-      });
-      setUser(response.data);
+      const response = await authApi.register({ name, email, password });
+      if (response.success) {
+        setUser(response.data);
+      } else {
+        throw new Error(response.error);
+      }
     } catch (error) {
       console.error('Registration failed:', error);
       throw error;
@@ -69,7 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await ApiClient.post('/api/auth/logout');
+      await authApi.logout();
       setUser(null);
     } catch (error) {
       console.error('Logout failed:', error);
