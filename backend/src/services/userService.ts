@@ -174,6 +174,16 @@ export class UserService {
     const db = getDB();
     await db.delete(Session, { id: sessionId });
   }
+  /**
+   * Invalidate a session given a full session token (id.secret).
+   * Extracts the session ID and deletes it.
+   */
+  async invalidateSessionByToken(token: string): Promise<void> {
+    const tokenParts = token.split('.');
+    if (tokenParts.length === 2) {
+      await this.deleteSession(tokenParts[0]);
+    }
+  }
   async listUsers(): Promise<User[]> {
     const db = getDB();
     const users = await db.find(User);

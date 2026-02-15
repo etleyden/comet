@@ -4,7 +4,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "outDir": "./dist",
-    "rootDir": "./src",
+    "baseUrl": "..",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -13,7 +13,7 @@
     "experimentalDecorators": true,
     "sourceMap": true,
     "paths": {
-      "shared": ["../shared/src/index.ts"]
+      "shared": ["shared/src/index.ts"]
     }
   },
   "include": ["src/**/*"],

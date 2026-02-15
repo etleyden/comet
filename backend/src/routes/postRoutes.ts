@@ -2,6 +2,8 @@ import { Express } from 'express';
 import { z } from 'zod';
 import { createEndpoint } from '../utils/createEndpoint';
 import { requireAuth } from '../middleware/auth';
+import { AuthenticatedRequest } from '../types/api';
+import type { Post } from 'shared';
 
 const CreatePostSchema = z.object({
   title: z.string().min(3),
@@ -13,13 +15,13 @@ export function postRoutes(app: Express) {
   app.post(
     '/api/posts',
     requireAuth(),
-    createEndpoint({
+    createEndpoint<z.infer<typeof CreatePostSchema>, Post, AuthenticatedRequest>({
       schema: CreatePostSchema,
-      handler: async (input, req) => {
-        const post = {
+      handler: async (input, req): Promise<Post> => {
+        const post: Post = {
           id: Math.random().toString(36).slice(2, 9),
           ...input,
-          authorId: req.user!.id, // User is guaranteed to exist due to requireAuth()
+          authorId: req.user.id,
           createdAt: new Date().toISOString(),
         };
         return post;
@@ -31,9 +33,9 @@ export function postRoutes(app: Express) {
   app.get(
     '/api/posts',
     requireAuth(),
-    createEndpoint({
+    createEndpoint<unknown, Post[], AuthenticatedRequest>({
       inputSource: 'query',
-      handler: async () => {
+      handler: async (): Promise<Post[]> => {
         return [
           {
             id: '1',

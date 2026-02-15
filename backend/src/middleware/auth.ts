@@ -2,12 +2,14 @@ import { Request, Response, NextFunction } from 'express';
 import { UserService } from '../services/userService';
 import User from '../entities/User';
 
-// Extend Express Request type to include user
+// Extend Express Request to allow middleware to attach auth properties.
+// Route handlers should use AuthenticatedRequest (from types/api.ts) for
+// non-optional access to user/authSession behind requireAuth().
 declare global {
   namespace Express {
     interface Request {
       user?: User;
-      session?: { id: string; userId: string };
+      authSession?: { id: string; userId: string };
     }
   }
 }
@@ -70,7 +72,7 @@ export function requireAuth(options: AuthOptions = {}) {
 
       // Attach user and session to request
       req.user = session.user;
-      req.session = {
+      req.authSession = {
         id: session.id,
         userId: session.user.id,
       };

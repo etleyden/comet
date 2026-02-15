@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { EndpointConfig } from '../types/api';
 
-export function createEndpoint<TInput, TOutput>(config: EndpointConfig<TInput, TOutput>) {
+export function createEndpoint<TInput, TOutput, TReq extends Request = Request>(
+  config: EndpointConfig<TInput, TOutput, TReq>
+) {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
       // Validate input if schema provided
@@ -14,8 +16,9 @@ export function createEndpoint<TInput, TOutput>(config: EndpointConfig<TInput, T
         input = dataSource as TInput;
       }
 
-      // Execute handler
-      const result = await config.handler(input, req, res);
+      // Execute handler — cast is safe because middleware (e.g. requireAuth)
+      // has already validated and attached the required properties to req
+      const result = await config.handler(input, req as TReq, res);
 
       // Send response
       res.json({ success: true, data: result });
