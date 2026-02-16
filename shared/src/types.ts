@@ -13,6 +13,13 @@ export interface Session {
   expiresAt: Date;
 }
 
+export interface UploadRecord {
+  id: string;
+  userId: string;
+  mapping: Record<string, string>;
+  createdAt: Date;
+}
+
 export interface Transaction {
   id: string;
   amount: number;

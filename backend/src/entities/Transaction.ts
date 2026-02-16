@@ -8,12 +8,19 @@ import {
 } from 'typeorm';
 import Account from './Account';
 import Category from './Category';
+import UploadRecord from './UploadRecord';
 
 @Entity()
 export default class Transaction {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  @ManyToOne(() => UploadRecord, upload => upload.id)
+  upload!: UploadRecord;
+
+  // Accounts are linked per transaction instead of per upload
+  // since we'll probably need to retrieve account from transaction quite often
+  // so this reduces joins
   @ManyToOne(() => Account, account => account.id)
   account!: Account;
 
