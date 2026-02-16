@@ -32,6 +32,8 @@ export interface Transaction {
 
 export interface Account {
   id: string;
+  name: string;
+  institution?: string;
   account: string;
   routing: string;
 }
@@ -82,6 +84,15 @@ export interface LogoutResponse {
 export interface CreatePostRequest {
   title: string;
   content: string;
+}
+
+// ─── Accounts API Types ──────────────────────────────────────────────
+
+export interface CreateAccountRequest {
+  name: string;
+  institution?: string;
+  account: string;
+  routing: string;
 }
 
 // ─── Health API Types ────────────────────────────────────────────────

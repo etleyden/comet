@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Box, Typography, Button, Container, Paper } from '@mui/material';
 import { healthApi, postsApi } from '../../api';
+import { Link } from 'react-router-dom';
 
 /**
  * The page users see when they first log in.
@@ -35,9 +36,11 @@ export function HomePage() {
           <Typography variant="h4">
             Welcome, {user?.name}!
           </Typography>
-          <Typography variant="subtitle2" sx={{ color: "gray" }}>
-            {user?.email}
-          </Typography>
+          <Link to="/experiments" >
+            <Typography variant="subtitle2" sx={{ textDecoration: "none", color: "gray" }}>
+              {user?.email}
+            </Typography>
+          </Link>
         </Box>
         <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
           <Button onClick={apiCheck}>Check API Connection</Button>
@@ -54,6 +57,6 @@ export function HomePage() {
           <Button href="/upload">Upload</Button>
         </Box>
       </Paper>
-    </Container>
+    </Container >
   );
 }

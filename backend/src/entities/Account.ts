@@ -6,11 +6,17 @@ export default class Account {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ unique: true })
-  account!: string; // Added definite assignment assertion
+  @Column()
+  name!: string; // Added definite assignment assertion
 
   @Column()
-  routing!: string; // Added definite assignment assertion
+  institution?: string;
+
+  @Column({ unique: true })
+  account?: string; // Added definite assignment assertion
+
+  @Column()
+  routing?: string; // Added definite assignment assertion
 
   @ManyToMany(() => User, user => user.accounts)
   users!: User[]; // Added definite assignment assertion
