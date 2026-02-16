@@ -6,7 +6,9 @@ import { accountsApi } from "../../../api";
 /**
  * UI component used to create a new account for a user to track
  */
-export default function AccountCreation() {
+export default function AccountCreation(props: {
+    onAccountCreated?: () => void;
+}) {
     const [formData, setFormData] = useState({
         accountName: "",
         institution: "",
@@ -45,6 +47,8 @@ export default function AccountCreation() {
                     accountNumber: "",
                     routingNumber: "",
                 });
+                // Notify parent component
+                props.onAccountCreated?.();
             } else {
                 setError(response.error);
             }
