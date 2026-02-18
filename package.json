@@ -14,7 +14,10 @@
     "dev:frontend": "npm --prefix frontend run dev",
     "clean": "docker system prune --all -f && docker volume prune --all -f",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\""
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "test": "npm run test --workspaces --if-present",
+    "test:unit": "npm run test:unit --workspaces --if-present",
+    "test:integration": "npm run test:integration --workspaces --if-present"
   },
   "dependencies": {
     "@fontsource/roboto": "^5.2.9"
