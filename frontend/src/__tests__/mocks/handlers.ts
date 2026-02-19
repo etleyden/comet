@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { testUser, testAccount, testAccount2 } from '../fixtures/entities';
-import type { ApiResponse, AuthUser, User, Account, LogoutResponse } from 'shared';
+import type { ApiResponse, AuthUser, User, Account, LogoutResponse, UploadTransactionsResponse } from 'shared';
 
 const BASE_URL = 'https://localhost:86';
 
@@ -63,6 +63,21 @@ export const handlers = [
         institution: body.institution as string | undefined,
         account: body.account as string,
         routing: body.routing as string,
+      },
+    };
+    return HttpResponse.json(response);
+  }),
+
+  // ─── Transaction Handlers ────────────────────────────────────────────
+
+  http.post(`${BASE_URL}/api/transactions/upload`, async ({ request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    const transactions = body.transactions as unknown[];
+    const response: ApiResponse<UploadTransactionsResponse> = {
+      success: true,
+      data: {
+        uploadRecordId: '880e8400-e29b-41d4-a716-446655440000',
+        transactionCount: transactions?.length ?? 0,
       },
     };
     return HttpResponse.json(response);

@@ -95,6 +95,19 @@ export interface CreateAccountRequest {
   routing: string;
 }
 
+// ─── Transactions API Types ──────────────────────────────────────────
+
+export interface UploadTransactionsRequest {
+  accountId: string;
+  mapping: Record<string, string>;
+  transactions: Record<string, any>[];
+}
+
+export interface UploadTransactionsResponse {
+  uploadRecordId: string;
+  transactionCount: number;
+}
+
 // ─── Health API Types ────────────────────────────────────────────────
 
 export interface HealthStatus {
