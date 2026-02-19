@@ -1,88 +1,77 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import { createTestApp } from '@test/utils/testApp';
-import { testCreateAccountData, testAccount, testAccount2, testUser } from '@test/fixtures';
+import { setupTestDb, resetTestDb, teardownTestDb } from '@test/utils/testDb';
+import { UserService } from '../services/userService';
 
-// Mock the data-source module
-vi.mock('../data-source', () => ({
-  getDB: vi.fn(),
-}));
-
-import { getDB } from '../data-source';
-
-const mockedGetDB = vi.mocked(getDB);
-
-// Helper: mock a valid session so requireAuth() passes.
-// Cookie value: "session=test-session-id.secret" → session ID = "test-session-id", secret = "secret"
-// The secretHash stored in the DB must be SHA-256("secret") encoded as base64.
-const TEST_SESSION_SECRET_HASH = 'K7gNU3sdo+OL0wNhqoVWhr3g6s1xYv72ol/pe/Unols=';
-
-function mockAuthenticatedUser(mockDB: Record<string, any>) {
-  mockDB.findOne.mockResolvedValue({
-    id: 'test-session-id',
-    secretHash: TEST_SESSION_SECRET_HASH,
-    createdAt: new Date(),
-    user: testUser,
-  });
-}
+// Redirect ALL data-source imports (routes, middleware, services) to the test DB
+vi.mock('../data-source', async () => {
+  const testDb = await import('@test/utils/testDb');
+  return { getDB: () => testDb.getTestDB() };
+});
 
 describe('Account Routes (Integration)', () => {
   const app = createTestApp();
-  let mockDB: Record<string, any>;
-  let mockQB: Record<string, any>;
+  let sessionToken: string;
 
-  beforeEach(() => {
-    mockQB = {
-      select: vi.fn().mockReturnThis(),
-      addSelect: vi.fn().mockReturnThis(),
-      where: vi.fn().mockReturnThis(),
-      andWhere: vi.fn().mockReturnThis(),
-      innerJoin: vi.fn().mockReturnThis(),
-      leftJoin: vi.fn().mockReturnThis(),
-      relation: vi.fn().mockReturnThis(),
-      of: vi.fn().mockReturnThis(),
-      add: vi.fn().mockResolvedValue(undefined),
-      getOne: vi.fn(),
-      getMany: vi.fn(),
-    };
-
-    mockDB = {
-      save: vi.fn(),
-      findOneBy: vi.fn(),
-      findOne: vi.fn(),
-      find: vi.fn(),
-      delete: vi.fn(),
-      createQueryBuilder: vi.fn().mockReturnValue(mockQB),
-    };
-
-    mockedGetDB.mockReturnValue(mockDB as any);
-    vi.clearAllMocks();
-    mockedGetDB.mockReturnValue(mockDB as any);
+  beforeAll(async () => {
+    await setupTestDb();
   });
+
+  beforeEach(async () => {
+    await resetTestDb();
+    // Seed a user + session so authenticated requests work
+    const userService = new UserService();
+    const user = await userService.createUser('Test User', 'test@example.com', 'password123');
+    const session = await userService.createSession(user);
+    sessionToken = session.token;
+  });
+
+  afterAll(async () => {
+    await teardownTestDb();
+  });
+
+  // ── POST /api/accounts ────────────────────────────────────────────
 
   describe('POST /api/accounts', () => {
     it('should return 401 when not authenticated', async () => {
       const response = await request(app)
         .post('/api/accounts')
-        .send(testCreateAccountData)
+        .send({ name: 'Checking', account: '12345678', routing: '021000021' })
         .expect(401);
 
       expect(response.body.success).toBe(false);
     });
 
     it('should return 400 with invalid account data', async () => {
-      mockAuthenticatedUser(mockDB);
-
       const response = await request(app)
         .post('/api/accounts')
-        .set('Cookie', 'session=test-session-id.secret')
+        .set('Cookie', `session=${sessionToken}`)
         .send({ name: '' }) // Missing required fields
         .expect(400);
 
       expect(response.body.success).toBe(false);
       expect(response.body.error).toBe('Validation error');
     });
+
+    it('should create an account successfully', async () => {
+      const response = await request(app)
+        .post('/api/accounts')
+        .set('Cookie', `session=${sessionToken}`)
+        .send({ name: 'Primary Checking', institution: 'Test Bank', account: '12345678', routing: '021000021' })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toMatchObject({
+        name: 'Primary Checking',
+        account: '12345678',
+        routing: '021000021',
+      });
+      expect(response.body.data.id).toBeDefined();
+    });
   });
+
+  // ── GET /api/accounts ─────────────────────────────────────────────
 
   describe('GET /api/accounts', () => {
     it('should return 401 when not authenticated', async () => {
@@ -91,6 +80,51 @@ describe('Account Routes (Integration)', () => {
         .expect(401);
 
       expect(response.body.success).toBe(false);
+    });
+
+    it('should return accounts for the authenticated user', async () => {
+      // Create two accounts via the API
+      await request(app)
+        .post('/api/accounts')
+        .set('Cookie', `session=${sessionToken}`)
+        .send({ name: 'Checking', institution: 'Test Bank', account: '11111111', routing: '021000021' });
+
+      await request(app)
+        .post('/api/accounts')
+        .set('Cookie', `session=${sessionToken}`)
+        .send({ name: 'Savings', institution: 'Test Credit Union', account: '22222222', routing: '021000089' });
+
+      const response = await request(app)
+        .get('/api/accounts')
+        .set('Cookie', `session=${sessionToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(2);
+      expect(response.body.data.map((a: any) => a.name)).toEqual(
+        expect.arrayContaining(['Checking', 'Savings'])
+      );
+    });
+
+    it('should not return accounts belonging to another user', async () => {
+      // Create account under first user
+      await request(app)
+        .post('/api/accounts')
+        .set('Cookie', `session=${sessionToken}`)
+        .send({ name: 'User1 Account', institution: 'Test Bank', account: '11111111', routing: '021000021' });
+
+      // Create a second user + session
+      const userService = new UserService();
+      const user2 = await userService.createUser('User Two', 'user2@example.com', 'password123');
+      const session2 = await userService.createSession(user2);
+
+      const response = await request(app)
+        .get('/api/accounts')
+        .set('Cookie', `session=${session2.token}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(0);
     });
   });
 });

@@ -1,44 +1,50 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 import { UserService } from './userService';
-import { createMockEntityManager } from '@test/mocks';
-import { testUser, TEST_PASSWORD } from '@test/fixtures';
+import { setupTestDb, getTestDB, resetTestDb, teardownTestDb } from '@test/utils/testDb';
+import User from '../entities/User';
 
-// Mock the data-source module so UserService doesn't need a real DB
-vi.mock('../data-source', () => ({
-  getDB: vi.fn(),
-}));
-
-import { getDB } from '../data-source';
-
-const mockedGetDB = vi.mocked(getDB);
+// Redirect data-source imports to the testcontainer-backed database
+vi.mock('../data-source', async () => {
+  const testDb = await import('@test/utils/testDb');
+  return { getDB: () => testDb.getTestDB() };
+});
 
 describe('UserService', () => {
   let userService: UserService;
-  let mockDB: ReturnType<typeof createMockEntityManager>;
 
-  beforeEach(() => {
-    userService = new UserService();
-    mockDB = createMockEntityManager();
-    mockedGetDB.mockReturnValue(mockDB as any);
-    vi.clearAllMocks();
+  beforeAll(async () => {
+    await setupTestDb();
   });
+
+  beforeEach(async () => {
+    await resetTestDb();
+    userService = new UserService();
+  });
+
+  afterAll(async () => {
+    await teardownTestDb();
+  });
+
+  // ── Pure helper methods (no DB) ────────────────────────────────────
 
   describe('hashPassword / verifyPassword', () => {
     it('should hash a password and verify it correctly', async () => {
-      const hash = await userService.hashPassword(TEST_PASSWORD);
-      expect(hash).not.toBe(TEST_PASSWORD);
+      const hash = await userService.hashPassword('password123');
+      expect(hash).not.toBe('password123');
       expect(hash.length).toBeGreaterThan(0);
 
-      const isValid = await userService.verifyPassword(TEST_PASSWORD, hash);
+      const isValid = await userService.verifyPassword('password123', hash);
       expect(isValid).toBe(true);
     });
 
     it('should reject an incorrect password', async () => {
-      const hash = await userService.hashPassword(TEST_PASSWORD);
+      const hash = await userService.hashPassword('password123');
       const isValid = await userService.verifyPassword('wrongpassword', hash);
       expect(isValid).toBe(false);
     });
   });
+
+  // ── Token validation ───────────────────────────────────────────────
 
   describe('validateSessionToken', () => {
     it('should return null for a token without a dot separator', async () => {
@@ -52,75 +58,73 @@ describe('UserService', () => {
     });
 
     it('should return null when session is not found', async () => {
-      mockDB.findOne.mockResolvedValue(null);
-      const result = await userService.validateSessionToken('sessionid.secret');
+      const result = await userService.validateSessionToken('nonexistent.secret');
       expect(result).toBeNull();
     });
+
+    it('should return the session for a valid token', async () => {
+      const user = await userService.createUser('Test', 'test@example.com', 'password123');
+      const session = await userService.createSession(user);
+
+      const result = await userService.validateSessionToken(session.token);
+      expect(result).not.toBeNull();
+      expect(result!.user.id).toBe(user.id);
+    });
   });
+
+  // ── User creation ─────────────────────────────────────────────────
 
   describe('createUser', () => {
     it('should throw if user with email already exists', async () => {
-      mockDB.findOneBy.mockResolvedValue(testUser);
+      await userService.createUser('First', 'duplicate@example.com', 'password123');
 
       await expect(
-        userService.createUser('Test', testUser.email, TEST_PASSWORD)
+        userService.createUser('Second', 'duplicate@example.com', 'password456')
       ).rejects.toThrow('User with this email already exists');
     });
 
-    it('should save a new user when email is not taken', async () => {
-      mockDB.findOneBy.mockResolvedValue(null);
-      mockDB.save.mockResolvedValue({ ...testUser, passwordHash: 'hashed' });
+    it('should save a new user and return it', async () => {
+      const result = await userService.createUser('Test User', 'test@example.com', 'password123');
 
-      const result = await userService.createUser(testUser.name, testUser.email, TEST_PASSWORD);
+      expect(result.id).toBeDefined();
+      expect(result.name).toBe('Test User');
+      expect(result.email).toBe('test@example.com');
 
-      expect(mockDB.save).toHaveBeenCalledTimes(1);
-      expect(result.email).toBe(testUser.email);
-      expect(result.name).toBe(testUser.name);
+      // Verify actually persisted
+      const db = getTestDB();
+      const saved = await db.findOneBy(User, { id: result.id });
+      expect(saved).not.toBeNull();
+      expect(saved!.email).toBe('test@example.com');
     });
   });
 
+  // ── Authentication ─────────────────────────────────────────────────
+
   describe('authenticateUser', () => {
     it('should throw for a non-existent email', async () => {
-      const mockQB = {
-        addSelect: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        getOne: vi.fn().mockResolvedValue(null),
-      };
-      mockDB.createQueryBuilder.mockReturnValue(mockQB as any);
-
       await expect(
-        userService.authenticateUser('nonexistent@example.com', TEST_PASSWORD)
+        userService.authenticateUser('nobody@example.com', 'password123')
       ).rejects.toThrow('Invalid login credentials');
     });
 
     it('should throw for an incorrect password', async () => {
-      const hash = await userService.hashPassword(TEST_PASSWORD);
-      const mockQB = {
-        addSelect: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        getOne: vi.fn().mockResolvedValue({ ...testUser, passwordHash: hash }),
-      };
-      mockDB.createQueryBuilder.mockReturnValue(mockQB as any);
+      await userService.createUser('Test', 'test@example.com', 'password123');
 
       await expect(
-        userService.authenticateUser(testUser.email, 'wrongpassword')
+        userService.authenticateUser('test@example.com', 'wrongpassword')
       ).rejects.toThrow('Invalid login credentials');
     });
 
     it('should return the user for correct credentials', async () => {
-      const hash = await userService.hashPassword(TEST_PASSWORD);
-      const userWithHash = { ...testUser, passwordHash: hash };
-      const mockQB = {
-        addSelect: vi.fn().mockReturnThis(),
-        where: vi.fn().mockReturnThis(),
-        getOne: vi.fn().mockResolvedValue(userWithHash),
-      };
-      mockDB.createQueryBuilder.mockReturnValue(mockQB as any);
+      await userService.createUser('Test', 'test@example.com', 'password123');
 
-      const result = await userService.authenticateUser(testUser.email, TEST_PASSWORD);
-      expect(result.email).toBe(testUser.email);
+      const result = await userService.authenticateUser('test@example.com', 'password123');
+      expect(result.email).toBe('test@example.com');
+      expect(result.name).toBe('Test');
     });
   });
+
+  // ── Session management ─────────────────────────────────────────────
 
   describe('createSession', () => {
     it('should throw if user has no id', async () => {
@@ -128,23 +132,53 @@ describe('UserService', () => {
     });
 
     it('should throw if user is not found in the database', async () => {
-      mockDB.findOneBy.mockResolvedValue(null);
-      await expect(userService.createSession({ id: 'nonexistent' })).rejects.toThrow('Invalid user');
+      await expect(
+        userService.createSession({ id: '550e8400-e29b-41d4-a716-446655440099' })
+      ).rejects.toThrow('Invalid user');
+    });
+
+    it('should create a session for a valid user', async () => {
+      const user = await userService.createUser('Test', 'test@example.com', 'password123');
+      const session = await userService.createSession(user);
+
+      expect(session.token).toBeDefined();
+      expect(session.token).toContain('.');
+      expect(session.id).toBeDefined();
     });
   });
 
   describe('invalidateSessionByToken', () => {
-    it('should extract session ID and delete it', async () => {
-      mockDB.delete.mockResolvedValue({ affected: 1 });
+    it('should delete the session so it can no longer be validated', async () => {
+      const user = await userService.createUser('Test', 'test@example.com', 'password123');
+      const session = await userService.createSession(user);
 
-      await userService.invalidateSessionByToken('sessionid.secret');
+      // Session is valid before invalidation
+      expect(await userService.validateSessionToken(session.token)).not.toBeNull();
 
-      expect(mockDB.delete).toHaveBeenCalledWith(expect.anything(), { id: 'sessionid' });
+      await userService.invalidateSessionByToken(session.token);
+
+      // Session is gone after invalidation
+      expect(await userService.validateSessionToken(session.token)).toBeNull();
     });
 
     it('should do nothing if token format is invalid', async () => {
+      // Should not throw
       await userService.invalidateSessionByToken('invalidtoken');
-      expect(mockDB.delete).not.toHaveBeenCalled();
+    });
+  });
+
+  // ── Listing ────────────────────────────────────────────────────────
+
+  describe('listUsers', () => {
+    it('should return all users', async () => {
+      await userService.createUser('Alice', 'alice@example.com', 'password123');
+      await userService.createUser('Bob', 'bob@example.com', 'password123');
+
+      const users = await userService.listUsers();
+      expect(users).toHaveLength(2);
+      expect(users.map((u) => u.email)).toEqual(
+        expect.arrayContaining(['alice@example.com', 'bob@example.com'])
+      );
     });
   });
 });

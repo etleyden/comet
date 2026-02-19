@@ -12,8 +12,8 @@ export default mergeConfig(baseConfig, defineConfig({
     outputFile: {
       json: '../reports/backend/integration-test-results.json',
     },
-    // Integration tests may need longer timeouts for DB operations
+    // Integration tests may need longer timeouts for DB + container operations
     testTimeout: 15000,
-    hookTimeout: 15000,
+    hookTimeout: 30000,
   },
 }));
