@@ -40,9 +40,9 @@ describe('User Routes (Integration)', () => {
       expect(response.body.data.name).toBe('New User');
 
       // Session cookie should be set
-      const cookies = response.headers['set-cookie'];
+      const cookies = response.headers['set-cookie'] as unknown as string[];
       expect(cookies).toBeDefined();
-      expect(cookies.startsWith('session=')).toBe(true);
+      expect(cookies.some((c) => c.startsWith('session='))).toBe(true);
     });
 
     it('should return 400 for invalid registration data', async () => {
