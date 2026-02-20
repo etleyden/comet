@@ -1,6 +1,6 @@
 # Comet
 
-A personal finance application for importing, categorizing, and tracking transactions across bank accounts. Upload CSV exports from your bank, map columns to the expected fields, and maintain a structured transaction history with categories.
+A personal finance application for tracking your personal finances. Core objective is to provide extensive analytics for data-focused users.
 
 ## Tech Stack
 
@@ -191,7 +191,3 @@ If ports 86, 3000, or 5431 are in use, change the host-side port mappings in `do
 1. Ensure containers are running: `docker ps`
 2. Check database logs: `docker logs db`
 3. Verify `.env` values match `docker-compose.yml`
-
-## License
-
-MIT
