@@ -16,11 +16,11 @@
       "shared": [
         "shared/src/index.ts"
       ],
-      "@test": [
-        "backend/src/__tests__/index.ts"
-      ],
       "@test/*": [
         "backend/src/__tests__/*"
+      ],
+      "@test": [
+        "backend/src/__tests__"
       ]
     }
   },

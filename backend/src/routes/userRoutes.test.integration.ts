@@ -1,59 +1,48 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach, afterAll } from 'vitest';
 import request from 'supertest';
 import { createTestApp } from '@test/utils/testApp';
-import { testRegisterData, testLoginCredentials, testUser, TEST_PASSWORD } from '@test/fixtures';
+import { setupTestDb, resetTestDb, teardownTestDb } from '@test/utils/testDb';
+import { UserService } from '../services/userService';
 
-// Mock the data-source module
-vi.mock('../data-source', () => ({
-  getDB: vi.fn(),
-}));
-
-import { getDB } from '../data-source';
-
-const mockedGetDB = vi.mocked(getDB);
+// Redirect ALL data-source imports (routes, middleware, services) to the test DB
+vi.mock('../data-source', async () => {
+  const testDb = await import('@test/utils/testDb');
+  return { getDB: () => testDb.getTestDB() };
+});
 
 describe('User Routes (Integration)', () => {
   const app = createTestApp();
-  let mockDB: Record<string, any>;
 
-  beforeEach(() => {
-    mockDB = {
-      save: vi.fn(),
-      findOneBy: vi.fn(),
-      findOne: vi.fn(),
-      find: vi.fn(),
-      delete: vi.fn(),
-      createQueryBuilder: vi.fn(),
-    };
-    mockedGetDB.mockReturnValue(mockDB as any);
-    vi.clearAllMocks();
-    mockedGetDB.mockReturnValue(mockDB as any);
+  beforeAll(async () => {
+    await setupTestDb();
   });
+
+  beforeEach(async () => {
+    await resetTestDb();
+  });
+
+  afterAll(async () => {
+    await teardownTestDb();
+  });
+
+  // ── Registration ──────────────────────────────────────────────────
 
   describe('POST /auth/register', () => {
     it('should register a new user and return auth data', async () => {
-      const savedUser = { id: testUser.id, name: testRegisterData.name, email: testRegisterData.email, passwordHash: 'hashed' };
-
-      // First findOneBy: check existing user → null. Second findOneBy: validate user for session → user.
-      mockDB.findOneBy
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(savedUser);
-      mockDB.save.mockImplementation((_Entity: any, data: any) => {
-        if (data.passwordHash) {
-          return Promise.resolve(savedUser);
-        }
-        return Promise.resolve({ id: data.id, secretHash: data.secretHash, createdAt: new Date(), user: savedUser });
-      });
-
       const response = await request(app)
         .post('/auth/register')
-        .send(testRegisterData)
+        .send({ name: 'New User', email: 'newuser@example.com', password: 'securepassword123' })
         .expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data).toHaveProperty('token');
-      expect(response.body.data.email).toBe(testRegisterData.email);
-      expect(response.body.data.name).toBe(testRegisterData.name);
+      expect(response.body.data.email).toBe('newuser@example.com');
+      expect(response.body.data.name).toBe('New User');
+
+      // Session cookie should be set
+      const cookies = response.headers['set-cookie'] as unknown as string[];
+      expect(cookies).toBeDefined();
+      expect(cookies.some((c) => c.startsWith('session='))).toBe(true);
     });
 
     it('should return 400 for invalid registration data', async () => {
@@ -67,17 +56,51 @@ describe('User Routes (Integration)', () => {
     });
 
     it('should return 500 when user already exists', async () => {
-      mockDB.findOneBy.mockResolvedValue(testUser); // Existing user
+      // Seed a user directly
+      const userService = new UserService();
+      await userService.createUser('Existing', 'existing@example.com', 'password123');
 
       const response = await request(app)
         .post('/auth/register')
-        .send(testRegisterData)
+        .send({ name: 'Duplicate', email: 'existing@example.com', password: 'password123' })
         .expect(500);
 
       expect(response.body.success).toBe(false);
       expect(response.body.error).toContain('already exists');
     });
   });
+
+  // ── Login ─────────────────────────────────────────────────────────
+
+  describe('POST /api/auth/login', () => {
+    it('should login with valid credentials and set session cookie', async () => {
+      const userService = new UserService();
+      await userService.createUser('Test User', 'test@example.com', 'password123');
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({ email: 'test@example.com', password: 'password123' })
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.email).toBe('test@example.com');
+      expect(response.body.data).toHaveProperty('token');
+    });
+
+    it('should return 500 for invalid credentials', async () => {
+      const userService = new UserService();
+      await userService.createUser('Test User', 'test@example.com', 'password123');
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send({ email: 'test@example.com', password: 'wrongpassword' })
+        .expect(500);
+
+      expect(response.body.success).toBe(false);
+    });
+  });
+
+  // ── Logout ────────────────────────────────────────────────────────
 
   describe('POST /api/auth/logout', () => {
     it('should return success even without a session cookie', async () => {
@@ -90,17 +113,26 @@ describe('User Routes (Integration)', () => {
     });
 
     it('should clear session and return success with a session cookie', async () => {
-      mockDB.delete.mockResolvedValue({ affected: 1 });
+      // Create user + session
+      const userService = new UserService();
+      const user = await userService.createUser('Test', 'test@example.com', 'password123');
+      const session = await userService.createSession(user);
 
       const response = await request(app)
         .post('/api/auth/logout')
-        .set('Cookie', 'session=sessionid.secret')
+        .set('Cookie', `session=${session.token}`)
         .expect(200);
 
       expect(response.body.success).toBe(true);
       expect(response.body.data.success).toBe(true);
+
+      // Verify session was actually invalidated
+      const validatedSession = await userService.validateSessionToken(session.token);
+      expect(validatedSession).toBeNull();
     });
   });
+
+  // ── Current User ──────────────────────────────────────────────────
 
   describe('GET /auth/me', () => {
     it('should return 401 when not authenticated', async () => {
@@ -111,7 +143,27 @@ describe('User Routes (Integration)', () => {
       expect(response.body.success).toBe(false);
       expect(response.body.error).toContain('Authentication required');
     });
+
+    it('should return the current user when authenticated', async () => {
+      const userService = new UserService();
+      const user = await userService.createUser('Test User', 'test@example.com', 'password123');
+      const session = await userService.createSession(user);
+
+      const response = await request(app)
+        .get('/auth/me')
+        .set('Cookie', `session=${session.token}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toMatchObject({
+        id: user.id,
+        name: 'Test User',
+        email: 'test@example.com',
+      });
+    });
   });
+
+  // ── Health ────────────────────────────────────────────────────────
 
   describe('GET /health', () => {
     it('should return ok status', async () => {

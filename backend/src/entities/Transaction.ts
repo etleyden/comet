@@ -33,7 +33,7 @@ export default class Transaction {
   @ManyToOne(() => Category, { nullable: true })
   category?: Category;
 
-  @Column()
+  @Column({ nullable: true })
   notes?: string;
 
   @Column({

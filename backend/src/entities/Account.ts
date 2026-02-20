@@ -9,7 +9,7 @@ export default class Account {
   @Column()
   name!: string; // Added definite assignment assertion
 
-  @Column()
+  @Column({ nullable: true })
   institution?: string;
 
   @Column({ unique: true })
