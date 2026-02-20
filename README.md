@@ -1,3 +1,4 @@
+[![Board Status](https://etleyden.visualstudio.com/f40b9e3f-c214-4dea-8baa-2a3c5b07a72e/c9ef754e-5d64-4709-9577-c6a6b2ea7f61/_apis/work/boardbadge/a0103553-1e30-430c-8fe5-d2f4f9f63e4d)](https://etleyden.visualstudio.com/f40b9e3f-c214-4dea-8baa-2a3c5b07a72e/_boards/board/t/c9ef754e-5d64-4709-9577-c6a6b2ea7f61/Microsoft.RequirementCategory)
 # Comet
 
 A personal finance application for importing, categorizing, and tracking transactions across bank accounts. Upload CSV exports from your bank, map columns to the expected fields, and maintain a structured transaction history with categories.
