@@ -1,5 +1,7 @@
 import type {
     ApiResponse,
+    TransactionFilters,
+    GetTransactionsRequest,
     UploadTransactionsRequest,
     UploadTransactionsResponse,
     GetTransactionsResponse,
@@ -12,10 +14,19 @@ import ApiClient from '../apiClient';
 export const transactionsApi = {
     /**
      * GET /api/transactions
-     * Fetches all transactions for the current user.
+     * Fetches paginated and optionally filtered transactions for the current user.
      */
-    getTransactions(): Promise<ApiResponse<GetTransactionsResponse>> {
-        return ApiClient.get<ApiResponse<GetTransactionsResponse>>('/api/transactions');
+    getTransactions(request?: Pick<GetTransactionsRequest, 'page' | 'limit'> & { filter?: TransactionFilters }): Promise<ApiResponse<GetTransactionsResponse>> {
+        const params: Record<string, string | number> = {};
+
+        if (request?.page !== undefined) params.page = request.page;
+        if (request?.limit !== undefined) params.limit = request.limit;
+
+        return ApiClient.post<ApiResponse<GetTransactionsResponse>>(
+            '/api/transactions',
+            { filter: request?.filter },
+            { params: Object.keys(params).length > 0 ? params : undefined },
+        );
     },
 
     /**

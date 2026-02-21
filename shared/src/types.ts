@@ -103,6 +103,21 @@ export interface CreateAccountRequest {
 
 // ─── Transactions API Types ──────────────────────────────────────────
 
+export interface TransactionFilters {
+  dateFrom?: string;
+  dateTo?: string;
+  accountIds?: string[];
+  vendors?: string[];
+  /** Pass null as an element to include transactions with no category assigned, e.g. [null, 'uuid-xyz'] */
+  categoryIds?: (string | null)[];
+  amountMin?: number;
+  amountMax?: number;
+}
+
+export interface GetTransactionsRequest extends Pagination {
+  filter?: TransactionFilters;
+}
+
 export interface UploadTransactionsRequest {
   accountId: string;
   mapping: Record<string, string>;

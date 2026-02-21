@@ -8,7 +8,12 @@ export function createEndpoint<TInput, TOutput, TReq extends Request = Request>(
     try {
       // Validate input if schema provided
       let input: TInput;
-      const dataSource = config.inputSource === 'query' ? req.query : req.body;
+      const dataSource =
+        config.inputSource === 'query'
+          ? req.query
+          : config.inputSource === 'both'
+            ? { ...req.query, ...req.body }
+            : req.body;
 
       if (config.schema) {
         input = config.schema.parse(dataSource);

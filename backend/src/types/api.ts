@@ -21,6 +21,6 @@ export interface EndpointConfig<TInput = unknown, TOutput = unknown, TReq extend
   schema?: z.ZodType<TInput, z.ZodTypeDef, unknown>;
   handler: ApiHandler<TInput, TOutput, TReq>;
   description?: string;
-  /** Where to read input from (defaults to body) */
-  inputSource?: 'body' | 'query';
+  /** Where to read input from (defaults to body). Use 'both' to merge req.query and req.body. */
+  inputSource?: 'body' | 'query' | 'both';
 }

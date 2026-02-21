@@ -16,7 +16,7 @@ import Register from './Register';
  * Login Component. Also allows users to access the registration form by default.
  * @param hideRegisterToggle If true, hides the register toggle and only shows the login form
  */
-export default function Login({ hideRegisterToggle = false }: { hideRegisterToggle?: boolean }) {
+export default function Login() {
   const [isRegistering, setIsRegistering] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -46,7 +46,7 @@ export default function Login({ hideRegisterToggle = false }: { hideRegisterTogg
         justifyContent: 'center',
       }}
     >
-      {isRegistering && !hideRegisterToggle ? (
+      {isRegistering ? (
         <Register onCancel={() => setIsRegistering(false)} />
       ) : (
         <FormGroup sx={{ display: 'flex', gap: 2, width: '100%', maxWidth: 300 }}>
@@ -88,11 +88,9 @@ export default function Login({ hideRegisterToggle = false }: { hideRegisterTogg
             <Button variant="contained" onClick={handleLogin}>
               Login
             </Button>
-            {!hideRegisterToggle && (
-              <Button variant="text" onClick={() => setIsRegistering(true)}>
-                Register
-              </Button>
-            )}
+            <Button variant="text" onClick={() => setIsRegistering(true)}>
+              Register
+            </Button>
           </Box>
         </FormGroup>
       )}
