@@ -92,6 +92,7 @@ export class TransactionService {
             accountId: tx.account.id,
             accountName: tx.account.name,
             categoryId: tx.category?.id,
+            categoryName: tx.category?.name,
         }));
 
         return {

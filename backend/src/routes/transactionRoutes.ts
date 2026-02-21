@@ -5,7 +5,6 @@ import { requireAuth } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types/api';
 import type { UploadTransactionsResponse, GetTransactionsResponse } from 'shared';
 import { TransactionService } from '../services/transactionService';
-import { zodFlexibleDate } from '../utils/parseDate';
 
 // Accepts a single comma-separated string or an array of strings and returns string[]
 const csvOrArray = (schema: z.ZodString = z.string()) =>

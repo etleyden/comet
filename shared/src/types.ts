@@ -131,6 +131,7 @@ export interface UploadTransactionsResponse {
 
 export interface TransactionWithAccount extends Transaction {
   accountName: string;
+  categoryName?: string;
 }
 
 export interface GetTransactionsResponse {
