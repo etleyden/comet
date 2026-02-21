@@ -5,7 +5,7 @@ import { requireAuth } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types/api';
 import type { UploadTransactionsResponse, GetTransactionsResponse } from 'shared';
 import { TransactionService } from '../services/transactionService';
-import { parseFlexibleDate } from '../utils/parseDate';
+import { zodFlexibleDate } from '../utils/parseDate';
 
 // Accepts a single comma-separated string or an array of strings and returns string[]
 const csvOrArray = (schema: z.ZodString = z.string()) =>
@@ -23,9 +23,9 @@ const GetTransactionsSchema = z.object({
     page: z.coerce.number().int().min(1).default(1),
     limit: z.coerce.number().int().min(1).max(500).default(25),
     filter: z.object({
-        // Date range — accepts flexible formats, normalised to UTC ISO-8601 by parseFlexibleDate
-        dateFrom: z.string().transform(parseFlexibleDate).optional(),
-        dateTo: z.string().transform(parseFlexibleDate).optional(),
+        // Date range — YYYY-MM-DD only
+        dateFrom: z.string().date().optional(),
+        dateTo: z.string().date().optional(),
         // Account filter
         accountIds: csvOrArray(z.string().uuid()).optional(),
         // Vendor / description search terms
