@@ -5,10 +5,40 @@ import { requireAuth } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types/api';
 import type { UploadTransactionsResponse, GetTransactionsResponse } from 'shared';
 import { TransactionService } from '../services/transactionService';
+import { parseFlexibleDate } from '../utils/parseDate';
+
+// Accepts a single comma-separated string or an array of strings and returns string[]
+const csvOrArray = (schema: z.ZodString = z.string()) =>
+    z.preprocess(
+        (v) =>
+            Array.isArray(v)
+                ? v
+                : typeof v === 'string'
+                    ? v.split(',').filter(Boolean)
+                    : [],
+        z.array(schema)
+    );
 
 const GetTransactionsSchema = z.object({
     page: z.coerce.number().int().min(1).default(1),
-    limit: z.coerce.number().int().min(1).max(100).default(25),
+    limit: z.coerce.number().int().min(1).max(500).default(25),
+    filter: z.object({
+        // Date range — accepts flexible formats, normalised to UTC ISO-8601 by parseFlexibleDate
+        dateFrom: z.string().transform(parseFlexibleDate).optional(),
+        dateTo: z.string().transform(parseFlexibleDate).optional(),
+        // Account filter
+        accountIds: csvOrArray(z.string().uuid()).optional(),
+        // Vendor / description search terms
+        vendors: csvOrArray().optional(),
+        // Category filter — pass null in the array to include uncategorized transactions
+        categoryIds: z.preprocess(
+            (v) => Array.isArray(v) ? v : typeof v === 'string' ? v.split(',').filter(Boolean) : [],
+            z.array(z.string().uuid().nullable())
+        ).optional(),
+        // Amount range
+        amountMin: z.coerce.number().optional(),
+        amountMax: z.coerce.number().optional(),
+    }).optional(),
 });
 
 const UploadTransactionsSchema = z.object({
@@ -22,18 +52,19 @@ const UploadTransactionsSchema = z.object({
 export function transactionRoutes(app: Express) {
     const transactionService = new TransactionService();
 
-    // GET /api/transactions - Get paginated transactions for current user (requires authentication)
-    app.get(
+    // POST /api/transactions/search - Get paginated/filtered transactions for current user (requires authentication)
+    app.post(
         '/api/transactions',
         requireAuth(),
         createEndpoint<z.infer<typeof GetTransactionsSchema>, GetTransactionsResponse, AuthenticatedRequest>({
-            inputSource: 'query',
+            inputSource: 'both',
             schema: GetTransactionsSchema,
             handler: async (input, req): Promise<GetTransactionsResponse> => {
                 return transactionService.getTransactions({
                     user: req.user,
                     page: input.page,
                     limit: input.limit,
+                    filter: input.filter,
                 });
             },
         })

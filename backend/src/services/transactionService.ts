@@ -8,6 +8,7 @@ import type {
     UploadTransactionsResponse,
     TransactionWithAccount,
     GetTransactionsResponse,
+    TransactionFilters,
     UploadTransactionsRequest,
 } from 'shared';
 
@@ -19,21 +20,64 @@ export interface GetTransactionsInput {
     user: User;
     page?: number;
     limit?: number;
+    filter?: TransactionFilters;
 }
 
 export class TransactionService {
     /**
      * Fetches paginated transactions for the given user, ordered by date descending.
+     * Supports optional filtering by date range, accounts, vendors (notes), categories,
+     * and amount range.
      */
     async getTransactions(input: GetTransactionsInput): Promise<GetTransactionsResponse> {
-        const { user, page = 1, limit = 100 } = input;
+        const { user, page = 1, limit = 100, filter = {} } = input;
+        const { dateFrom, dateTo, accountIds, vendors, categoryIds, amountMin, amountMax } = filter;
+        const nonNullCategoryIds = categoryIds?.filter((id): id is string => id !== null) ?? [];
+        const includesUncategorized = categoryIds?.includes(null) ?? false;
         const db = getDB();
 
-        const [rows, total] = await db
+        let qb = db
             .createQueryBuilder(Transaction, 'tx')
             .innerJoinAndSelect('tx.account', 'account')
+            .leftJoinAndSelect('tx.category', 'category')
             .innerJoin('account.users', 'u')
-            .where('u.id = :userId', { userId: user.id })
+            .where('u.id = :userId', { userId: user.id });
+
+        if (dateFrom) {
+            qb = qb.andWhere('tx.date >= :dateFrom', { dateFrom });
+        }
+        if (dateTo) {
+            qb = qb.andWhere('tx.date <= :dateTo', { dateTo });
+        }
+        if (accountIds && accountIds.length > 0) {
+            qb = qb.andWhere('account.id IN (:...accountIds)', { accountIds });
+        }
+        if (vendors && vendors.length > 0) {
+            // Each vendor term is matched as a case-insensitive substring of notes
+            const vendorConditions = vendors.map((_, i) => `tx.notes ILIKE :vendor${i}`);
+            const vendorParams = Object.fromEntries(vendors.map((v, i) => [`vendor${i}`, `%${v}%`]));
+            qb = qb.andWhere(`(${vendorConditions.join(' OR ')})`, vendorParams);
+        }
+        if (nonNullCategoryIds.length > 0 || includesUncategorized) {
+            const conditions: string[] = [];
+            const params: Record<string, any> = {};
+            if (nonNullCategoryIds.length > 0) {
+                conditions.push('category.id IN (:...categoryIds)');
+                params.categoryIds = nonNullCategoryIds;
+            }
+            if (includesUncategorized) {
+                conditions.push('category.id IS NULL');
+            }
+            qb = qb.andWhere(`(${conditions.join(' OR ')})`, params);
+        }
+        if (amountMin !== undefined) {
+            qb = qb.andWhere('tx.amount >= :amountMin', { amountMin });
+        }
+        if (amountMax !== undefined) {
+            qb = qb.andWhere('tx.amount <= :amountMax', { amountMax });
+        }
+
+        const [rows, total] = await qb
             .orderBy('tx.date', 'DESC')
             .skip((page - 1) * limit)
             .take(limit)
