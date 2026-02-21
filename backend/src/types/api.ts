@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { z } from 'zod';
 import User from '../entities/User';
 
@@ -18,7 +18,7 @@ export type ApiHandler<TInput = unknown, TOutput = unknown, TReq extends Request
 ) => Promise<TOutput> | TOutput;
 
 export interface EndpointConfig<TInput = unknown, TOutput = unknown, TReq extends Request = Request> {
-  schema?: z.ZodSchema<TInput>;
+  schema?: z.ZodType<TInput, z.ZodTypeDef, unknown>;
   handler: ApiHandler<TInput, TOutput, TReq>;
   description?: string;
   /** Where to read input from (defaults to body) */

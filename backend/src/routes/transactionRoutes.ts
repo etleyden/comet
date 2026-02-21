@@ -3,8 +3,13 @@ import { z } from 'zod';
 import { createEndpoint } from '../utils/createEndpoint';
 import { requireAuth } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types/api';
-import type { UploadTransactionsResponse } from 'shared';
+import type { UploadTransactionsResponse, GetTransactionsResponse } from 'shared';
 import { TransactionService } from '../services/transactionService';
+
+const GetTransactionsSchema = z.object({
+    page: z.coerce.number().int().min(1).default(1),
+    limit: z.coerce.number().int().min(1).max(100).default(25),
+});
 
 const UploadTransactionsSchema = z.object({
     accountId: z.string().uuid('A valid account ID is required'),
@@ -16,6 +21,23 @@ const UploadTransactionsSchema = z.object({
 
 export function transactionRoutes(app: Express) {
     const transactionService = new TransactionService();
+
+    // GET /api/transactions - Get paginated transactions for current user (requires authentication)
+    app.get(
+        '/api/transactions',
+        requireAuth(),
+        createEndpoint<z.infer<typeof GetTransactionsSchema>, GetTransactionsResponse, AuthenticatedRequest>({
+            inputSource: 'query',
+            schema: GetTransactionsSchema,
+            handler: async (input, req): Promise<GetTransactionsResponse> => {
+                return transactionService.getTransactions({
+                    user: req.user,
+                    page: input.page,
+                    limit: input.limit,
+                });
+            },
+        })
+    );
 
     // POST /api/transactions/upload - Upload transactions (requires authentication)
     app.post(
