@@ -4,13 +4,58 @@ import Transaction from '../entities/Transaction';
 import UploadRecord from '../entities/UploadRecord';
 import Account from '../entities/Account';
 import User from '../entities/User';
-import type { UploadTransactionsRequest, UploadTransactionsResponse } from 'shared';
+import type {
+    UploadTransactionsResponse,
+    TransactionWithAccount,
+    GetTransactionsResponse,
+    UploadTransactionsRequest,
+} from 'shared';
 
 export interface UploadTransactionsInput extends UploadTransactionsRequest {
     user: User;
 }
 
+export interface GetTransactionsInput {
+    user: User;
+    page?: number;
+    limit?: number;
+}
+
 export class TransactionService {
+    /**
+     * Fetches paginated transactions for the given user, ordered by date descending.
+     */
+    async getTransactions(input: GetTransactionsInput): Promise<GetTransactionsResponse> {
+        const { user, page = 1, limit = 100 } = input;
+        const db = getDB();
+
+        const [rows, total] = await db
+            .createQueryBuilder(Transaction, 'tx')
+            .innerJoinAndSelect('tx.account', 'account')
+            .innerJoin('account.users', 'u')
+            .where('u.id = :userId', { userId: user.id })
+            .orderBy('tx.date', 'DESC')
+            .skip((page - 1) * limit)
+            .take(limit)
+            .getManyAndCount();
+
+        const transactions: TransactionWithAccount[] = rows.map((tx) => ({
+            id: tx.id,
+            amount: Number(tx.amount),
+            date: tx.date instanceof Date ? tx.date.toISOString() : String(tx.date),
+            notes: tx.notes,
+            status: tx.status,
+            accountId: tx.account.id,
+            accountName: tx.account.name,
+            categoryId: tx.category?.id,
+        }));
+
+        return {
+            transactions,
+            total,
+        };
+    }
+
     /**
      * Processes an upload of raw transaction rows.
      *

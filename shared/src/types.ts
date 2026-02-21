@@ -1,3 +1,9 @@
+// ─── Re-usable extensible types ──────────────────────────────
+
+export interface Pagination {
+  page: number;
+  limit: number;
+}
 // ─── Core Entity Types ───────────────────────────────────────────────
 
 export interface User {
@@ -106,6 +112,15 @@ export interface UploadTransactionsRequest {
 export interface UploadTransactionsResponse {
   uploadRecordId: string;
   transactionCount: number;
+}
+
+export interface TransactionWithAccount extends Transaction {
+  accountName: string;
+}
+
+export interface GetTransactionsResponse {
+  transactions: TransactionWithAccount[];
+  total: number;
 }
 
 // ─── Health API Types ────────────────────────────────────────────────
