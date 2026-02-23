@@ -14,7 +14,7 @@ export interface VendorFilterHeaderProps {
  * Each chip can be individually removed. A "clear" button removes all chips.
  * The resulting array of substrings is OR'd together on the backend.
  *
- * TODO: The backend currently matches these substrings against `tx.notes`
+ * TODO: The backend currently matches these substrings against `tx.description`
  * (the description field). Once a proper Vendor entity exists, update the
  * backend filter to match against the vendor name instead.
  */

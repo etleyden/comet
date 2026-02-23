@@ -144,6 +144,11 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
                   updateFilter({ vendors: vendors.length > 0 ? vendors : undefined })
                 }
               />
+              <TableCell>
+                <Typography variant="subtitle2" fontWeight="bold" noWrap>
+                  Description
+                </Typography>
+              </TableCell>
               <CategoryFilterHeader
                 selectedCategoryIds={headerFilter.categoryIds ?? []}
                 onChange={(categoryIds) =>
@@ -155,11 +160,6 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
                 amountMax={headerFilter.amountMax}
                 onChange={(amountMin, amountMax) => updateFilter({ amountMin, amountMax })}
               />
-              <TableCell>
-                <Typography variant="subtitle2" fontWeight="bold" noWrap>
-                  Notes
-                </Typography>
-              </TableCell>
             </TableRow>
           </TableHead>
 
@@ -183,9 +183,9 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
                   <TableCell>{tx.accountName}</TableCell>
                   {/* TODO: Display vendor name once the Vendor entity and API exist */}
                   <TableCell>{'—'}</TableCell>
+                  <TableCell>{tx.description ?? '—'}</TableCell>
                   <TableCell>{tx.categoryName ?? '—'}</TableCell>
                   <TableCell align="right">{formatAmount(tx.amount)}</TableCell>
-                  <TableCell>{tx.notes ?? '—'}</TableCell>
                 </TableRow>
               ))
             )}
