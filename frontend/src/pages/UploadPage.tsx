@@ -5,10 +5,12 @@ import Button from "@mui/material/Button";
 import { Alert, Box, CircularProgress, Typography } from "@mui/material";
 import ImportCSVButton from "../components/upload/ImportCSVButton";
 import { transactionsApi } from "../../api";
+import { useNotification } from "../context/NotificationContext";
 
 type UploadPageState = "EMPTY" | "MAPPING" | "LOADING" | "SUCCESS" | "ERROR";
 
 export default function UploadPage() {
+    const { notify } = useNotification();
     const [data, setData] = useState<any[]>([]);
     const [columnMappings, setColumnMappings] = useState<Record<string, string>>({});
     const [accountId, setAccountId] = useState<string>("");
@@ -46,6 +48,7 @@ export default function UploadPage() {
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : "Upload failed");
+            notify("Upload failed: " + (err instanceof Error ? err.message : "Unknown error"), "error");
             setPageState("ERROR");
         }
     };

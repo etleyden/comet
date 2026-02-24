@@ -19,6 +19,7 @@ import ScienceIcon from '@mui/icons-material/Science';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { healthApi } from '../../../api';
+import { useNotification } from '../../context/NotificationContext';
 
 export const DRAWER_WIDTH = 260;
 export const DRAWER_MARGIN = 12;
@@ -41,6 +42,7 @@ const publicNavItems: NavItem[] = [
 
 export default function SiteDrawer() {
     const { isAuthenticated, user, logout } = useAuth();
+    const { notify } = useNotification();
     const navigate = useNavigate();
     const location = useLocation();
     const [apiStatus, setApiStatus] = useState<'ok' | 'error' | 'loading'>('loading');
@@ -52,6 +54,7 @@ export default function SiteDrawer() {
             setApiStatus('ok');
         } catch {
             setApiStatus('error');
+            notify("Unable to reach API server. Some features may not work.", "error");
         }
     }, []);
 
@@ -165,3 +168,4 @@ export default function SiteDrawer() {
         </>
     );
 }
+
