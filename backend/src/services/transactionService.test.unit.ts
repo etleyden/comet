@@ -186,7 +186,7 @@ describe('TransactionService', () => {
             expect(new Date(tx.date).toISOString()).toContain('2025-07-15');
         });
 
-        it('should map the description to notes', async () => {
+        it('should map the description field', async () => {
             const input = makeInput({
                 mapping: { amount: 'Amount', date: 'Date', description: 'Desc' },
                 transactions: [{ Amount: '10', Date: '2025-01-01', Desc: 'Lunch special' }],
@@ -195,7 +195,7 @@ describe('TransactionService', () => {
 
             const db = getTestDB();
             const [tx] = await db.find(Transaction);
-            expect(tx.notes).toBe('Lunch special');
+            expect(tx.description).toBe('Lunch special');
         });
     });
 

@@ -26,7 +26,7 @@ export interface GetTransactionsInput {
 export class TransactionService {
     /**
      * Fetches paginated transactions for the given user, ordered by date descending.
-     * Supports optional filtering by date range, accounts, vendors (notes), categories,
+     * Supports optional filtering by date range, accounts, vendors (description), categories,
      * and amount range.
      */
     async getTransactions(input: GetTransactionsInput): Promise<GetTransactionsResponse> {
@@ -53,8 +53,8 @@ export class TransactionService {
             qb = qb.andWhere('account.id IN (:...accountIds)', { accountIds });
         }
         if (vendors && vendors.length > 0) {
-            // Each vendor term is matched as a case-insensitive substring of notes
-            const vendorConditions = vendors.map((_, i) => `tx.notes ILIKE :vendor${i}`);
+            // Each vendor term is matched as a case-insensitive substring of description
+            const vendorConditions = vendors.map((_, i) => `tx.description ILIKE :vendor${i}`);
             const vendorParams = Object.fromEntries(vendors.map((v, i) => [`vendor${i}`, `%${v}%`]));
             qb = qb.andWhere(`(${vendorConditions.join(' OR ')})`, vendorParams);
         }
@@ -87,11 +87,12 @@ export class TransactionService {
             id: tx.id,
             amount: Number(tx.amount),
             date: tx.date instanceof Date ? tx.date.toISOString() : String(tx.date),
-            notes: tx.notes,
+            description: tx.description,
             status: tx.status,
             accountId: tx.account.id,
             accountName: tx.account.name,
             categoryId: tx.category?.id,
+            categoryName: tx.category?.name,
         }));
 
         return {
@@ -155,7 +156,7 @@ export class TransactionService {
                 }
 
                 if (mapping.description) {
-                    tx.notes = String(raw[mapping.description] ?? '');
+                    tx.description = String(raw[mapping.description] ?? '');
                 }
 
                 if (mapping.status) {

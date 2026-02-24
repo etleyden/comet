@@ -34,7 +34,7 @@ export default class Transaction {
   category?: Category;
 
   @Column({ nullable: true })
-  notes?: string;
+  description?: string;
 
   @Column({
     type: 'enum',

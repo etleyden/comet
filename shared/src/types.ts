@@ -30,7 +30,7 @@ export interface Transaction {
   id: string;
   amount: number;
   date: string;
-  notes?: string;
+  description?: string;
   status: 'pending' | 'completed' | 'cancelled';
   accountId: string;
   categoryId?: string;
@@ -131,6 +131,7 @@ export interface UploadTransactionsResponse {
 
 export interface TransactionWithAccount extends Transaction {
   accountName: string;
+  categoryName?: string;
 }
 
 export interface GetTransactionsResponse {
