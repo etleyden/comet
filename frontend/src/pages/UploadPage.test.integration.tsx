@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from 'vitest
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
+import { NotificationProvider } from '../context/NotificationContext';
 import { http, HttpResponse } from 'msw';
 import { server } from '../__tests__/mocks/server';
 import { theme } from '../theme';
@@ -38,7 +39,9 @@ vi.mock('../components/upload/ImportCSVButton', () => ({
 function renderUploadPage() {
     return render(
         <ThemeProvider theme={theme}>
-            <UploadPage />
+            <NotificationProvider>
+                <UploadPage />
+            </NotificationProvider>
         </ThemeProvider>
     );
 }
@@ -163,7 +166,9 @@ describe('UploadPage (Integration)', () => {
         await userEvent.click(screen.getByRole('button', { name: /upload/i }));
 
         await waitFor(() => {
-            expect(screen.getByRole('alert')).toBeInTheDocument();
+            // The page renders an inline error alert; a notification toast is also
+            // shown, so getAllByRole is used to handle multiple alert elements.
+            expect(screen.getAllByRole('alert').length).toBeGreaterThan(0);
         });
     });
 });
