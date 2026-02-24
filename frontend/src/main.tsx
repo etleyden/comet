@@ -10,13 +10,16 @@ import App from './App.tsx';
 import { theme } from './theme.ts';
 import { CssBaseline } from '@mui/material';
 import { AuthProvider } from './context/AuthContext.tsx';
+import { NotificationProvider } from './context/NotificationContext.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <AuthProvider>
-        <App />
+        <NotificationProvider>
+          <App />
+        </NotificationProvider>
       </AuthProvider>
     </ThemeProvider>
   </StrictMode>

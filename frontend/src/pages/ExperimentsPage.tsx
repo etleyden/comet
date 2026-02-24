@@ -1,40 +1,45 @@
-import { useMemo, useState } from "react";
-import { Box, Typography } from "@mui/material";
-import AccountSelection from "../components/accounts/AccountSelection";
-import TransactionTable from "../components/transactionTable/TransactionTable";
+import { Box, Button, Stack, Typography } from "@mui/material";
+import { useNotification } from "../context/NotificationContext";
 
 export default function ExperimentsPage() {
-    const [selectedAccount, setSelectedAccount] = useState("");
-
-    // When an account is selected, constrain the table to that account.
-    // Memoised so TransactionTable sees a stable object reference.
-    const tableFilter = useMemo(
-        () => (selectedAccount ? { accountIds: [selectedAccount] } : undefined),
-        [selectedAccount],
-    );
+    const { notify } = useNotification();
 
     return (
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 4, p: 3 }}>
-            <Box>
-                <Typography variant="h5" gutterBottom>Filter by Account</Typography>
-                <AccountSelection
-                    value={selectedAccount}
-                    onChange={setSelectedAccount}
-                    label="Select Account"
-                />
-            </Box>
+        <Box sx={{ p: 3 }}>
+            <Typography variant="h5" gutterBottom>
+                Notification System Demo
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                Click a button to trigger a notification. They appear in the bottom-right,
+                auto-dismiss after 5 seconds, and can be closed manually.
+            </Typography>
 
-            <Box>
-                <Typography variant="h5" gutterBottom>
-                    Transactions
-                    {selectedAccount && (
-                        <Typography component="span" variant="body2" color="text.secondary" sx={{ ml: 1 }}>
-                            (filtered to selected account)
-                        </Typography>
-                    )}
-                </Typography>
-                <TransactionTable filter={tableFilter} />
-            </Box>
+            <Stack direction="row" spacing={2}>
+                <Button
+                    color="success"
+                    onClick={() => notify("Operation completed successfully!", "success")}
+                >
+                    Success
+                </Button>
+                <Button
+                    color="error"
+                    onClick={() => notify("Something went wrong.", "error")}
+                >
+                    Error
+                </Button>
+                <Button
+                    color="warning"
+                    onClick={() => notify("Watch out — this needs attention.", "warning")}
+                >
+                    Warning
+                </Button>
+                <Button
+                    color="info"
+                    onClick={() => notify("Here's some useful info.", "info")}
+                >
+                    Info
+                </Button>
+            </Stack>
         </Box>
     );
 }
