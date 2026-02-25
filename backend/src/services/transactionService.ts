@@ -55,8 +55,8 @@ export class TransactionService {
             qb = qb.andWhere('account.id IN (:...accountIds)', { accountIds });
         }
         if (vendors && vendors.length > 0) {
-            // Each vendor term is matched as a case-insensitive substring of description
-            const vendorConditions = vendors.map((_, i) => `tx.description ILIKE :vendor${i}`);
+            // Each vendor term is matched as a case-insensitive substring of the vendor field
+            const vendorConditions = vendors.map((_, i) => `tx.vendorLabel ILIKE :vendor${i}`);
             const vendorParams = Object.fromEntries(vendors.map((v, i) => [`vendor${i}`, `%${v}%`]));
             qb = qb.andWhere(`(${vendorConditions.join(' OR ')})`, vendorParams);
         }
@@ -89,6 +89,8 @@ export class TransactionService {
             id: tx.id,
             amount: Number(tx.amount),
             date: toISOString(tx.date),
+            vendorLabel: tx.vendorLabel,
+            categoryLabel: tx.categoryLabel,
             description: tx.description,
             status: tx.status,
             accountId: tx.account.id,
@@ -157,6 +159,14 @@ export class TransactionService {
                     tx.date = new Date(raw[mapping.date]);
                 } else {
                     tx.date = new Date();
+                }
+
+                if (mapping.vendor) {
+                    tx.vendorLabel = String(raw[mapping.vendor] ?? '');
+                }
+
+                if (mapping.category) {
+                    tx.categoryLabel = String(raw[mapping.category] ?? '');
                 }
 
                 if (mapping.description) {

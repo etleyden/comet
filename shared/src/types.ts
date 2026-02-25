@@ -30,6 +30,8 @@ export interface Transaction {
   id: string;
   amount: number;
   date: string;
+  vendorLabel?: string;
+  categoryLabel?: string;
   description?: string;
   status: 'pending' | 'completed' | 'cancelled';
   accountId: string;

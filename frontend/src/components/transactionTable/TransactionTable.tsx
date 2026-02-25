@@ -208,10 +208,9 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
                   </TableCell>
                   <TableCell>{formatDate(tx.date)}</TableCell>
                   <TableCell>{tx.accountName}</TableCell>
-                  {/* TODO: Display vendor name once the Vendor entity and API exist */}
-                  <TableCell>{'—'}</TableCell>
+                  <TableCell>{tx.vendorLabel ?? '—'}</TableCell>
                   <TableCell>{tx.description ?? '—'}</TableCell>
-                  <TableCell>{tx.categoryName ?? '—'}</TableCell>
+                  <TableCell>{tx.categoryLabel ?? tx.categoryName ?? '—'}</TableCell>
                   <TableCell align="right">{formatAmount(tx.amount)}</TableCell>
                 </TableRow>
               ))

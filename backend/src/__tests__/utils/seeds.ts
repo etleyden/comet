@@ -35,6 +35,8 @@ export interface SeedTransactionOptions {
     amount: number;
     /** ISO date string, e.g. '2025-01-15' */
     date: string;
+    vendorLabel?: string;
+    categoryLabel?: string;
     description?: string;
     category?: Category;
     status?: Transaction['status'];
@@ -47,6 +49,8 @@ export async function seedTransaction(opts: SeedTransactionOptions): Promise<Tra
         upload: opts.upload,
         amount: opts.amount,
         date: new Date(opts.date),
+        vendorLabel: opts.vendorLabel,
+        categoryLabel: opts.categoryLabel,
         description: opts.description ?? '',
         status: opts.status ?? 'completed',
         category: opts.category,

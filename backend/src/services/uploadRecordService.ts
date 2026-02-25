@@ -47,6 +47,8 @@ export class UploadRecordService {
 
     /**
      * Updates the column mapping on an existing upload record.
+     * Also re-derives the vendorLabel and categoryLabel fields on all linked
+     * transactions from the new mapping and each transaction's stored raw row.
      */
     async updateUploadRecord(input: UpdateUploadRecordInput): Promise<GetUploadRecordResponse> {
         const { id, user, mapping } = input;
@@ -55,6 +57,9 @@ export class UploadRecordService {
         const record = await this.findOwnedRecord(id, user.id);
         record.mapping = mapping;
         const saved = await db.save(UploadRecord, record);
+
+        // Re-derive vendorLabel and categoryLabel from the updated mapping
+        await this.remapTransactionFields(saved.id, mapping);
 
         const { transactionCount, accountName } = await this.getRecordMetadata(saved.id);
 
@@ -140,5 +145,29 @@ export class UploadRecordService {
             transactionCount,
             accountName: sampleTx?.account?.name ?? 'Unknown',
         };
+    }
+
+    /**
+     * Re-derives the vendorLabel and categoryLabel fields on all transactions
+     * linked to the given upload record, using each transaction's stored
+     * raw row and the new mapping.
+     */
+    private async remapTransactionFields(uploadId: string, mapping: Record<string, string>): Promise<void> {
+        const db = getDB();
+
+        const transactions = await db
+            .createQueryBuilder(Transaction, 'tx')
+            .where('tx.uploadId = :uploadId', { uploadId })
+            .getMany();
+
+        for (const tx of transactions) {
+            tx.vendorLabel = mapping.vendor ? String(tx.raw[mapping.vendor] ?? '') : undefined;
+            tx.categoryLabel = mapping.category ? String(tx.raw[mapping.category] ?? '') : undefined;
+            tx.description = mapping.description ? String(tx.raw[mapping.description] ?? '') : undefined;
+        }
+
+        if (transactions.length > 0) {
+            await db.save(Transaction, transactions);
+        }
     }
 }
