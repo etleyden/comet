@@ -1,5 +1,6 @@
 import { getDB } from '../data-source';
 import { AppDataSource } from '../data-source';
+import { toISOString } from '../utils/dateUtils';
 import Transaction from '../entities/Transaction';
 import UploadRecord from '../entities/UploadRecord';
 import Account from '../entities/Account';
@@ -87,7 +88,7 @@ export class TransactionService {
         const transactions: TransactionWithAccount[] = rows.map((tx) => ({
             id: tx.id,
             amount: Number(tx.amount),
-            date: tx.date instanceof Date ? tx.date.toISOString() : String(tx.date),
+            date: toISOString(tx.date),
             description: tx.description,
             status: tx.status,
             accountId: tx.account.id,
@@ -95,9 +96,7 @@ export class TransactionService {
             categoryId: tx.category?.id,
             categoryName: tx.category?.name,
             uploadRecordId: tx.upload?.id,
-            uploadCreatedAt: tx.upload?.createdAt instanceof Date
-                ? tx.upload.createdAt.toISOString()
-                : tx.upload?.createdAt ? String(tx.upload.createdAt) : undefined,
+            uploadCreatedAt: toISOString(tx.upload?.createdAt),
         }));
 
         return {

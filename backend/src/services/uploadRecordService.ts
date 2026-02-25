@@ -1,4 +1,5 @@
 import { getDB } from '../data-source';
+import { toISOString } from '../utils/dateUtils';
 import UploadRecord from '../entities/UploadRecord';
 import Transaction from '../entities/Transaction';
 import User from '../entities/User';
@@ -38,7 +39,7 @@ export class UploadRecordService {
             id: record.id,
             userId: user.id,
             mapping: record.mapping,
-            createdAt: record.createdAt,
+            createdAt: toISOString(record.createdAt),
             transactionCount,
             accountName,
         };
@@ -61,7 +62,7 @@ export class UploadRecordService {
             id: saved.id,
             userId: user.id,
             mapping: saved.mapping,
-            createdAt: saved.createdAt,
+            createdAt: toISOString(saved.createdAt),
             transactionCount,
             accountName,
         };

@@ -23,7 +23,7 @@ export interface UploadRecord {
   id: string;
   userId: string;
   mapping: Record<string, string>;
-  createdAt: Date;
+  createdAt: string;
 }
 
 export interface Transaction {

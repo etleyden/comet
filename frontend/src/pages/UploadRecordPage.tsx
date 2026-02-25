@@ -188,7 +188,7 @@ export default function UploadRecordPage() {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {MAPPING_ATTRIBUTES.map((attr) => {
+                        {MAPPING_ATTRIBUTES.map((attr: string) => {
                             const csvColumn = editing ? draftMapping[attr] : record.mapping[attr];
                             return (
                                 <TableRow key={attr}>
