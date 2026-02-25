@@ -5,6 +5,11 @@ import {
     Box,
     Button,
     CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
     IconButton,
     Paper,
     Stack,
@@ -43,6 +48,9 @@ export default function UploadRecordPage() {
 
     // ── Delete confirmation ──────────────────────────────────────
     const [deleting, setDeleting] = useState(false);
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [deleteConfirmText, setDeleteConfirmText] = useState('');
+    const DELETE_PHRASE = 'delete transactions';
 
     // ── Fetch ────────────────────────────────────────────────────
     useEffect(() => {
@@ -94,6 +102,16 @@ export default function UploadRecordPage() {
         }
     };
 
+    const openDeleteDialog = () => {
+        setDeleteConfirmText('');
+        setDeleteDialogOpen(true);
+    };
+
+    const closeDeleteDialog = () => {
+        setDeleteDialogOpen(false);
+        setDeleteConfirmText('');
+    };
+
     const handleDelete = async () => {
         if (!id) return;
         setDeleting(true);
@@ -112,6 +130,8 @@ export default function UploadRecordPage() {
         } catch (err) {
             notify(err instanceof Error ? err.message : 'Failed to delete upload record', 'error');
             setDeleting(false);
+        } finally {
+            setDeleteDialogOpen(false);
         }
     };
 
@@ -139,99 +159,140 @@ export default function UploadRecordPage() {
     const createdAt = new Date(record.createdAt).toLocaleString();
 
     return (
-        <Box sx={{ p: 3, maxWidth: 800 }}>
-            {/* Header */}
-            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
-                <Box>
-                    <Typography variant="h5">Upload Record</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        {record.accountName} &middot; {createdAt} &middot; {record.transactionCount} transactions
-                    </Typography>
-                </Box>
+        <>
+            <Box sx={{ p: 3, maxWidth: 800 }}>
+                {/* Header */}
+                <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
+                    <Box>
+                        <Typography variant="h5">Upload Record</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {record.accountName} &middot; {createdAt} &middot; {record.transactionCount} transactions
+                        </Typography>
+                    </Box>
 
-                <Stack direction="row" spacing={1}>
-                    {!editing && (
-                        <IconButton color="primary" onClick={startEditing} title="Edit mapping">
-                            <EditIcon />
+                    <Stack direction="row" spacing={1}>
+                        {!editing && (
+                            <IconButton color="primary" onClick={startEditing} title="Edit mapping">
+                                <EditIcon />
+                            </IconButton>
+                        )}
+                        <IconButton
+                            color="error"
+                            onClick={openDeleteDialog}
+                            disabled={deleting}
+                            title="Delete upload record and its transactions"
+                        >
+                            <DeleteIcon />
                         </IconButton>
-                    )}
-                    <IconButton
-                        color="error"
-                        onClick={handleDelete}
-                        disabled={deleting}
-                        title="Delete upload record and its transactions"
-                    >
-                        <DeleteIcon />
-                    </IconButton>
+                    </Stack>
                 </Stack>
-            </Stack>
 
-            {/* Mapping table */}
-            <Typography variant="h6" gutterBottom>
-                Column Mapping
-            </Typography>
+                {/* Mapping table */}
+                <Typography variant="h6" gutterBottom>
+                    Column Mapping
+                </Typography>
 
-            <TableContainer component={Paper} variant="outlined">
-                <Table size="small">
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>
-                                <Typography variant="subtitle2" fontWeight="bold">
-                                    Field
-                                </Typography>
-                            </TableCell>
-                            <TableCell>
-                                <Typography variant="subtitle2" fontWeight="bold">
-                                    CSV Column
-                                </Typography>
-                            </TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {MAPPING_ATTRIBUTES.map((attr: string) => {
-                            const csvColumn = editing ? draftMapping[attr] : record.mapping[attr];
-                            return (
-                                <TableRow key={attr}>
-                                    <TableCell sx={{ textTransform: 'capitalize' }}>{attr}</TableCell>
-                                    <TableCell>
-                                        {editing ? (
-                                            <TextField
-                                                size="small"
-                                                variant="standard"
-                                                value={csvColumn ?? ''}
-                                                onChange={(e) => updateDraftValue(attr, e.target.value)}
-                                                fullWidth
-                                            />
-                                        ) : (
-                                            csvColumn ?? <Typography color="text.secondary">—</Typography>
-                                        )}
-                                    </TableCell>
-                                </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                <TableContainer component={Paper} variant="outlined">
+                    <Table size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell>
+                                    <Typography variant="subtitle2" fontWeight="bold">
+                                        Field
+                                    </Typography>
+                                </TableCell>
+                                <TableCell>
+                                    <Typography variant="subtitle2" fontWeight="bold">
+                                        CSV Column
+                                    </Typography>
+                                </TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {MAPPING_ATTRIBUTES.map((attr: string) => {
+                                const csvColumn = editing ? draftMapping[attr] : record.mapping[attr];
+                                return (
+                                    <TableRow key={attr}>
+                                        <TableCell sx={{ textTransform: 'capitalize' }}>{attr}</TableCell>
+                                        <TableCell>
+                                            {editing ? (
+                                                <TextField
+                                                    size="small"
+                                                    variant="standard"
+                                                    value={csvColumn ?? ''}
+                                                    onChange={(e) => updateDraftValue(attr, e.target.value)}
+                                                    fullWidth
+                                                />
+                                            ) : (
+                                                csvColumn ?? <Typography color="text.secondary">—</Typography>
+                                            )}
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
 
-            {/* Edit actions */}
-            {editing && (
-                <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-                    <Button
-                        variant="contained"
-                        startIcon={<SaveIcon />}
-                        onClick={saveMapping}
-                    >
-                        Save
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        startIcon={<CancelIcon />}
-                        onClick={cancelEditing}
-                    >
+                {/* Edit actions */}
+                {editing && (
+                    <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                        <Button
+                            variant="contained"
+                            startIcon={<SaveIcon />}
+                            onClick={saveMapping}
+                        >
+                            Save
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            startIcon={<CancelIcon />}
+                            onClick={cancelEditing}
+                        >
+                            Cancel
+                        </Button>
+                    </Stack>
+                )}
+            </Box>
+
+            {/* Delete confirmation dialog */}
+            <Dialog open={deleteDialogOpen} onClose={closeDeleteDialog} maxWidth="xs" fullWidth>
+                <DialogTitle>Delete upload record?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ mb: 2 }}>
+                        This will permanently delete this upload record and all{' '}
+                        <strong>{record?.transactionCount ?? ''} transactions</strong> associated with it.
+                        This action cannot be undone.
+                    </DialogContentText>
+                    <DialogContentText sx={{ mb: 1 }}>
+                        Type <strong>{DELETE_PHRASE}</strong> to confirm:
+                    </DialogContentText>
+                    <TextField
+                        autoFocus
+                        fullWidth
+                        size="small"
+                        value={deleteConfirmText}
+                        onChange={(e) => setDeleteConfirmText(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && deleteConfirmText === DELETE_PHRASE) handleDelete();
+                        }}
+                        placeholder={DELETE_PHRASE}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeDeleteDialog} disabled={deleting}>
                         Cancel
                     </Button>
-                </Stack>
-            )}
-        </Box>
+                    <Button
+                        variant="contained"
+                        color="error"
+                        disabled={deleteConfirmText !== DELETE_PHRASE || deleting}
+                        onClick={handleDelete}
+                    >
+                        {deleting ? 'Deleting…' : 'Delete'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </>
     );
 }
