@@ -15,7 +15,7 @@ import ApiClient from '../apiClient';
  */
 export const uploadRecordsApi = {
     /**
-     * GET /api/upload-records/:id
+     * GET /api/upload-record/:id
      */
     getUploadRecord(id: string): Promise<ApiResponse<GetUploadRecordResponse>> {
         return ApiClient.get<ApiResponse<GetUploadRecordResponse>>(`/api/upload-record/${id}`);
