@@ -4,6 +4,7 @@ export { postsApi } from './services/postsApi';
 export { healthApi } from './services/healthApi';
 export { accountsApi } from './services/accountsApi';
 export { transactionsApi } from './services/transactionsApi';
+export { uploadRecordsApi } from './services/uploadRecordsApi';
 
 // Re-export the low-level client for escape-hatch usage
 export { default as ApiClient } from './apiClient';

@@ -40,6 +40,7 @@ export class TransactionService {
             .createQueryBuilder(Transaction, 'tx')
             .innerJoinAndSelect('tx.account', 'account')
             .leftJoinAndSelect('tx.category', 'category')
+            .leftJoinAndSelect('tx.upload', 'upload')
             .innerJoin('account.users', 'u')
             .where('u.id = :userId', { userId: user.id });
 
@@ -93,6 +94,10 @@ export class TransactionService {
             accountName: tx.account.name,
             categoryId: tx.category?.id,
             categoryName: tx.category?.name,
+            uploadRecordId: tx.upload?.id,
+            uploadCreatedAt: tx.upload?.createdAt instanceof Date
+                ? tx.upload.createdAt.toISOString()
+                : tx.upload?.createdAt ? String(tx.upload.createdAt) : undefined,
         }));
 
         return {

@@ -124,6 +124,26 @@ export interface UploadTransactionsRequest {
   transactions: Record<string, any>[];
 }
 
+/**
+ * Canonical list of application-level attribute names used in CSV-to-transaction
+ * column mappings. These keys appear in `UploadTransactionsRequest.mapping` and
+ * are persisted in `UploadRecord.mapping`.
+ *
+ * Keep this list in sync with the mapping logic in
+ * `TransactionService.uploadTransactions` on the backend.
+ */
+export const MAPPING_ATTRIBUTES = [
+  'date',
+  'vendor',
+  'description',
+  'category',
+  'amount',
+  'status',
+] as const;
+
+/** A single mapping attribute name. */
+export type MappingAttribute = (typeof MAPPING_ATTRIBUTES)[number];
+
 export interface UploadTransactionsResponse {
   uploadRecordId: string;
   transactionCount: number;
@@ -132,6 +152,8 @@ export interface UploadTransactionsResponse {
 export interface TransactionWithAccount extends Transaction {
   accountName: string;
   categoryName?: string;
+  uploadRecordId?: string;
+  uploadCreatedAt?: string;
 }
 
 export interface GetTransactionsResponse {
@@ -143,4 +165,19 @@ export interface GetTransactionsResponse {
 
 export interface HealthStatus {
   status: string;
+}
+
+// ─── Upload Record API Types ─────────────────────────────────────────
+
+export interface GetUploadRecordResponse extends UploadRecord {
+  transactionCount: number;
+  accountName: string;
+}
+
+export interface UpdateUploadRecordRequest {
+  mapping: Record<string, string>;
+}
+
+export interface DeleteUploadRecordResponse {
+  deletedTransactionCount: number;
 }
