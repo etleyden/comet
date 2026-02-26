@@ -4,6 +4,7 @@ import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
 import { HomePage } from './pages/HomePage';
 import UploadPage from './pages/UploadPage';
+import UploadRecordPage from './pages/UploadRecordPage';
 import ExperimentsPage from './pages/ExperimentsPage';
 import SiteDrawer, { DRAWER_MARGIN } from './components/navigation/SiteDrawer';
 import { Box } from '@mui/material';
@@ -47,6 +48,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <UploadPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/upload-record/:id"
+              element={
+                <ProtectedRoute>
+                  <UploadRecordPage />
                 </ProtectedRoute>
               }
             />

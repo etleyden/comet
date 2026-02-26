@@ -127,6 +127,26 @@ describe('TransactionService', () => {
             expect(upload!.mapping).toEqual(mapping);
         });
 
+        it('should store availableColumns derived from the uploaded rows', async () => {
+            const input = makeInput({
+                mapping: { amount: 'Amount', date: 'Date' },
+                transactions: [
+                    { Amount: '10', Date: '2025-01-01', Extra: 'bonus' },
+                    { Amount: '20', Date: '2025-01-02', Desc: 'test' },
+                ],
+            });
+            const result = await transactionService.uploadTransactions(input);
+
+            const db = getTestDB();
+            const upload = await db.findOneBy(UploadRecord, { id: result.uploadRecordId });
+            expect(upload).not.toBeNull();
+            // Should contain all unique column names across all rows
+            expect(upload!.availableColumns).toEqual(
+                expect.arrayContaining(['Amount', 'Date', 'Extra', 'Desc']),
+            );
+            expect(upload!.availableColumns).toHaveLength(4);
+        });
+
         it('should persist Transaction entities linked to the account', async () => {
             const input = makeInput();
             await transactionService.uploadTransactions(input);
@@ -138,12 +158,56 @@ describe('TransactionService', () => {
         });
     });
 
+    // ── Mapping column validation ────────────────────────────────────
+
+    describe('mapping column validation', () => {
+        it('should reject a mapping referencing columns not present in the CSV data', async () => {
+            const input = makeInput({
+                mapping: { amount: 'TotalValue', date: 'Date' },
+                transactions: [{ Amount: '10', Date: '2025-01-01' }],
+            });
+
+            await expect(transactionService.uploadTransactions(input)).rejects.toThrow(
+                'Mapping contains columns not found in CSV: TotalValue',
+            );
+        });
+
+        it('should set 400 status on mapping validation error', async () => {
+            const input = makeInput({
+                mapping: { amount: 'FakeCol' },
+                transactions: [{ Amount: '10', Date: '2025-01-01' }],
+            });
+
+            try {
+                await transactionService.uploadTransactions(input);
+                expect.fail('should have thrown');
+            } catch (err: any) {
+                expect(err.status).toBe(400);
+            }
+        });
+
+        it('should not persist anything when mapping validation fails', async () => {
+            const input = makeInput({
+                mapping: { amount: 'BadColumn' },
+                transactions: [{ Amount: '10', Date: '2025-01-01' }],
+            });
+
+            await expect(transactionService.uploadTransactions(input)).rejects.toThrow();
+
+            const db = getTestDB();
+            const uploads = await db.find(UploadRecord);
+            const txns = await db.find(Transaction);
+            expect(uploads).toHaveLength(0);
+            expect(txns).toHaveLength(0);
+        });
+    });
+
     // ── Mapping & data transformation ────────────────────────────────
 
     describe('field mapping', () => {
         it('should parse amount from a string', async () => {
             const input = makeInput({
-                transactions: [{ Amount: '123.45', Date: '2025-01-01' }],
+                transactions: [{ Amount: '123.45', Date: '2025-01-01', Desc: 'test' }],
             });
             await transactionService.uploadTransactions(input);
 
@@ -154,7 +218,7 @@ describe('TransactionService', () => {
 
         it('should accept a numeric amount value', async () => {
             const input = makeInput({
-                transactions: [{ Amount: 99.99, Date: '2025-01-01' }],
+                transactions: [{ Amount: 99.99, Date: '2025-01-01', Desc: 'test' }],
             });
             await transactionService.uploadTransactions(input);
 
@@ -177,7 +241,7 @@ describe('TransactionService', () => {
 
         it('should map the date field correctly', async () => {
             const input = makeInput({
-                transactions: [{ Amount: '10', Date: '2025-07-15' }],
+                transactions: [{ Amount: '10', Date: '2025-07-15', Desc: 'test' }],
             });
             await transactionService.uploadTransactions(input);
 
@@ -243,7 +307,7 @@ describe('TransactionService', () => {
 
     describe('raw row storage', () => {
         it('should preserve the full raw row in the jsonb column', async () => {
-            const rawRow = { Amount: '50', Date: '2025-03-01', Extra: 'bonus', Num: 42 };
+            const rawRow = { Amount: '50', Date: '2025-03-01', Desc: 'note', Extra: 'bonus', Num: 42 };
             const input = makeInput({ transactions: [rawRow] });
             await transactionService.uploadTransactions(input);
 

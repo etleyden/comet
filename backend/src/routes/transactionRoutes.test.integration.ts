@@ -393,12 +393,12 @@ describe('Transaction Routes (Integration)', () => {
 
         describe('filter.vendors', () => {
             beforeEach(async () => {
-                await seedTransaction({ account: account1, upload: uploadRecord, amount: 10, date: '2025-01-01', description: 'Whole Foods Market' });
-                await seedTransaction({ account: account1, upload: uploadRecord, amount: 20, date: '2025-01-02', description: 'Amazon Prime' });
-                await seedTransaction({ account: account1, upload: uploadRecord, amount: 30, date: '2025-01-03', description: 'Uber Eats' });
+                await seedTransaction({ account: account1, upload: uploadRecord, amount: 10, date: '2025-01-01', vendorLabel: 'Whole Foods Market' });
+                await seedTransaction({ account: account1, upload: uploadRecord, amount: 20, date: '2025-01-02', vendorLabel: 'Amazon Prime' });
+                await seedTransaction({ account: account1, upload: uploadRecord, amount: 30, date: '2025-01-03', vendorLabel: 'Uber Eats' });
             });
 
-            it('returns transactions whose description match a vendor term (case-insensitive)', async () => {
+            it('returns transactions whose vendorLabel matches a vendor term (case-insensitive)', async () => {
                 const res = await request(app)
                     .post('/api/transactions/')
                     .set('Cookie', `session=${sessionToken}`)
@@ -406,7 +406,7 @@ describe('Transaction Routes (Integration)', () => {
                     .expect(200);
 
                 expect(res.body.data.total).toBe(1);
-                expect(res.body.data.transactions[0].description).toBe('Whole Foods Market');
+                expect(res.body.data.transactions[0].vendorLabel).toBe('Whole Foods Market');
             });
 
             it('returns partial match on vendor term', async () => {
@@ -429,7 +429,7 @@ describe('Transaction Routes (Integration)', () => {
                 expect(res.body.data.total).toBe(2);
             });
 
-            it('returns empty when no description matches the vendor term', async () => {
+            it('returns empty when no vendor matches the vendor term', async () => {
                 const res = await request(app)
                     .post('/api/transactions/')
                     .set('Cookie', `session=${sessionToken}`)
@@ -671,9 +671,9 @@ describe('Transaction Routes (Integration)', () => {
             });
 
             it('applies vendor and amount filter together', async () => {
-                await seedTransaction({ account: account1, upload: uploadRecord, amount: 15, date: '2025-01-01', description: 'Starbucks Coffee' });
-                await seedTransaction({ account: account1, upload: uploadRecord, amount: 150, date: '2025-01-02', description: 'Starbucks Reserve' });
-                await seedTransaction({ account: account1, upload: uploadRecord, amount: 80, date: '2025-01-03', description: 'Whole Foods' });
+                await seedTransaction({ account: account1, upload: uploadRecord, amount: 15, date: '2025-01-01', vendorLabel: 'Starbucks Coffee' });
+                await seedTransaction({ account: account1, upload: uploadRecord, amount: 150, date: '2025-01-02', vendorLabel: 'Starbucks Reserve' });
+                await seedTransaction({ account: account1, upload: uploadRecord, amount: 80, date: '2025-01-03', vendorLabel: 'Whole Foods' });
 
                 const res = await request(app)
                     .post('/api/transactions/')

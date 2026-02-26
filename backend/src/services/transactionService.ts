@@ -1,5 +1,6 @@
 import { getDB } from '../data-source';
 import { AppDataSource } from '../data-source';
+import { toISOString } from '../utils/dateUtils';
 import Transaction from '../entities/Transaction';
 import UploadRecord from '../entities/UploadRecord';
 import Account from '../entities/Account';
@@ -11,6 +12,7 @@ import type {
     TransactionFilters,
     UploadTransactionsRequest,
 } from 'shared';
+import { validateMappingColumns } from '../utils/mappingUtils';
 
 export interface UploadTransactionsInput extends UploadTransactionsRequest {
     user: User;
@@ -40,6 +42,7 @@ export class TransactionService {
             .createQueryBuilder(Transaction, 'tx')
             .innerJoinAndSelect('tx.account', 'account')
             .leftJoinAndSelect('tx.category', 'category')
+            .leftJoinAndSelect('tx.upload', 'upload')
             .innerJoin('account.users', 'u')
             .where('u.id = :userId', { userId: user.id });
 
@@ -53,8 +56,8 @@ export class TransactionService {
             qb = qb.andWhere('account.id IN (:...accountIds)', { accountIds });
         }
         if (vendors && vendors.length > 0) {
-            // Each vendor term is matched as a case-insensitive substring of description
-            const vendorConditions = vendors.map((_, i) => `tx.description ILIKE :vendor${i}`);
+            // Each vendor term is matched as a case-insensitive substring of the vendor field
+            const vendorConditions = vendors.map((_, i) => `tx.vendorLabel ILIKE :vendor${i}`);
             const vendorParams = Object.fromEntries(vendors.map((v, i) => [`vendor${i}`, `%${v}%`]));
             qb = qb.andWhere(`(${vendorConditions.join(' OR ')})`, vendorParams);
         }
@@ -86,13 +89,17 @@ export class TransactionService {
         const transactions: TransactionWithAccount[] = rows.map((tx) => ({
             id: tx.id,
             amount: Number(tx.amount),
-            date: tx.date instanceof Date ? tx.date.toISOString() : String(tx.date),
+            date: toISOString(tx.date),
+            vendorLabel: tx.vendorLabel,
+            categoryLabel: tx.categoryLabel,
             description: tx.description,
             status: tx.status,
             accountId: tx.account.id,
             accountName: tx.account.name,
             categoryId: tx.category?.id,
             categoryName: tx.category?.name,
+            uploadRecordId: tx.upload?.id,
+            uploadCreatedAt: toISOString(tx.upload?.createdAt),
         }));
 
         return {
@@ -129,10 +136,30 @@ export class TransactionService {
 
         // Run the write operations in a transaction
         return AppDataSource.transaction(async (txManager) => {
+            // Derive available columns from the raw rows
+            const columnSet = new Set<string>();
+            for (const row of transactions) {
+                for (const key of Object.keys(row)) {
+                    columnSet.add(key);
+                }
+            }
+            const availableColumns = Array.from(columnSet);
+
+            // Validate mapping columns against available columns
+            const invalidColumns = validateMappingColumns(mapping, availableColumns);
+            if (invalidColumns.length > 0) {
+                const err: any = new Error(
+                    `Mapping contains columns not found in CSV: ${invalidColumns.join(', ')}`,
+                );
+                err.status = 400;
+                throw err;
+            }
+
             // Create the upload record
             const uploadRecord = new UploadRecord();
             uploadRecord.user = user;
             uploadRecord.mapping = mapping;
+            uploadRecord.availableColumns = availableColumns;
             const savedUpload = await txManager.save(UploadRecord, uploadRecord);
 
             // Build transaction entities from the raw rows using the mapping
@@ -153,6 +180,14 @@ export class TransactionService {
                     tx.date = new Date(raw[mapping.date]);
                 } else {
                     tx.date = new Date();
+                }
+
+                if (mapping.vendor) {
+                    tx.vendorLabel = String(raw[mapping.vendor] ?? '');
+                }
+
+                if (mapping.category) {
+                    tx.categoryLabel = String(raw[mapping.category] ?? '');
                 }
 
                 if (mapping.description) {

@@ -34,6 +34,12 @@ export default class Transaction {
   category?: Category;
 
   @Column({ nullable: true })
+  vendorLabel?: string;
+
+  @Column({ nullable: true })
+  categoryLabel?: string;
+
+  @Column({ nullable: true })
   description?: string;
 
   @Column({

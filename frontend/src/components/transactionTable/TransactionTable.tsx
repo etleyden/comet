@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import {
+  IconButton,
+  ListItemText,
+  Menu,
+  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -11,6 +15,8 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material';
+import { Link } from 'react-router-dom';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { TransactionFilters, TransactionWithAccount } from 'shared';
 import { transactionsApi } from '../../../api';
 import {
@@ -39,6 +45,20 @@ const FETCH_DEBOUNCE_MS = 300;
 export default function TransactionTable({ filter: externalFilter }: TransactionTableProps) {
   // ── Filter state managed by column header popovers ─────────────
   const [headerFilter, setHeaderFilter] = useState<TransactionFilters>({});
+
+  // ── Row action menu ────────────────────────────────────────────
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [menuTx, setMenuTx] = useState<TransactionWithAccount | null>(null);
+
+  const openMenu = (event: React.MouseEvent<HTMLElement>, tx: TransactionWithAccount) => {
+    setMenuAnchor(event.currentTarget);
+    setMenuTx(tx);
+  };
+
+  const closeMenu = () => {
+    setMenuAnchor(null);
+    setMenuTx(null);
+  };
 
   // ── Pagination ─────────────────────────────────────────────────
   const [page, setPage] = useState(0); // 0-indexed (MUI convention)
@@ -127,6 +147,8 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
         <Table size="small">
           <TableHead>
             <TableRow>
+              {/* Empty header for the actions column */}
+              <TableCell padding="checkbox" />
               <DateFilterHeader
                 dateFrom={headerFilter.dateFrom}
                 dateTo={headerFilter.dateTo}
@@ -166,31 +188,60 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
                   <CircularProgress />
                 </TableCell>
               </TableRow>
             ) : transactions.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} align="center" sx={{ py: 6 }}>
+                <TableCell colSpan={7} align="center" sx={{ py: 6 }}>
                   <Typography color="text.secondary">No transactions found</Typography>
                 </TableCell>
               </TableRow>
             ) : (
               transactions.map((tx) => (
                 <TableRow key={tx.id} hover>
+                  <TableCell padding="checkbox">
+                    <IconButton size="small" onClick={(e) => openMenu(e, tx)}>
+                      <MoreVertIcon fontSize="small" />
+                    </IconButton>
+                  </TableCell>
                   <TableCell>{formatDate(tx.date)}</TableCell>
                   <TableCell>{tx.accountName}</TableCell>
-                  {/* TODO: Display vendor name once the Vendor entity and API exist */}
-                  <TableCell>{'—'}</TableCell>
+                  <TableCell>{tx.vendorLabel ?? '—'}</TableCell>
                   <TableCell>{tx.description ?? '—'}</TableCell>
-                  <TableCell>{tx.categoryName ?? '—'}</TableCell>
+                  <TableCell>{tx.categoryLabel ?? tx.categoryName ?? '—'}</TableCell>
                   <TableCell align="right">{formatAmount(tx.amount)}</TableCell>
                 </TableRow>
               ))
             )}
           </TableBody>
         </Table>
+
+        {/* Row action menu */}
+        <Menu
+          anchorEl={menuAnchor}
+          open={Boolean(menuAnchor)}
+          onClose={closeMenu}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+        >
+          <MenuItem
+            disabled={!menuTx?.uploadRecordId}
+            component={menuTx?.uploadRecordId ? Link : 'li'}
+            to={menuTx?.uploadRecordId ? `/upload-record/${menuTx.uploadRecordId}` : undefined}
+            onClick={closeMenu}
+          >
+            <ListItemText
+              primary="View Upload"
+              secondary={
+                menuTx?.uploadCreatedAt
+                  ? new Date(menuTx.uploadCreatedAt).toLocaleDateString()
+                  : 'No upload record'
+              }
+            />
+          </MenuItem>
+        </Menu>
       </TableContainer>
 
       <TablePagination

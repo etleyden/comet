@@ -22,6 +22,7 @@ import {
     Typography,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
+import { MAPPING_ATTRIBUTES } from 'shared';
 
 interface TransactionMappingTableProps {
     data: any[];
@@ -33,14 +34,9 @@ interface TransactionMappingTableProps {
  * and preview the mapped data in a table.
  */
 export default function TransactionMappingTable({ data, onMappingChange }: TransactionMappingTableProps) {
-    const [columnMappings, setColumnMappings] = useState<Record<string, string>>({
-        date: "",
-        vendor: "",
-        description: "",
-        category: "",
-        amount: "",
-        status: "",
-    });
+    const [columnMappings, setColumnMappings] = useState<Record<string, string>>(
+        Object.fromEntries(MAPPING_ATTRIBUTES.map((attr) => [attr, '']))
+    );
 
     const [pagination, setPagination] = useState({
         pageIndex: 0,
