@@ -3,9 +3,8 @@ import { z } from 'zod';
 import { createEndpoint } from '../utils/createEndpoint';
 import { requireAuth } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types/api';
-import type { Account, CreateAccountRequest } from 'shared';
-import { getDB } from '../data-source';
-import AccountEntity from '../entities/Account';
+import type { Account, DeleteAccountResponse } from 'shared';
+import { AccountService } from '../services/accountService';
 
 const CreateAccountSchema = z.object({
     name: z.string().min(1, 'Account name is required'),
@@ -14,68 +13,76 @@ const CreateAccountSchema = z.object({
     routing: z.string().min(1, 'Routing number is required'),
 });
 
+const UpdateAccountSchema = z.object({
+    name: z.string().min(1).optional(),
+    institution: z.string().optional(),
+    account: z.string().min(1).optional(),
+    routing: z.string().min(1).optional(),
+});
+
+const accountService = new AccountService();
+
 export function accountRoutes(app: Express) {
-    // POST /api/accounts - Create account (requires authentication)
+    // POST /api/accounts - Create account
     app.post(
         '/api/accounts',
         requireAuth(),
         createEndpoint<z.infer<typeof CreateAccountSchema>, Account, AuthenticatedRequest>({
             schema: CreateAccountSchema,
             handler: async (input, req): Promise<Account> => {
-                const db = getDB();
-
-                // Create the account entity
-                const account = new AccountEntity();
-                account.name = input.name;
-                account.institution = input.institution;
-                account.account = input.account;
-                account.routing = input.routing;
-
-                // Save the account
-                const savedAccount = await db.save(AccountEntity, account);
-
-                // Associate the account with the current user
-                await db
-                    .createQueryBuilder()
-                    .relation(AccountEntity, 'users')
-                    .of(savedAccount)
-                    .add(req.user.id);
-
-                // Return the account data
-                return {
-                    id: savedAccount.id,
-                    name: savedAccount.name,
-                    institution: savedAccount.institution,
-                    account: savedAccount.account!,
-                    routing: savedAccount.routing!,
-                };
+                return accountService.createAccount(input, req.user);
             },
         })
     );
 
-    // GET /api/accounts - Get all accounts for current user (requires authentication)
+    // GET /api/accounts - Get all accounts for current user
     app.get(
         '/api/accounts',
         requireAuth(),
         createEndpoint<unknown, Account[], AuthenticatedRequest>({
             inputSource: 'query',
-            handler: async (input, req): Promise<Account[]> => {
-                const db = getDB();
+            handler: async (_input, req): Promise<Account[]> => {
+                return accountService.getAccounts(req.user);
+            },
+        })
+    );
 
-                // Get accounts associated with the current user
-                const accounts = await db
-                    .createQueryBuilder(AccountEntity, 'account')
-                    .innerJoin('account.users', 'user')
-                    .where('user.id = :userId', { userId: req.user.id })
-                    .getMany();
+    // GET /api/accounts/:id - Get a single account by ID
+    app.get(
+        '/api/accounts/:id',
+        requireAuth(),
+        createEndpoint<unknown, Account, AuthenticatedRequest>({
+            inputSource: 'query',
+            handler: async (_input, req): Promise<Account> => {
+                const account = await accountService.getAccountById(req.params.id, req.user);
+                if (!account) {
+                    throw new Error('Account not found');
+                }
+                return account;
+            },
+        })
+    );
 
-                return accounts.map(account => ({
-                    id: account.id,
-                    name: account.name,
-                    institution: account.institution,
-                    account: account.account!,
-                    routing: account.routing!,
-                }));
+    // PUT /api/accounts/:id - Update an account
+    app.put(
+        '/api/accounts/:id',
+        requireAuth(),
+        createEndpoint<z.infer<typeof UpdateAccountSchema>, Account, AuthenticatedRequest>({
+            schema: UpdateAccountSchema,
+            handler: async (input, req): Promise<Account> => {
+                return accountService.updateAccount(req.params.id, input, req.user);
+            },
+        })
+    );
+
+    // DELETE /api/accounts/:id - Delete an account
+    app.delete(
+        '/api/accounts/:id',
+        requireAuth(),
+        createEndpoint<unknown, DeleteAccountResponse, AuthenticatedRequest>({
+            handler: async (_input, req): Promise<DeleteAccountResponse> => {
+                await accountService.deleteAccount(req.params.id, req.user);
+                return { deleted: true };
             },
         })
     );

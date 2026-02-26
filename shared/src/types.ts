@@ -104,6 +104,17 @@ export interface CreateAccountRequest {
   routing: string;
 }
 
+export interface UpdateAccountRequest {
+  name?: string;
+  institution?: string;
+  account?: string;
+  routing?: string;
+}
+
+export interface DeleteAccountResponse {
+  deleted: boolean;
+}
+
 // ─── Transactions API Types ──────────────────────────────────────────
 
 export interface TransactionFilters {
