@@ -10,8 +10,11 @@ import {
     DialogContent,
     DialogContentText,
     DialogTitle,
+    FormControl,
     IconButton,
+    MenuItem,
     Paper,
+    Select,
     Stack,
     Table,
     TableBody,
@@ -216,13 +219,23 @@ export default function UploadRecordPage() {
                                         <TableCell sx={{ textTransform: 'capitalize' }}>{attr}</TableCell>
                                         <TableCell>
                                             {editing ? (
-                                                <TextField
-                                                    size="small"
-                                                    variant="standard"
-                                                    value={csvColumn ?? ''}
-                                                    onChange={(e) => updateDraftValue(attr, e.target.value)}
-                                                    fullWidth
-                                                />
+                                                <FormControl fullWidth size="small">
+                                                    <Select
+                                                        value={csvColumn ?? ''}
+                                                        onChange={(e) => updateDraftValue(attr, e.target.value as string)}
+                                                        displayEmpty
+                                                        data-testid={`mapping-select-${attr}`}
+                                                    >
+                                                        <MenuItem value="">
+                                                            <em>None</em>
+                                                        </MenuItem>
+                                                        {(record.availableColumns ?? []).map((col) => (
+                                                            <MenuItem key={col} value={col}>
+                                                                {col}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
                                             ) : (
                                                 csvColumn ?? <Typography color="text.secondary">—</Typography>
                                             )}

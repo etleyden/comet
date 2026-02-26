@@ -12,6 +12,7 @@ import type {
     TransactionFilters,
     UploadTransactionsRequest,
 } from 'shared';
+import { validateMappingColumns } from '../utils/mappingUtils';
 
 export interface UploadTransactionsInput extends UploadTransactionsRequest {
     user: User;
@@ -135,10 +136,30 @@ export class TransactionService {
 
         // Run the write operations in a transaction
         return AppDataSource.transaction(async (txManager) => {
+            // Derive available columns from the raw rows
+            const columnSet = new Set<string>();
+            for (const row of transactions) {
+                for (const key of Object.keys(row)) {
+                    columnSet.add(key);
+                }
+            }
+            const availableColumns = Array.from(columnSet);
+
+            // Validate mapping columns against available columns
+            const invalidColumns = validateMappingColumns(mapping, availableColumns);
+            if (invalidColumns.length > 0) {
+                const err: any = new Error(
+                    `Mapping contains columns not found in CSV: ${invalidColumns.join(', ')}`,
+                );
+                err.status = 400;
+                throw err;
+            }
+
             // Create the upload record
             const uploadRecord = new UploadRecord();
             uploadRecord.user = user;
             uploadRecord.mapping = mapping;
+            uploadRecord.availableColumns = availableColumns;
             const savedUpload = await txManager.save(UploadRecord, uploadRecord);
 
             // Build transaction entities from the raw rows using the mapping

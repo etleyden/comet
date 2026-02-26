@@ -23,6 +23,7 @@ export interface UploadRecord {
   id: string;
   userId: string;
   mapping: Record<string, string>;
+  availableColumns: string[];
   createdAt: string;
 }
 

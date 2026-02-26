@@ -76,12 +76,14 @@ describe('UploadRecordService', () => {
         user: UserEntity,
         mapping: Record<string, string> = { amount: 'Amount', date: 'Date' },
         txCount = 2,
+        availableColumns: string[] = ['Amount', 'Date', 'Description', 'Vendor', 'Category'],
     ): Promise<UploadRecord> {
         const db = getTestDB();
 
         const upload = new UploadRecord();
         upload.user = user;
         upload.mapping = mapping;
+        upload.availableColumns = availableColumns;
         const saved = await db.save(UploadRecord, upload);
 
         for (let i = 0; i < txCount; i++) {
@@ -91,8 +93,10 @@ describe('UploadRecordService', () => {
             tx.amount = 10 + i;
             tx.date = new Date('2025-06-01');
             tx.description = `Transaction ${i}`;
+            tx.vendorLabel = `Vendor ${i}`;
+            tx.categoryLabel = `Category ${i}`;
             tx.status = 'completed';
-            tx.raw = { Amount: String(10 + i), Date: '2025-06-01' };
+            tx.raw = { Amount: String(10 + i), Date: '2025-06-01', Description: `Transaction ${i}`, Vendor: `Vendor ${i}`, Category: `Category ${i}` };
             await db.save(Transaction, tx);
         }
 
@@ -113,6 +117,7 @@ describe('UploadRecordService', () => {
             expect(result.id).toBe(record.id);
             expect(result.userId).toBe(testUser.id);
             expect(result.mapping).toEqual({ amount: 'Amt', date: 'Dt' });
+            expect(result.availableColumns).toEqual(['Amount', 'Date', 'Description', 'Vendor', 'Category']);
             expect(result.transactionCount).toBe(3);
             expect(result.accountName).toBe('Primary Checking');
             expect(result.createdAt).toBeDefined();
@@ -155,9 +160,9 @@ describe('UploadRecordService', () => {
 
     describe('updateUploadRecord', () => {
         it('should update the mapping and return the updated record', async () => {
-            const record = await seedUploadRecord(testUser, { amount: 'Amt' });
+            const record = await seedUploadRecord(testUser, { amount: 'Amount' });
 
-            const newMapping = { amount: 'Total', date: 'TransDate', description: 'Memo' };
+            const newMapping = { amount: 'Amount', date: 'Date', description: 'Description' };
             const result = await uploadRecordService.updateUploadRecord({
                 id: record.id,
                 user: testUser,
@@ -170,9 +175,9 @@ describe('UploadRecordService', () => {
         });
 
         it('should persist the mapping change to the database', async () => {
-            const record = await seedUploadRecord(testUser, { amount: 'Amt' });
+            const record = await seedUploadRecord(testUser, { amount: 'Amount' });
 
-            const newMapping = { amount: 'NewAmount', date: 'NewDate' };
+            const newMapping = { amount: 'Amount', date: 'Date' };
             await uploadRecordService.updateUploadRecord({
                 id: record.id,
                 user: testUser,
@@ -191,9 +196,143 @@ describe('UploadRecordService', () => {
                 uploadRecordService.updateUploadRecord({
                     id: record.id,
                     user: otherUser,
-                    mapping: { amount: 'X' },
+                    mapping: { amount: 'Amount' },
                 }),
             ).rejects.toThrow('Upload record not found');
+        });
+
+        it('should reject mapping with columns not in availableColumns', async () => {
+            const record = await seedUploadRecord(testUser, { amount: 'Amount' });
+
+            await expect(
+                uploadRecordService.updateUploadRecord({
+                    id: record.id,
+                    user: testUser,
+                    mapping: { amount: 'NonExistentColumn' },
+                }),
+            ).rejects.toThrow('Mapping contains columns not found in CSV: NonExistentColumn');
+        });
+
+        it('should set 400 status on validation error', async () => {
+            const record = await seedUploadRecord(testUser, { amount: 'Amount' });
+
+            try {
+                await uploadRecordService.updateUploadRecord({
+                    id: record.id,
+                    user: testUser,
+                    mapping: { amount: 'BadCol' },
+                });
+                expect.fail('should have thrown');
+            } catch (err: any) {
+                expect(err.status).toBe(400);
+            }
+        });
+
+        it('should re-derive vendorLabel from the updated mapping', async () => {
+            const record = await seedUploadRecord(
+                testUser,
+                { amount: 'Amount', vendor: 'Description' },
+                2,
+            );
+
+            // Change vendor mapping from Description to Vendor
+            await uploadRecordService.updateUploadRecord({
+                id: record.id,
+                user: testUser,
+                mapping: { amount: 'Amount', vendor: 'Vendor' },
+            });
+
+            const db = getTestDB();
+            const transactions = await db.find(Transaction, {
+                where: { upload: { id: record.id } },
+                order: { amount: 'ASC' },
+            });
+
+            expect(transactions[0].vendorLabel).toBe('Vendor 0');
+            expect(transactions[1].vendorLabel).toBe('Vendor 1');
+        });
+
+        it('should re-derive categoryLabel from the updated mapping', async () => {
+            const record = await seedUploadRecord(
+                testUser,
+                { amount: 'Amount', category: 'Description' },
+                2,
+            );
+
+            // Change category mapping from Description to Category
+            await uploadRecordService.updateUploadRecord({
+                id: record.id,
+                user: testUser,
+                mapping: { amount: 'Amount', category: 'Category' },
+            });
+
+            const db = getTestDB();
+            const transactions = await db.find(Transaction, {
+                where: { upload: { id: record.id } },
+                order: { amount: 'ASC' },
+            });
+
+            expect(transactions[0].categoryLabel).toBe('Category 0');
+            expect(transactions[1].categoryLabel).toBe('Category 1');
+        });
+
+        it('should re-derive description from the updated mapping', async () => {
+            const record = await seedUploadRecord(
+                testUser,
+                { amount: 'Amount', description: 'Vendor' },
+                2,
+            );
+
+            // Change description mapping from Vendor to Description
+            await uploadRecordService.updateUploadRecord({
+                id: record.id,
+                user: testUser,
+                mapping: { amount: 'Amount', description: 'Description' },
+            });
+
+            const db = getTestDB();
+            const transactions = await db.find(Transaction, {
+                where: { upload: { id: record.id } },
+                order: { amount: 'ASC' },
+            });
+
+            expect(transactions[0].description).toBe('Transaction 0');
+            expect(transactions[1].description).toBe('Transaction 1');
+        });
+
+        it('should clear derived fields when mapping key is removed', async () => {
+            const record = await seedUploadRecord(
+                testUser,
+                { amount: 'Amount', vendor: 'Vendor', category: 'Category' },
+                1,
+            );
+
+            // Remove vendor and category from the mapping
+            await uploadRecordService.updateUploadRecord({
+                id: record.id,
+                user: testUser,
+                mapping: { amount: 'Amount' },
+            });
+
+            const db = getTestDB();
+            const [tx] = await db.find(Transaction, {
+                where: { upload: { id: record.id } },
+            });
+
+            expect(tx.vendorLabel).toBeNull();
+            expect(tx.categoryLabel).toBeNull();
+        });
+
+        it('should return availableColumns in the response', async () => {
+            const record = await seedUploadRecord(testUser, { amount: 'Amount' });
+
+            const result = await uploadRecordService.updateUploadRecord({
+                id: record.id,
+                user: testUser,
+                mapping: { amount: 'Amount', date: 'Date' },
+            });
+
+            expect(result.availableColumns).toEqual(['Amount', 'Date', 'Description', 'Vendor', 'Category']);
         });
     });
 

@@ -8,6 +8,7 @@ import type {
     DeleteUploadRecordResponse,
     UpdateUploadRecordRequest,
 } from 'shared';
+import { validateMappingColumns } from '../utils/mappingUtils';
 
 export interface GetUploadRecordInput {
     id: string;
@@ -39,6 +40,7 @@ export class UploadRecordService {
             id: record.id,
             userId: user.id,
             mapping: record.mapping,
+            availableColumns: record.availableColumns ?? [],
             createdAt: toISOString(record.createdAt),
             transactionCount,
             accountName,
@@ -55,6 +57,20 @@ export class UploadRecordService {
         const db = getDB();
 
         const record = await this.findOwnedRecord(id, user.id);
+
+        // Validate mapping columns against the stored available columns
+        const availableColumns = record.availableColumns ?? [];
+        if (availableColumns.length > 0) {
+            const invalidColumns = validateMappingColumns(mapping, availableColumns);
+            if (invalidColumns.length > 0) {
+                const err: any = new Error(
+                    `Mapping contains columns not found in CSV: ${invalidColumns.join(', ')}`,
+                );
+                err.status = 400;
+                throw err;
+            }
+        }
+
         record.mapping = mapping;
         const saved = await db.save(UploadRecord, record);
 
@@ -67,6 +83,7 @@ export class UploadRecordService {
             id: saved.id,
             userId: user.id,
             mapping: saved.mapping,
+            availableColumns: saved.availableColumns ?? [],
             createdAt: toISOString(saved.createdAt),
             transactionCount,
             accountName,
@@ -161,9 +178,9 @@ export class UploadRecordService {
             .getMany();
 
         for (const tx of transactions) {
-            tx.vendorLabel = mapping.vendor ? String(tx.raw[mapping.vendor] ?? '') : undefined;
-            tx.categoryLabel = mapping.category ? String(tx.raw[mapping.category] ?? '') : undefined;
-            tx.description = mapping.description ? String(tx.raw[mapping.description] ?? '') : undefined;
+            (tx as any).vendorLabel = mapping.vendor ? String(tx.raw[mapping.vendor] ?? '') : null;
+            (tx as any).categoryLabel = mapping.category ? String(tx.raw[mapping.category] ?? '') : null;
+            (tx as any).description = mapping.description ? String(tx.raw[mapping.description] ?? '') : null;
         }
 
         if (transactions.length > 0) {

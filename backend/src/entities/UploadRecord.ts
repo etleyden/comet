@@ -24,6 +24,10 @@ export default class UploadRecord {
     @Column('jsonb')
     mapping!: Record<string, string>;
 
+    /** The original CSV column headers available in the uploaded file */
+    @Column('jsonb', { default: '[]' })
+    availableColumns!: string[];
+
     @CreateDateColumn()
     createdAt!: Date;
 
