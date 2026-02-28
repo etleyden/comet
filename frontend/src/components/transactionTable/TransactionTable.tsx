@@ -42,6 +42,11 @@ export interface TransactionTableProps {
 /** Debounce delay (ms) for fetch triggered by filter / pagination changes. */
 const FETCH_DEBOUNCE_MS = 300;
 
+const cellStyle = {
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+}
 export default function TransactionTable({ filter: externalFilter }: TransactionTableProps) {
   // ── Filter state managed by column header popovers ─────────────
   const [headerFilter, setHeaderFilter] = useState<TransactionFilters>({});
@@ -166,7 +171,7 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
                   updateFilter({ vendors: vendors.length > 0 ? vendors : undefined })
                 }
               />
-              <TableCell>
+              <TableCell sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 <Typography variant="subtitle2" fontWeight="bold" noWrap>
                   Description
                 </Typography>
@@ -184,7 +189,6 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
               />
             </TableRow>
           </TableHead>
-
           <TableBody>
             {loading ? (
               <TableRow>
@@ -206,12 +210,24 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
                       <MoreVertIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
-                  <TableCell>{formatDate(tx.date)}</TableCell>
-                  <TableCell>{tx.accountName}</TableCell>
-                  <TableCell>{tx.vendorLabel ?? '—'}</TableCell>
-                  <TableCell>{tx.description ?? '—'}</TableCell>
-                  <TableCell>{tx.categoryLabel ?? tx.categoryName ?? '—'}</TableCell>
-                  <TableCell align="right">{formatAmount(tx.amount)}</TableCell>
+                  <TableCell sx={cellStyle}>
+                    {formatDate(tx.date)}
+                  </TableCell>
+                  <TableCell sx={cellStyle}>
+                    {tx.accountName}
+                  </TableCell>
+                  <TableCell sx={cellStyle}>
+                    {tx.vendorLabel ?? '—'}
+                  </TableCell>
+                  <TableCell sx={cellStyle}>
+                    {tx.description ?? '—'}
+                  </TableCell>
+                  <TableCell sx={cellStyle}>
+                    {tx.categoryLabel ?? tx.categoryName ?? '—'}
+                  </TableCell>
+                  <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                    {formatAmount(tx.amount)}
+                  </TableCell>
                 </TableRow>
               ))
             )}

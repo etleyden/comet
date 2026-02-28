@@ -43,8 +43,8 @@ export interface Account {
   id: string;
   name: string;
   institution?: string;
-  account: string;
-  routing: string;
+  account?: string;
+  routing?: string;
 }
 
 export interface Category {
@@ -100,8 +100,8 @@ export interface CreatePostRequest {
 export interface CreateAccountRequest {
   name: string;
   institution?: string;
-  account: string;
-  routing: string;
+  account?: string;
+  routing?: string;
 }
 
 // ─── Transactions API Types ──────────────────────────────────────────

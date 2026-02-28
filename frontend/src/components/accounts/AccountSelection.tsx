@@ -9,6 +9,7 @@ interface AccountSelectionProps {
     label?: string;
     required?: boolean;
     disabled?: boolean;
+    refreshTrigger?: number; // When this changes, accounts will be reloaded
 }
 
 /**
@@ -19,7 +20,8 @@ export default function AccountSelection({
     onChange,
     label = "Account",
     required = false,
-    disabled = false
+    disabled = false,
+    refreshTrigger = 0
 }: AccountSelectionProps) {
     const [accounts, setAccounts] = useState<Account[]>([]);
     const [loading, setLoading] = useState(true);
@@ -27,7 +29,7 @@ export default function AccountSelection({
 
     useEffect(() => {
         loadAccounts();
-    }, []);
+    }, [refreshTrigger]);
 
     const loadAccounts = async () => {
         setLoading(true);
