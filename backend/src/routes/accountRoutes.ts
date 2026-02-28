@@ -10,8 +10,8 @@ import AccountEntity from '../entities/Account';
 const CreateAccountSchema = z.object({
     name: z.string().min(1, 'Account name is required'),
     institution: z.string().optional(),
-    account: z.string().min(1, 'Account number is required'),
-    routing: z.string().min(1, 'Routing number is required'),
+    account: z.string().min(1, 'Account number is required').optional(),
+    routing: z.string().min(1, 'Routing number is required').optional(),
 });
 
 export function accountRoutes(app: Express) {
@@ -46,8 +46,8 @@ export function accountRoutes(app: Express) {
                     id: savedAccount.id,
                     name: savedAccount.name,
                     institution: savedAccount.institution,
-                    account: savedAccount.account!,
-                    routing: savedAccount.routing!,
+                    account: savedAccount.account,
+                    routing: savedAccount.routing,
                 };
             },
         })
@@ -73,8 +73,8 @@ export function accountRoutes(app: Express) {
                     id: account.id,
                     name: account.name,
                     institution: account.institution,
-                    account: account.account!,
-                    routing: account.routing!,
+                    account: account.account,
+                    routing: account.routing,
                 }));
             },
         })

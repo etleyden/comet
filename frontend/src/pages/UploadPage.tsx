@@ -1,10 +1,12 @@
 import { useState } from "react";
 import TransactionMappingTable from "../components/upload/TransactionMappingTable";
 import AccountSelection from "../components/accounts/AccountSelection";
+import AccountCreation from "../components/accounts/AccountCreation";
 import Button from "@mui/material/Button";
-import { Alert, Box, CircularProgress, Typography } from "@mui/material";
+import { Alert, Box, CircularProgress, Typography, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import ImportCSVButton from "../components/upload/ImportCSVButton";
-import { transactionsApi } from "../../api";
+import { transactionsApi, accountsApi } from "../../api";
 import { useNotification } from "../context/NotificationContext";
 
 type UploadPageState = "EMPTY" | "MAPPING" | "LOADING" | "SUCCESS" | "ERROR";
@@ -17,6 +19,8 @@ export default function UploadPage() {
     const [pageState, setPageState] = useState<UploadPageState>("EMPTY");
     const [uploadResult, setUploadResult] = useState<{ uploadRecordId: string; transactionCount: number } | null>(null);
     const [error, setError] = useState<string | null>(null);
+    const [showCreateAccountDialog, setShowCreateAccountDialog] = useState(false);
+    const [accountRefreshTrigger, setAccountRefreshTrigger] = useState(0);
 
     const handleCSVImport = (data: any[]) => {
         setData(data);
@@ -62,6 +66,27 @@ export default function UploadPage() {
         setPageState("EMPTY");
     };
 
+    const handleAccountCreated = async () => {
+        // Refresh the account list
+        setAccountRefreshTrigger(prev => prev + 1);
+        
+        // Get the newly created account to auto-select it
+        try {
+            const response = await accountsApi.getAccounts();
+            if (response.success && response.data.length > 0) {
+                // Select the most recently created account (last in list)
+                const newAccount = response.data[response.data.length - 1];
+                setAccountId(newAccount.id);
+                notify(`Account "${newAccount.name}" created and selected`, "success");
+            }
+        } catch (err) {
+            notify("Account created, but failed to auto-select", "warning");
+        }
+        
+        // Close the dialog
+        setShowCreateAccountDialog(false);
+    };
+
     return (<>
         {pageState === "EMPTY" && <ImportCSVButton onFileUpload={handleCSVImport} />}
 
@@ -73,8 +98,17 @@ export default function UploadPage() {
                         onChange={setAccountId}
                         label="Upload to Account"
                         required
+                        refreshTrigger={accountRefreshTrigger}
                     />
                 </Box>
+                <IconButton 
+                    color="primary" 
+                    onClick={() => setShowCreateAccountDialog(true)}
+                    title="Create new account"
+                    sx={{ border: 1, borderColor: 'primary.main' }}
+                >
+                    <AddIcon />
+                </IconButton>
                 <Button
                     variant="contained"
                     onClick={handleFileUpload}
@@ -118,5 +152,24 @@ export default function UploadPage() {
                 </Button>
             </Box>
         )}
+
+        <Dialog 
+            open={showCreateAccountDialog} 
+            onClose={() => setShowCreateAccountDialog(false)}
+            maxWidth="sm"
+            fullWidth
+        >
+            <DialogTitle>Create New Account</DialogTitle>
+            <DialogContent>
+                <Box sx={{ pt: 1 }}>
+                    <AccountCreation onAccountCreated={handleAccountCreated} />
+                </Box>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => setShowCreateAccountDialog(false)}>
+                    Cancel
+                </Button>
+            </DialogActions>
+        </Dialog>
     </>)
 }

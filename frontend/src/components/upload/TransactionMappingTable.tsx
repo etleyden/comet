@@ -21,7 +21,6 @@ import {
     MenuItem,
     Typography,
 } from "@mui/material";
-import { alpha } from "@mui/material/styles";
 import { MAPPING_ATTRIBUTES } from 'shared';
 
 interface TransactionMappingTableProps {
@@ -40,7 +39,7 @@ export default function TransactionMappingTable({ data, onMappingChange }: Trans
 
     const [pagination, setPagination] = useState({
         pageIndex: 0,
-        pageSize: 25,
+        pageSize: 10,
     });
 
     // Extract available CSV columns from the data
@@ -76,16 +75,15 @@ export default function TransactionMappingTable({ data, onMappingChange }: Trans
             accessorFn: (row) => (csvColumn ? row[csvColumn] : undefined),
             id: `${appAttribute}_${csvColumn || 'unmapped'}`,
             header: () => (
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1 }}>
-                    {/* <Typography variant="body" sx={{ mb: 1, fontWeight: "bold" }}> */}
-                    {appAttribute.charAt(0).toUpperCase() + appAttribute.slice(1)}
-                    {/* </Typography> */}
-                    <FormControl variant="standard" size="small">
+                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "stretch", gap: 1, minWidth: 120 }}>
+                    <Typography sx={{ fontWeight: "bold" }}>
+                        {appAttribute.charAt(0).toUpperCase() + appAttribute.slice(1)}
+                    </Typography>
+                    <FormControl variant="standard" size="small" fullWidth>
                         <Select
                             value={csvColumn}
                             onChange={(e) => handleMappingChange(appAttribute, e.target.value)}
                             displayEmpty
-                            sx={{ minWidth: 150 }}
                         >
                             <MenuItem value="">
                                 <em>Select column...</em>
@@ -123,20 +121,15 @@ export default function TransactionMappingTable({ data, onMappingChange }: Trans
     }
 
     return (
-        <Box>
-            <TableContainer component={Paper}>
-                <Table>
+        <Paper>
+            <TableContainer>
+                <Table size="small">
                     <TableHead>
                         {table.getHeaderGroups().map((headerGroup) => (
                             <TableRow key={headerGroup.id}>
-                                {headerGroup.headers.map((header, index) => (
+                                {headerGroup.headers.map((header, _index) => (
                                     <TableCell
                                         key={header.id}
-                                        sx={{
-                                            ...(index < headerGroup.headers.length - 1
-                                                ? { borderRight: 1, borderColor: "divider" }
-                                                : {}),
-                                        }}
                                     >
                                         {flexRender(
                                             header.column.columnDef.header,
@@ -151,11 +144,6 @@ export default function TransactionMappingTable({ data, onMappingChange }: Trans
                         {table.getRowModel().rows.map((row) => (
                             <TableRow
                                 key={row.id}
-                                sx={(theme) => ({
-                                    "&:nth-of-type(odd)": {
-                                        backgroundColor: alpha(theme.palette.action.hover, 0.05),
-                                    },
-                                })}
                             >
                                 {row.getVisibleCells().map((cell, index) => (
                                     <TableCell
@@ -192,8 +180,8 @@ export default function TransactionMappingTable({ data, onMappingChange }: Trans
                         pageIndex: 0,
                     }))
                 }
-                rowsPerPageOptions={[5, 25, 50, 100]}
+                rowsPerPageOptions={[10, 25, 50, 100]}
             />)}
-        </Box>
+        </Paper>
     );
 }

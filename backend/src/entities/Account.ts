@@ -12,10 +12,10 @@ export default class Account {
   @Column({ nullable: true })
   institution?: string;
 
-  @Column({ unique: true })
+  @Column({ nullable: true })
   account?: string; // Added definite assignment assertion
 
-  @Column()
+  @Column({ nullable: true })
   routing?: string; // Added definite assignment assertion
 
   @ManyToMany(() => User, user => user.accounts)

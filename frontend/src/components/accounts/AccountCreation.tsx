@@ -34,8 +34,8 @@ export default function AccountCreation(props: {
             const response = await accountsApi.createAccount({
                 name: formData.accountName,
                 institution: formData.institution || undefined,
-                account: formData.accountNumber,
-                routing: formData.routingNumber,
+                account: formData.accountNumber || undefined,
+                routing: formData.routingNumber || undefined,
             });
 
             if (response.success) {
@@ -91,7 +91,6 @@ export default function AccountCreation(props: {
                 name="accountNumber"
                 value={formData.accountNumber}
                 onChange={handleChange}
-                required
                 disabled={loading}
             />
             <TextField
@@ -99,7 +98,6 @@ export default function AccountCreation(props: {
                 name="routingNumber"
                 value={formData.routingNumber}
                 onChange={handleChange}
-                required
                 disabled={loading}
             />
             <Button type="submit" disabled={loading}>
