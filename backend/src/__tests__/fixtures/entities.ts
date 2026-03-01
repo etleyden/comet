@@ -1,4 +1,5 @@
 import type { User, Account, CreateAccountRequest, LoginRequest, RegisterRequest } from 'shared';
+import { Role } from 'shared';
 
 // ─── User Fixtures ────────────────────────────────────────────────────
 
@@ -6,12 +7,21 @@ export const testUser: User = {
   id: '550e8400-e29b-41d4-a716-446655440000',
   name: 'Test User',
   email: 'test@example.com',
+  role: Role.USER,
 };
 
 export const testUser2: User = {
   id: '550e8400-e29b-41d4-a716-446655440001',
   name: 'Another User',
   email: 'another@example.com',
+  role: Role.USER,
+};
+
+export const testAdminUser: User = {
+  id: '550e8400-e29b-41d4-a716-446655440002',
+  name: 'Admin User',
+  email: 'admin@example.com',
+  role: Role.ADMIN,
 };
 
 export const testLoginCredentials: LoginRequest = {

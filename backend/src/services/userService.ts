@@ -1,6 +1,7 @@
 import Session from '../entities/Session';
 import { getDB } from '../data-source';
 import User from '../entities/User';
+import { Role } from 'shared';
 import bcrypt from 'bcrypt';
 
 interface SessionWithToken extends Session {
@@ -188,5 +189,43 @@ export class UserService {
     const db = getDB();
     const users = await db.find(User);
     return users;
+  }
+
+  /**
+   * Seeds an initial admin user from environment variables.
+   * Reads ADMIN_NAME, ADMIN_EMAIL, and ADMIN_PASSWORD.
+   * - If all three are set and no user with that email exists, creates an admin.
+   * - If the user already exists, ensures their role is ADMIN.
+   * - If the env vars are not set, does nothing.
+   */
+  async seedAdminUser(): Promise<void> {
+    const name = process.env.ADMIN_NAME;
+    const email = process.env.ADMIN_EMAIL;
+    const password = process.env.ADMIN_PASSWORD;
+
+    if (!email || !password || !name) {
+      return; // Env vars not configured — skip seeding
+    }
+
+    const db = getDB();
+    const existing = await db.findOneBy(User, { email });
+
+    if (existing) {
+      if (existing.role !== Role.ADMIN) {
+        existing.role = Role.ADMIN;
+        await db.save(User, existing);
+        console.log(`Promoted existing user ${email} to ADMIN.`);
+      }
+      return;
+    }
+
+    const passwordHash = await this.hashPassword(password);
+    await db.save(User, {
+      name,
+      email,
+      passwordHash,
+      role: Role.ADMIN,
+    });
+    console.log(`Seeded admin user: ${email}`);
   }
 }

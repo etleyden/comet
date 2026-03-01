@@ -1,5 +1,10 @@
 // ─── Re-usable extensible types ──────────────────────────────
 
+export enum Role {
+  USER = 'user',
+  ADMIN = 'admin',
+}
+
 export interface Pagination {
   page: number;
   limit: number;
@@ -10,6 +15,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  role: Role;
 }
 
 export interface Session {

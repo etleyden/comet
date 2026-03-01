@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Role } from 'shared';
 import { useAuth } from '../../context/AuthContext';
 import {
     Drawer,
@@ -16,10 +17,12 @@ import {
 import HomeIcon from '@mui/icons-material/Home';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import ScienceIcon from '@mui/icons-material/Science';
+import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LoginIcon from '@mui/icons-material/Login';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { healthApi } from '../../../api';
 import { useNotification } from '../../context/NotificationContext';
+import { RequireRole } from '../auth/RequireRole';
 
 export const DRAWER_WIDTH = 260;
 export const DRAWER_MARGIN = 12;
@@ -121,6 +124,17 @@ export default function SiteDrawer() {
                             </ListItemButton>
                         </ListItem>
                     ))}
+                    <RequireRole role={Role.ADMIN}>
+                        <ListItem disablePadding>
+                            <ListItemButton
+                                selected={location.pathname === '/admin'}
+                                onClick={() => handleNavigate('/admin')}
+                            >
+                                <ListItemIcon><AdminPanelSettingsIcon /></ListItemIcon>
+                                <ListItemText primary="Admin" />
+                            </ListItemButton>
+                        </ListItem>
+                    </RequireRole>
                 </List>
 
                 <Box sx={{ flexGrow: 1 }} />

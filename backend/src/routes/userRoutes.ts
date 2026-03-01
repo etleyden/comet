@@ -35,7 +35,7 @@ function clearSessionCookie(res: Response): void {
 }
 
 function toAuthUser(user: UserEntity, token: string): AuthUser {
-  return { id: user.id, name: user.name, email: user.email, token };
+  return { id: user.id, name: user.name, email: user.email, role: user.role, token };
 }
 
 export function userRoutes(app: Express) {
@@ -94,6 +94,7 @@ export function userRoutes(app: Express) {
           id: req.user.id,
           name: req.user.name,
           email: req.user.email,
+          role: req.user.role,
         };
       },
     })

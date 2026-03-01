@@ -1,11 +1,17 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { User } from 'shared';
+import { Role } from 'shared';
 import { authApi } from '../../api';
+
+/** Role hierarchy: higher index ⇒ more privileged. */
+const ROLE_HIERARCHY: Role[] = [Role.USER, Role.ADMIN];
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  /** Returns true when the current user's role meets or exceeds the required role. */
+  hasRole: (role: Role) => boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -75,17 +81,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const hasRole = useCallback(
+    (role: Role): boolean => {
+      if (!user) return false;
+      return ROLE_HIERARCHY.indexOf(user.role) >= ROLE_HIERARCHY.indexOf(role);
+    },
+    [user],
+  );
+
+  const value = useMemo<AuthContextType>(
+    () => ({
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      hasRole,
+      login,
+      register,
+      logout,
+    }),
+    [user, isLoading, hasRole],
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        register,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
