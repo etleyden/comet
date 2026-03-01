@@ -1,0 +1,13 @@
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['src/**/*.test.ts'],
+    reporters: ['default', 'json'],
+    outputFile: {
+      json: '../reports/shared/test-results.json',
+    },
+  },
+});

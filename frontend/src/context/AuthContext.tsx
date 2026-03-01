@@ -1,10 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { User } from 'shared';
-import { Role } from 'shared';
+import { Role, meetsRoleRequirement } from 'shared';
 import { authApi } from '../../api';
-
-/** Role hierarchy: higher index ⇒ more privileged. */
-const ROLE_HIERARCHY: Role[] = [Role.USER, Role.ADMIN];
 
 interface AuthContextType {
   user: User | null;
@@ -88,7 +85,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const hasRole = useCallback(
     (role: Role): boolean => {
       if (!user) return false;
-      return ROLE_HIERARCHY.indexOf(user.role) >= ROLE_HIERARCHY.indexOf(role);
+      return meetsRoleRequirement(user.role, role);
     },
     [user],
   );

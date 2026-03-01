@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { Role } from 'shared';
+import { Role, meetsRoleRequirement } from 'shared';
 import { UserService } from '../services/userService';
 import User from '../entities/User';
 
@@ -18,13 +18,6 @@ declare global {
 export interface AuthOptions {
   required?: boolean;
   role?: Role;
-}
-
-/** Role hierarchy: higher index ⇒ more privileged. */
-const ROLE_HIERARCHY: Role[] = [Role.USER, Role.ADMIN];
-
-function meetsRoleRequirement(userRole: Role, requiredRole: Role): boolean {
-  return ROLE_HIERARCHY.indexOf(userRole) >= ROLE_HIERARCHY.indexOf(requiredRole);
 }
 
 /**

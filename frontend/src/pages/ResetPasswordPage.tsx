@@ -14,6 +14,7 @@ import {
 import { Visibility, VisibilityOff } from '@mui/icons-material';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../../api';
+import { validatePassword } from 'shared';
 
 /**
  * Page shown when a user must reset their password before continuing.
@@ -34,8 +35,9 @@ export default function ResetPasswordPage() {
     const handleSubmit = async () => {
         setError('');
 
-        if (newPassword.length < 8) {
-            setError('New password must be at least 8 characters.');
+        const { valid, errors: pwErrors } = validatePassword(newPassword);
+        if (!valid) {
+            setError(`New password does not meet requirements: ${pwErrors.join(', ')}.`);
             return;
         }
 

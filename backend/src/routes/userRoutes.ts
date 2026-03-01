@@ -5,12 +5,25 @@ import { UserService } from '../services/userService';
 import { requireAuth } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types/api';
 import type { AuthUser, User as ApiUser, LogoutResponse, ResetPasswordRequest } from 'shared';
+import { validatePassword } from 'shared';
 import UserEntity from '../entities/User';
+
+/** Zod refinement that delegates to the shared validatePassword rules. */
+const passwordField = () =>
+  z.string().superRefine((val, ctx) => {
+    const { valid, errors } = validatePassword(val);
+    if (!valid) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `Password does not meet requirements: ${errors.join(', ')}`,
+      });
+    }
+  });
 
 const CreateUserSchema = z.object({
   name: z.string().min(2),
   email: z.string().email(),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
+  password: passwordField(),
 });
 
 const UserLoginSchema = z.object({
@@ -111,7 +124,7 @@ export function userRoutes(app: Express) {
   // POST /api/auth/reset-password - Change password (requires authentication)
   const ResetPasswordSchema = z.object({
     currentPassword: z.string().min(1, 'Current password is required'),
-    newPassword: z.string().min(8, 'New password must be at least 8 characters'),
+    newPassword: passwordField(),
   });
 
   app.post(
