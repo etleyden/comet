@@ -9,6 +9,7 @@ import {
 import Account from './Account';
 import Category from './Category';
 import UploadRecord from './UploadRecord';
+import Vendor from './Vendor';
 
 @Entity()
 export default class Transaction {
@@ -35,6 +36,9 @@ export default class Transaction {
 
   @Column({ nullable: true })
   vendorLabel?: string;
+
+  @Column({nullable: true })
+  vendor?: Vendor;
 
   @Column({ nullable: true })
   categoryLabel?: string;
