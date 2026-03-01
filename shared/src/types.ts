@@ -1,5 +1,10 @@
 // ─── Re-usable extensible types ──────────────────────────────
 
+export enum Role {
+  USER = 'user',
+  ADMIN = 'admin',
+}
+
 export interface Pagination {
   page: number;
   limit: number;
@@ -10,6 +15,8 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  role: Role;
+  requiresPasswordReset: boolean;
 }
 
 export interface Session {
@@ -86,6 +93,11 @@ export interface AuthUser extends User {
 
 export interface LogoutResponse {
   success: boolean;
+}
+
+export interface ResetPasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }
 
 // ─── Posts API Types ─────────────────────────────────────────────────

@@ -1,6 +1,7 @@
 import Session from '../entities/Session';
 import { getDB } from '../data-source';
 import User from '../entities/User';
+import { Role } from 'shared';
 import bcrypt from 'bcrypt';
 
 interface SessionWithToken extends Session {
@@ -119,6 +120,32 @@ export class UserService {
     return user;
   }
 
+  /**
+   * Resets a user's password. Verifies the current password before applying.
+   * Clears the requiresPasswordReset flag on success.
+   */
+  async resetPassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
+    const db = getDB();
+    const user = await db
+      .createQueryBuilder(User, 'user')
+      .addSelect('user.passwordHash')
+      .where('user.id = :id', { id: userId })
+      .getOne();
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const isValid = await this.verifyPassword(currentPassword, user.passwordHash);
+    if (!isValid) {
+      throw new Error('Current password is incorrect');
+    }
+
+    user.passwordHash = await this.hashPassword(newPassword);
+    user.requiresPasswordReset = false;
+    await db.save(User, user);
+  }
+
   async createSession(user: Partial<User>): Promise<SessionWithToken> {
     // validate user
     if (!user.id) {
@@ -188,5 +215,56 @@ export class UserService {
     const db = getDB();
     const users = await db.find(User);
     return users;
+  }
+
+  /**
+   * Seeds an initial admin user from environment variables.
+   * Reads ADMIN_NAME and ADMIN_EMAIL (no password in env).
+   * - If both are set and no user with that email exists, creates an admin with
+   *   a random temporary password (printed to the console once) and sets
+   *   requiresPasswordReset = true.
+   * - If the user already exists, ensures their role is ADMIN.
+   * - If the env vars are not set, does nothing.
+   */
+  async seedAdminUser(): Promise<void> {
+    const name = process.env.ADMIN_NAME;
+    const email = process.env.ADMIN_EMAIL;
+
+    if (!email || !name) {
+      return; // Env vars not configured — skip seeding
+    }
+
+    const db = getDB();
+    const existing = await db.findOneBy(User, { email });
+
+    if (existing) {
+      if (existing.role !== Role.ADMIN) {
+        existing.role = Role.ADMIN;
+        await db.save(User, existing);
+        console.log(`Promoted existing user ${email} to ADMIN.`);
+      }
+      return;
+    }
+
+    // Generate a cryptographically random temporary password
+    const alphabet = 'abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    const bytes = new Uint8Array(20);
+    crypto.getRandomValues(bytes);
+    const tempPassword = Array.from(bytes, b => alphabet[b % alphabet.length]).join('');
+
+    const passwordHash = await this.hashPassword(tempPassword);
+    await db.save(User, {
+      name,
+      email,
+      passwordHash,
+      role: Role.ADMIN,
+      requiresPasswordReset: true,
+    });
+
+    console.log(`\n┌──────────────────────────────────────────────┐`);
+    console.log(`│  Seeded admin user: ${email}`);
+    console.log(`│  Temporary password: ${tempPassword}`);
+    console.log(`│  You will be prompted to change this on first login.`);
+    console.log(`└──────────────────────────────────────────────┘\n`);
   }
 }
