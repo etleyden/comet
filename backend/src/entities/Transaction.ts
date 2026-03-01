@@ -37,7 +37,7 @@ export default class Transaction {
   @Column({ nullable: true })
   vendorLabel?: string;
 
-  @Column({nullable: true })
+  @ManyToOne(() => Vendor, { nullable: true })
   vendor?: Vendor;
 
   @Column({ nullable: true })

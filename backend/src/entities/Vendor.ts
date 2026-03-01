@@ -1,4 +1,4 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import User from "./User";
 
 @Entity()
@@ -16,7 +16,7 @@ export default class Vendor {
     logoUrl?: string;
 
     // used when two vendors are merged
-    @Column({ nullable: true })
+    @ManyToOne(() => Vendor, { nullable: true })
     mergedInto?: Vendor;
 
     @CreateDateColumn()
@@ -25,6 +25,6 @@ export default class Vendor {
     @UpdateDateColumn()
     updatedAt!: Date;
 
-    @Column()
+    @ManyToOne(() => User)
     updatedBy!: User;
 }
