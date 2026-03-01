@@ -16,6 +16,7 @@ export interface User {
   name: string;
   email: string;
   role: Role;
+  requiresPasswordReset: boolean;
 }
 
 export interface Session {
@@ -92,6 +93,11 @@ export interface AuthUser extends User {
 
 export interface LogoutResponse {
   success: boolean;
+}
+
+export interface ResetPasswordRequest {
+  currentPassword: string;
+  newPassword: string;
 }
 
 // ─── Posts API Types ─────────────────────────────────────────────────

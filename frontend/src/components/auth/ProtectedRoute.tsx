@@ -28,7 +28,7 @@ interface ProtectedRouteProps {
  * <Route path="/about" element={<ProtectedRoute isPublic><AboutPage /></ProtectedRoute>} />
  */
 export function ProtectedRoute({ children, isPublic = false, requiredRole }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading, hasRole } = useAuth();
+  const { isAuthenticated, isLoading, hasRole, requiresPasswordReset } = useAuth();
 
   // Show loading spinner while checking authentication
   if (isLoading) {
@@ -44,6 +44,12 @@ export function ProtectedRoute({ children, isPublic = false, requiredRole }: Pro
   // If route requires auth and user is not authenticated, redirect to /
   if (!isPublic && !isAuthenticated) {
     return <Navigate to="/" replace />;
+  }
+
+  // If the user must reset their password, force them to the reset page
+  // (unless they're already on it)
+  if (!isPublic && isAuthenticated && requiresPasswordReset && window.location.pathname !== '/reset-password') {
+    return <Navigate to="/reset-password" replace />;
   }
 
   // If user is authenticated but lacks the required role, redirect to /home

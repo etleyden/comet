@@ -4,7 +4,7 @@ import { createEndpoint } from '../utils/createEndpoint';
 import { UserService } from '../services/userService';
 import { requireAuth } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types/api';
-import type { AuthUser, User as ApiUser, LogoutResponse } from 'shared';
+import type { AuthUser, User as ApiUser, LogoutResponse, ResetPasswordRequest } from 'shared';
 import UserEntity from '../entities/User';
 
 const CreateUserSchema = z.object({
@@ -35,7 +35,14 @@ function clearSessionCookie(res: Response): void {
 }
 
 function toAuthUser(user: UserEntity, token: string): AuthUser {
-  return { id: user.id, name: user.name, email: user.email, role: user.role, token };
+  return {
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    requiresPasswordReset: user.requiresPasswordReset,
+    token,
+  };
 }
 
 export function userRoutes(app: Express) {
@@ -95,7 +102,26 @@ export function userRoutes(app: Express) {
           name: req.user.name,
           email: req.user.email,
           role: req.user.role,
+          requiresPasswordReset: req.user.requiresPasswordReset,
         };
+      },
+    })
+  );
+
+  // POST /api/auth/reset-password - Change password (requires authentication)
+  const ResetPasswordSchema = z.object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z.string().min(8, 'New password must be at least 8 characters'),
+  });
+
+  app.post(
+    '/api/auth/reset-password',
+    requireAuth(),
+    createEndpoint<z.infer<typeof ResetPasswordSchema>, { success: boolean }, AuthenticatedRequest>({
+      schema: ResetPasswordSchema,
+      handler: async (input, req) => {
+        await userService.resetPassword(req.user.id, input.currentPassword, input.newPassword);
+        return { success: true };
       },
     })
   );

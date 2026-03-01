@@ -20,6 +20,9 @@ export default class User {
   @Column({ type: 'varchar', default: Role.USER })
   role!: Role;
 
+  @Column({ default: false })
+  requiresPasswordReset!: boolean;
+
   @OneToMany(() => Session, session => session.user)
   sessions?: Session[];
 

@@ -8,6 +8,7 @@ export const testUser: User = {
   name: 'Test User',
   email: 'test@example.com',
   role: Role.USER,
+  requiresPasswordReset: false,
 };
 
 export const testUser2: User = {
@@ -15,6 +16,7 @@ export const testUser2: User = {
   name: 'Another User',
   email: 'another@example.com',
   role: Role.USER,
+  requiresPasswordReset: false,
 };
 
 export const testAdminUser: User = {
@@ -22,6 +24,7 @@ export const testAdminUser: User = {
   name: 'Admin User',
   email: 'admin@example.com',
   role: Role.ADMIN,
+  requiresPasswordReset: false,
 };
 
 export const testLoginCredentials: LoginRequest = {

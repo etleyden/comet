@@ -10,8 +10,12 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  /** True when the user must change their password before using the app. */
+  requiresPasswordReset: boolean;
   /** Returns true when the current user's role meets or exceeds the required role. */
   hasRole: (role: Role) => boolean;
+  /** Re-fetches the current user from the server (e.g. after a password reset). */
+  refreshUser: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -94,7 +98,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       isAuthenticated: !!user,
       isLoading,
+      requiresPasswordReset: !!user?.requiresPasswordReset,
       hasRole,
+      refreshUser: checkAuth,
       login,
       register,
       logout,
