@@ -11,7 +11,8 @@ import {
     IconButton,
     InputAdornment,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../../api';
 import { validatePassword } from 'shared';
@@ -73,10 +74,10 @@ export default function ResetPasswordPage() {
                 <Typography variant="h5" gutterBottom>
                     Password Reset {user?.requiresPasswordReset ? 'Required' : ''}
                 </Typography>
-                {user?.requiresPasswordReset && 
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                    {user?.name ? `Hi ${user.name}, you` : 'You'} must set a new password before continuing.
-                </Typography>}
+                {user?.requiresPasswordReset &&
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                        {user?.name ? `Hi ${user.name}, you` : 'You'} must set a new password before continuing.
+                    </Typography>}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <TextField
                         label="Current / Temporary Password"
