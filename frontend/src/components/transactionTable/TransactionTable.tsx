@@ -207,7 +207,16 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
                     </IconButton>
                   </TableCell>
                   <TableCell>{formatDate(tx.date)}</TableCell>
-                  <TableCell>{tx.accountName}</TableCell>
+                  <TableCell>
+                    <Link
+                      to={`/accounts?highlight=${tx.accountId}`}
+                      style={{ color: 'inherit', textDecoration: 'none' }}
+                      onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
+                      onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                    >
+                      {tx.accountName}
+                    </Link>
+                  </TableCell>
                   <TableCell>{tx.vendorLabel ?? '—'}</TableCell>
                   <TableCell>{tx.description ?? '—'}</TableCell>
                   <TableCell>{tx.categoryLabel ?? tx.categoryName ?? '—'}</TableCell>

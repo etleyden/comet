@@ -129,7 +129,11 @@ function AccountCard({
     return (
         <Paper
             variant="outlined"
-            sx={{ p: 3, mb: 2 }}
+            data-testid={`account-card-${account.id}`}
+            sx={{
+                p: 3,
+                mb: 2,
+            }}
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
         >

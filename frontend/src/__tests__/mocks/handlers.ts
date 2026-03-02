@@ -1,6 +1,6 @@
 import { http, HttpResponse } from 'msw';
 import { testUser, testAccount, testAccount2 } from '../fixtures/entities';
-import type { ApiResponse, AuthUser, User, Account, LogoutResponse, UploadTransactionsResponse } from 'shared';
+import type { ApiResponse, AuthUser, User, Account, LogoutResponse, UploadTransactionsResponse, DeleteAccountResponse } from 'shared';
 
 const BASE_URL = 'https://localhost:86';
 
@@ -64,6 +64,39 @@ export const handlers = [
         account: body.account as string,
         routing: body.routing as string,
       },
+    };
+    return HttpResponse.json(response);
+  }),
+
+  http.get(`${BASE_URL}/api/accounts/:id`, ({ params }) => {
+    const found = [testAccount, testAccount2].find((a) => a.id === params.id);
+    if (!found) {
+      return HttpResponse.json({ success: false, error: 'Account not found' }, { status: 404 });
+    }
+    const response: ApiResponse<Account> = { success: true, data: found };
+    return HttpResponse.json(response);
+  }),
+
+  http.put(`${BASE_URL}/api/accounts/:id`, async ({ params, request }) => {
+    const body = await request.json() as Record<string, unknown>;
+    const base = [testAccount, testAccount2].find((a) => a.id === params.id) ?? testAccount;
+    const response: ApiResponse<Account> = {
+      success: true,
+      data: {
+        ...base,
+        ...(body.name !== undefined && { name: body.name as string }),
+        ...(body.institution !== undefined && { institution: body.institution as string }),
+        ...(body.account !== undefined && { account: body.account as string }),
+        ...(body.routing !== undefined && { routing: body.routing as string }),
+      },
+    };
+    return HttpResponse.json(response);
+  }),
+
+  http.delete(`${BASE_URL}/api/accounts/:id`, () => {
+    const response: ApiResponse<DeleteAccountResponse> = {
+      success: true,
+      data: { deleted: true },
     };
     return HttpResponse.json(response);
   }),
