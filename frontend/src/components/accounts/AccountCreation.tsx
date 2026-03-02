@@ -29,11 +29,11 @@ export default function AccountCreation({ onCreated, onCancel }: AccountCreation
         setSaving(true);
         setError(null);
         try {
-            const res = await accountsApi.createAccount({
-                name: form.name,
-                institution: form.institution || undefined,
-                account: form.account,
-                routing: form.routing,
+            const response = await accountsApi.createAccount({
+                name: formData.accountName,
+                institution: formData.institution || undefined,
+                account: formData.accountNumber || undefined,
+                routing: formData.routingNumber || undefined,
             });
             if (res.success) {
                 onCreated();
@@ -58,8 +58,8 @@ export default function AccountCreation({ onCreated, onCancel }: AccountCreation
             >
                 <TextField label="Account Name" name="name" value={form.name} onChange={handleChange} required disabled={saving} />
                 <TextField label="Institution" name="institution" value={form.institution} onChange={handleChange} disabled={saving} />
-                <TextField label="Account Number" name="account" value={form.account} onChange={handleChange} required disabled={saving} />
-                <TextField label="Routing Number" name="routing" value={form.routing} onChange={handleChange} required disabled={saving} />
+                <TextField label="Account Number" name="account" value={form.account} onChange={handleChange} disabled={saving} />
+                <TextField label="Routing Number" name="routing" value={form.routing} onChange={handleChange} disabled={saving} />
                 <Box sx={{ gridColumn: '1 / -1', display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
                     <Button onClick={onCancel} variant="text" disabled={saving}>Cancel</Button>
                     <Button type="submit" disabled={saving}>{saving ? 'Creating…' : 'Create'}</Button>

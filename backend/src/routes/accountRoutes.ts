@@ -9,8 +9,8 @@ import { AccountService } from '../services/accountService';
 const CreateAccountSchema = z.object({
     name: z.string().min(1, 'Account name is required'),
     institution: z.string().optional(),
-    account: z.string().min(1, 'Account number is required'),
-    routing: z.string().min(1, 'Routing number is required'),
+    account: z.string().min(1, 'Account number is required').optional(),
+    routing: z.string().min(1, 'Routing number is required').optional(),
 });
 
 const UpdateAccountSchema = z.object({
