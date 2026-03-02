@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comet — Coverage Reports</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f1117;
+      --surface:   #1a1d27;
+      --border:    #2a2d3a;
+      --accent:    #6366f1;
+      --accent-2:  #8b5cf6;
+      --text:      #e2e8f0;
+      --muted:     #64748b;
+      --green:     #22c55e;
+      --yellow:    #f59e0b;
+      --red:       #ef4444;
+      --radius:    12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 48px 24px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    h1 span {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 6px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      width: 100%;
+      max-width: 960px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      text-decoration: none;
+      color: inherit;
+      transition: border-color 0.2s, transform 0.15s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.15);
+    }
+
+    .card:hover::before { opacity: 1; }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      flex-shrink: 0;
+    }
+
+    .badge-backend  { background: rgba(99, 102, 241, 0.15); }
+    .badge-frontend { background: rgba(139, 92, 246, 0.15); }
+    .badge-shared   { background: rgba(34, 197, 94, 0.15); }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+
+    .metric {
+      background: rgba(255,255,255,0.04);
+      border-radius: 8px;
+      padding: 10px 8px;
+      text-align: center;
+    }
+
+    .metric-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 15px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .metric-value.loading { color: var(--muted); font-size: 12px; }
+    .metric-value.high    { color: var(--green); }
+    .metric-value.mid     { color: var(--yellow); }
+    .metric-value.low     { color: var(--red); }
+    .metric-value.none    { color: var(--muted); }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 4px;
+      border-top: 1px solid var(--border);
+    }
+
+    .source-path {
+      font-size: 12px;
+      color: var(--muted);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+
+    .arrow {
+      color: var(--accent);
+      font-size: 18px;
+      transition: transform 0.2s;
+    }
+
+    .card:hover .arrow { transform: translateX(4px); }
+
+    .txt-link {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .txt-link:hover {
+      color: var(--text);
+      border-color: var(--accent);
+    }
+
+    footer {
+      margin-top: 56px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">☄️</div>
+    <h1><span>Comet</span></h1>
+  </div>
+  <p class="subtitle">Coverage Reports &mdash; run <code style="background:#1a1d27;padding:2px 6px;border-radius:4px;font-size:12px;">npm run test:coverage</code> to refresh</p>
+</header>
+
+<div class="grid">
+
+  <!-- Backend -->
+  <a class="card" href="backend/coverage/index.html">
+    <div class="card-top">
+      <div class="badge badge-backend">⚙️</div>
+      <div>
+        <div class="card-title">Backend</div>
+        <div class="card-desc">Express API · TypeORM · Services &amp; Routes</div>
+      </div>
+    </div>
+    <div class="metrics" id="metrics-backend">
+      <div class="metric"><div class="metric-label">Stmts</div><div class="metric-value loading" id="be-stmts">—</div></div>
+      <div class="metric"><div class="metric-label">Branch</div><div class="metric-value loading" id="be-branch">—</div></div>
+      <div class="metric"><div class="metric-label">Funcs</div><div class="metric-value loading" id="be-funcs">—</div></div>
+      <div class="metric"><div class="metric-label">Lines</div><div class="metric-value loading" id="be-lines">—</div></div>
+    </div>
+    <div class="card-footer">
+      <span class="source-path">backend/coverage/</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+  <!-- Frontend -->
+  <a class="card" href="frontend/coverage/index.html">
+    <div class="card-top">
+      <div class="badge badge-frontend">⚛️</div>
+      <div>
+        <div class="card-title">Frontend</div>
+        <div class="card-desc">React 19 · Material-UI · Components &amp; Pages</div>
+      </div>
+    </div>
+    <div class="metrics" id="metrics-frontend">
+      <div class="metric"><div class="metric-label">Stmts</div><div class="metric-value loading" id="fe-stmts">—</div></div>
+      <div class="metric"><div class="metric-label">Branch</div><div class="metric-value loading" id="fe-branch">—</div></div>
+      <div class="metric"><div class="metric-label">Funcs</div><div class="metric-value loading" id="fe-funcs">—</div></div>
+      <div class="metric"><div class="metric-label">Lines</div><div class="metric-value loading" id="fe-lines">—</div></div>
+    </div>
+    <div class="card-footer">
+      <span class="source-path">frontend/coverage/</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+  <!-- Shared -->
+  <a class="card" href="shared/coverage/index.html">
+    <div class="card-top">
+      <div class="badge badge-shared">📦</div>
+      <div>
+        <div class="card-title">Shared</div>
+        <div class="card-desc">Common types · Password utils · Role utils</div>
+      </div>
+    </div>
+    <div class="metrics" id="metrics-shared">
+      <div class="metric"><div class="metric-label">Stmts</div><div class="metric-value loading" id="sh-stmts">—</div></div>
+      <div class="metric"><div class="metric-label">Branch</div><div class="metric-value loading" id="sh-branch">—</div></div>
+      <div class="metric"><div class="metric-label">Funcs</div><div class="metric-value loading" id="sh-funcs">—</div></div>
+      <div class="metric"><div class="metric-label">Lines</div><div class="metric-value loading" id="sh-lines">—</div></div>
+    </div>
+    <div class="card-footer">
+      <span class="source-path">shared/coverage/</span>
+      <span class="arrow">→</span>
+    </div>
+  </a>
+
+</div>
+
+<footer>
+  Powered by <a href="https://vitest.dev" style="color:var(--accent);text-decoration:none;">Vitest</a>
+  &amp; <a href="https://v8.dev/blog/javascript-code-coverage" style="color:var(--accent);text-decoration:none;">v8 coverage</a>
+</footer>
+
+<script>
+  function colorClass(pct) {
+    if (pct === null) return 'none';
+    if (pct >= 80) return 'high';
+    if (pct >= 50) return 'mid';
+    return 'low';
+  }
+
+  function fmt(pct) {
+    return pct === null ? 'n/a' : pct.toFixed(1) + '%';
+  }
+
+  function pct(covered, total) {
+    return total === 0 ? null : (covered / total) * 100;
+  }
+
+  async function loadMetrics(jsonPath, ids) {
+    try {
+      const res = await fetch(jsonPath);
+      if (!res.ok) return;
+      const data = await res.json();
+      const t = data.total;
+      const metrics = [
+        { id: ids[0], val: pct(t.statements.covered,  t.statements.total)  },
+        { id: ids[1], val: pct(t.branches.covered,    t.branches.total)    },
+        { id: ids[2], val: pct(t.functions.covered,   t.functions.total)   },
+        { id: ids[3], val: pct(t.lines.covered,       t.lines.total)       },
+      ];
+      for (const { id, val } of metrics) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        el.textContent = fmt(val);
+        el.className = 'metric-value ' + colorClass(val);
+      }
+    } catch (_) { /* report not yet generated — dashes remain */ }
+  }
+
+  loadMetrics('backend/coverage/coverage-summary.json',  ['be-stmts', 'be-branch', 'be-funcs', 'be-lines']);
+  loadMetrics('frontend/coverage/coverage-summary.json', ['fe-stmts', 'fe-branch', 'fe-funcs', 'fe-lines']);
+  loadMetrics('shared/coverage/coverage-summary.json',   ['sh-stmts', 'sh-branch', 'sh-funcs', 'sh-lines']);
+</script>
+
+</body>
+</html>

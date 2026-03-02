@@ -6,9 +6,14 @@
   "types": "./src/index.ts",
   "scripts": {
     "build": "echo 'Shared package does not require building'",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "devDependencies": {
-    "typescript": "^5.0.0"
+    "@vitest/coverage-v8": "^4.0.18",
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.18"
   }
 }
