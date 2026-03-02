@@ -79,7 +79,10 @@ export const handlers = [
 
   http.put(`${BASE_URL}/api/accounts/:id`, async ({ params, request }) => {
     const body = await request.json() as Record<string, unknown>;
-    const base = [testAccount, testAccount2].find((a) => a.id === params.id) ?? testAccount;
+    const base = [testAccount, testAccount2].find((a) => a.id === params.id);
+    if (!base) {
+      return HttpResponse.json({ success: false, error: 'Account not found' }, { status: 404 });
+    }
     const response: ApiResponse<Account> = {
       success: true,
       data: {

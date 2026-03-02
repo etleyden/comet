@@ -14,8 +14,8 @@ import {
   Paper,
   CircularProgress,
   Typography,
+  Link
 } from '@mui/material';
-import { Link } from 'react-router-dom';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { TransactionFilters, TransactionWithAccount } from 'shared';
 import { transactionsApi } from '../../../api';
@@ -215,10 +215,9 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
                   </TableCell>
                   <TableCell>
                     <Link
-                      to={`/accounts?highlight=${tx.accountId}`}
-                      style={{ color: 'inherit', textDecoration: 'none' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.textDecoration = 'underline')}
-                      onMouseLeave={(e) => (e.currentTarget.style.textDecoration = 'none')}
+                      href={`/accounts`}
+                      color='inherit'
+                      underline='hover'
                     >
                       {tx.accountName}
                     </Link>
@@ -252,7 +251,7 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
           <MenuItem
             disabled={!menuTx?.uploadRecordId}
             component={menuTx?.uploadRecordId ? Link : 'li'}
-            to={menuTx?.uploadRecordId ? `/upload-record/${menuTx.uploadRecordId}` : undefined}
+            href={menuTx?.uploadRecordId ? `/upload-record/${menuTx.uploadRecordId}` : undefined}
             onClick={closeMenu}
           >
             <ListItemText

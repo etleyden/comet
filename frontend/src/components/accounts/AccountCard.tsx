@@ -86,8 +86,8 @@ export default function AccountCard({
             const res = await accountsApi.updateAccount(account.id, {
                 name: form.name,
                 institution: form.institution || undefined,
-                account: form.account,
-                routing: form.routing,
+                account: form.account || undefined,
+                routing: form.routing || undefined,
             });
             if (res.success) {
                 setEditing(false);
@@ -134,6 +134,7 @@ export default function AccountCard({
             {/* Header */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box
+                    role="button"
                     sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer', gap: 1 }}
                     onClick={() => setExpanded((prev) => !prev)}
                 >
@@ -148,19 +149,19 @@ export default function AccountCard({
                 <Box sx={{ visibility: (hovered || editing || saving) ? 'visible' : 'hidden' }}>
                     {!editing ? (
                         <>
-                            <IconButton size="small" onClick={() => { setEditing(true); setExpanded(true); }} title="Edit">
+                            <IconButton size="small" onClick={() => { setEditing(true); setExpanded(true); }} aria-label="Edit">
                                 <EditIcon fontSize="small" />
                             </IconButton>
-                            <IconButton size="small" color="error" onClick={() => setConfirmDelete(true)} title="Delete">
+                            <IconButton size="small" color="error" onClick={() => setConfirmDelete(true)} aria-label="Delete">
                                 <DeleteIcon fontSize="small" />
                             </IconButton>
                         </>
                     ) : (
                         <>
-                            <IconButton size="small" color="primary" onClick={handleSave} disabled={saving} title="Save">
+                            <IconButton size="small" color="primary" onClick={handleSave} disabled={saving} aria-label="Save">
                                 <SaveIcon fontSize="small" />
                             </IconButton>
-                            <IconButton size="small" onClick={handleCancel} disabled={saving} title="Cancel">
+                            <IconButton size="small" onClick={handleCancel} disabled={saving} aria-label="Cancel">
                                 <CancelIcon fontSize="small" />
                             </IconButton>
                         </>
@@ -223,11 +224,11 @@ export default function AccountCard({
                             </Box>
                             <Box>
                                 <Typography variant="caption" color="text.secondary">Account Number</Typography>
-                                <Typography>{account.account}</Typography>
+                                <Typography>{account.account || '—'}</Typography>
                             </Box>
                             <Box>
                                 <Typography variant="caption" color="text.secondary">Routing Number</Typography>
-                                <Typography>{account.routing}</Typography>
+                                <Typography>{account.routing || '—'}</Typography>
                             </Box>
                         </>
                     )}

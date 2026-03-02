@@ -332,7 +332,7 @@ describe('AccountsPage (Integration)', () => {
         });
 
         // Dialog should close
-        expect(dialog).not.toBeInTheDocument();
+        await waitFor(() => expect(dialog).not.toBeInTheDocument());
     });
 
     it('should show an error when delete fails', async () => {
