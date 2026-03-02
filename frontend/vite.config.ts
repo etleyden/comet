@@ -45,7 +45,12 @@ export default defineConfig({
     },
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html'],
+      reporter: [
+        'text',                                       // console output when running
+        'html',                                       // friendly HTML UI (served via coverage:view)
+        'json-summary',                              // machine-readable summary
+        ['text', { file: 'coverage-summary.txt' }],  // text artifact in reports/frontend/coverage/
+      ],
       reportsDirectory: '../reports/frontend/coverage',
       exclude: ['**/node_modules/**', '**/dist/**', '**/*.test.ts', '**/*.test.tsx'],
     },
