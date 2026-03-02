@@ -30,15 +30,15 @@ export default function AccountCreation({ onCreated, onCancel }: AccountCreation
         setError(null);
         try {
             const response = await accountsApi.createAccount({
-                name: formData.accountName,
-                institution: formData.institution || undefined,
-                account: formData.accountNumber || undefined,
-                routing: formData.routingNumber || undefined,
+                name: form.name,
+                institution: form.institution || undefined,
+                account: form.account || undefined,
+                routing: form.routing || undefined,
             });
-            if (res.success) {
+            if (response.success) {
                 onCreated();
             } else {
-                setError(res.error);
+                setError(response.error);
             }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Failed to create account');

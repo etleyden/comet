@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { ThemeProvider } from '@mui/material/styles';
@@ -48,8 +48,9 @@ describe('AccountsPage (Integration)', () => {
         renderPage();
 
         await waitFor(() => {
-            expect(screen.getByText(testAccount.name)).toBeInTheDocument();
-            expect(screen.getByText(testAccount2.name)).toBeInTheDocument();
+            expect(screen.getByTestId(`account-name-heading-${testAccount.id}`)).toBeInTheDocument();
+            expect(screen.getByTestId(`account-name-heading-${testAccount2.id}`)).toBeInTheDocument();
+
         });
     });
 
@@ -144,7 +145,7 @@ describe('AccountsPage (Integration)', () => {
         await userEvent.click(screen.getByRole('button', { name: /^create$/i }));
 
         await waitFor(() => {
-            expect(screen.getByText('Business Checking')).toBeInTheDocument();
+            expect(screen.getByTestId(`account-name-heading-${newAccount.id}`)).toBeInTheDocument();
         });
 
         // Create form should be dismissed
@@ -179,12 +180,12 @@ describe('AccountsPage (Integration)', () => {
     it('should switch to edit mode on Edit button click', async () => {
         renderPage();
 
-        await waitFor(() => expect(screen.getByText(testAccount.name)).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByTestId(`account-name-heading-${testAccount.id}`)).toBeInTheDocument());
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
 
-        await userEvent.click(screen.getByTitle('Edit'));
+        await userEvent.click(within(card).getByTitle('Edit'));
 
         // Save / Cancel icon buttons should appear
         expect(screen.getByTitle('Save')).toBeInTheDocument();
@@ -194,11 +195,11 @@ describe('AccountsPage (Integration)', () => {
     it('should cancel edit and restore original values', async () => {
         renderPage();
 
-        await waitFor(() => expect(screen.getByText(testAccount.name)).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByTestId(`account-name-heading-${testAccount.id}`)).toBeInTheDocument());
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(screen.getByTitle('Edit'));
+        await userEvent.click(within(card).getByTitle('Edit'));
 
         // Clear and type a new name
         const nameInput = screen.getByDisplayValue(testAccount.name);
@@ -208,32 +209,34 @@ describe('AccountsPage (Integration)', () => {
         await userEvent.click(screen.getByTitle('Cancel'));
 
         // Original name should be back and edit mode gone
-        expect(screen.getByText(testAccount.name)).toBeInTheDocument();
+        expect(screen.getByTestId(`account-name-heading-${testAccount.id}`)).toBeInTheDocument();
         expect(screen.queryByTitle('Save')).not.toBeInTheDocument();
     });
 
     it('should save edits and exit edit mode', async () => {
         const updatedAccount: Account = { ...testAccount, name: 'Updated Checking' };
+        let saved = false;
 
         server.use(
-            http.put(`${BASE_URL}/api/accounts/:id`, () =>
-                HttpResponse.json({ success: true, data: updatedAccount } satisfies ApiResponse<Account>),
-            ),
+            http.put(`${BASE_URL}/api/accounts/:id`, () => {
+                saved = true;
+                return HttpResponse.json({ success: true, data: updatedAccount } satisfies ApiResponse<Account>);
+            }),
             http.get(`${BASE_URL}/api/accounts`, () =>
                 HttpResponse.json({
                     success: true,
-                    data: [updatedAccount, testAccount2],
+                    data: saved ? [updatedAccount, testAccount2] : [testAccount, testAccount2],
                 } satisfies ApiResponse<Account[]>),
             ),
         );
 
         renderPage();
 
-        await waitFor(() => expect(screen.getByText(testAccount.name)).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByTestId(`account-name-heading-${testAccount.id}`)).toBeInTheDocument());
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(screen.getByTitle('Edit'));
+        await userEvent.click(within(card).getByTitle('Edit'));
 
         const nameInput = screen.getByDisplayValue(testAccount.name);
         await userEvent.clear(nameInput);
@@ -243,7 +246,7 @@ describe('AccountsPage (Integration)', () => {
 
         await waitFor(() => {
             expect(screen.queryByTitle('Save')).not.toBeInTheDocument();
-            expect(screen.getByText('Updated Checking')).toBeInTheDocument();
+            expect(screen.getByTestId(`account-name-heading-${testAccount.id}`)).toHaveTextContent('Updated Checking');
         });
     });
 
@@ -256,11 +259,11 @@ describe('AccountsPage (Integration)', () => {
 
         renderPage();
 
-        await waitFor(() => expect(screen.getByText(testAccount.name)).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByTestId(`account-name-heading-${testAccount.id}`)).toBeInTheDocument());
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(screen.getByTitle('Edit'));
+        await userEvent.click(within(card).getByTitle('Edit'));
         await userEvent.click(screen.getByTitle('Save'));
 
         await waitFor(() => {
@@ -273,11 +276,11 @@ describe('AccountsPage (Integration)', () => {
     it('should open a confirmation dialog on Delete button click', async () => {
         renderPage();
 
-        await waitFor(() => expect(screen.getByText(testAccount.name)).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByTestId(`account-name-heading-${testAccount.id}`)).toBeInTheDocument());
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(screen.getByTitle('Delete'));
+        await userEvent.click(within(card).getByTitle('Delete'));
 
         expect(screen.getByRole('dialog')).toBeInTheDocument();
         expect(screen.getByText(/are you sure you want to delete/i)).toBeInTheDocument();
@@ -286,15 +289,15 @@ describe('AccountsPage (Integration)', () => {
     it('should dismiss the confirmation dialog when cancelled', async () => {
         renderPage();
 
-        await waitFor(() => expect(screen.getByText(testAccount.name)).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByTestId(`account-name-heading-${testAccount.id}`)).toBeInTheDocument());
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(screen.getByTitle('Delete'));
+        await userEvent.click(within(card).getByTitle('Delete'));
 
         await userEvent.click(screen.getAllByRole('button', { name: /cancel/i })[0]);
 
-        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     });
 
     it('should delete an account and refresh the list', async () => {
@@ -313,19 +316,19 @@ describe('AccountsPage (Integration)', () => {
 
         renderPage();
 
-        await waitFor(() => expect(screen.getByText(testAccount.name)).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByTestId(`account-name-heading-${testAccount.id}`)).toBeInTheDocument());
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(screen.getByTitle('Delete'));
+        await userEvent.click(within(card).getByTitle('Delete'));
 
         // Click the "Delete" button inside the dialog
         const dialog = screen.getByRole('dialog');
         await userEvent.click(screen.getByRole('button', { name: /^delete$/i }));
 
         await waitFor(() => {
-            expect(screen.queryByText(testAccount.name)).not.toBeInTheDocument();
-            expect(screen.getByText(testAccount2.name)).toBeInTheDocument();
+            expect(screen.queryByTestId(`account-name-heading-${testAccount.id}`)).not.toBeInTheDocument();
+            expect(screen.getByTestId(`account-name-heading-${testAccount2.id}`)).toBeInTheDocument();
         });
 
         // Dialog should close
@@ -341,11 +344,11 @@ describe('AccountsPage (Integration)', () => {
 
         renderPage();
 
-        await waitFor(() => expect(screen.getByText(testAccount.name)).toBeInTheDocument());
+        await waitFor(() => expect(screen.getByTestId(`account-name-heading-${testAccount.id}`)).toBeInTheDocument());
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(screen.getByTitle('Delete'));
+        await userEvent.click(within(card).getByTitle('Delete'));
         await userEvent.click(screen.getByRole('button', { name: /^delete$/i }));
 
         await waitFor(() => {

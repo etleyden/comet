@@ -45,8 +45,8 @@ export default function AccountCard({
     const [form, setForm] = useState<AccountFormState>({
         name: account.name,
         institution: account.institution ?? '',
-        account: account.account,
-        routing: account.routing,
+        account: account.account ?? '',
+        routing: account.routing ?? '',
     });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -59,8 +59,8 @@ export default function AccountCard({
         setForm({
             name: account.name,
             institution: account.institution ?? '',
-            account: account.account,
-            routing: account.routing,
+            account: account.account ?? '',
+            routing: account.routing ?? '',
         });
     }, [account]);
 
@@ -74,8 +74,8 @@ export default function AccountCard({
         setForm({
             name: account.name,
             institution: account.institution ?? '',
-            account: account.account,
-            routing: account.routing,
+            account: account.account ?? '',
+            routing: account.routing ?? '',
         });
     };
 
@@ -138,7 +138,7 @@ export default function AccountCard({
                     onClick={() => setExpanded((prev) => !prev)}
                 >
                     {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                    <Typography variant="h6">{account.name}</Typography>
+                    <Typography variant="h6" data-testid={`account-name-heading-${account.id}`}>{account.name}</Typography>
                     {account.institution && (
                         <Typography variant="body2" color="text.secondary">
                             — {account.institution}
