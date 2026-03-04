@@ -14,8 +14,8 @@ import {
   Paper,
   CircularProgress,
   Typography,
+  Link
 } from '@mui/material';
-import { Link } from 'react-router-dom';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { TransactionFilters, TransactionWithAccount } from 'shared';
 import { transactionsApi } from '../../../api';
@@ -213,8 +213,14 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
                   <TableCell sx={cellStyle}>
                     {formatDate(tx.date)}
                   </TableCell>
-                  <TableCell sx={cellStyle}>
-                    {tx.accountName}
+                  <TableCell>
+                    <Link
+                      href={`/accounts`}
+                      color='inherit'
+                      underline='hover'
+                    >
+                      {tx.accountName}
+                    </Link>
                   </TableCell>
                   <TableCell sx={cellStyle}>
                     {tx.vendorLabel ?? '—'}
@@ -245,7 +251,7 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
           <MenuItem
             disabled={!menuTx?.uploadRecordId}
             component={menuTx?.uploadRecordId ? Link : 'li'}
-            to={menuTx?.uploadRecordId ? `/upload-record/${menuTx.uploadRecordId}` : undefined}
+            href={menuTx?.uploadRecordId ? `/upload-record/${menuTx.uploadRecordId}` : undefined}
             onClick={closeMenu}
           >
             <ListItemText

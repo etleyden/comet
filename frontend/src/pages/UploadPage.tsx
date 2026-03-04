@@ -69,7 +69,7 @@ export default function UploadPage() {
     const handleAccountCreated = async () => {
         // Refresh the account list
         setAccountRefreshTrigger(prev => prev + 1);
-        
+
         // Get the newly created account to auto-select it
         try {
             const response = await accountsApi.getAccounts();
@@ -82,7 +82,7 @@ export default function UploadPage() {
         } catch (err) {
             notify("Account created, but failed to auto-select", "warning");
         }
-        
+
         // Close the dialog
         setShowCreateAccountDialog(false);
     };
@@ -101,8 +101,8 @@ export default function UploadPage() {
                         refreshTrigger={accountRefreshTrigger}
                     />
                 </Box>
-                <IconButton 
-                    color="primary" 
+                <IconButton
+                    color="primary"
                     onClick={() => setShowCreateAccountDialog(true)}
                     title="Create new account"
                     sx={{ border: 1, borderColor: 'primary.main' }}
@@ -153,8 +153,8 @@ export default function UploadPage() {
             </Box>
         )}
 
-        <Dialog 
-            open={showCreateAccountDialog} 
+        <Dialog
+            open={showCreateAccountDialog}
             onClose={() => setShowCreateAccountDialog(false)}
             maxWidth="sm"
             fullWidth
@@ -162,7 +162,7 @@ export default function UploadPage() {
             <DialogTitle>Create New Account</DialogTitle>
             <DialogContent>
                 <Box sx={{ pt: 1 }}>
-                    <AccountCreation onAccountCreated={handleAccountCreated} />
+                    <AccountCreation onCreated={handleAccountCreated} onCancel={() => setShowCreateAccountDialog(false)} />
                 </Box>
             </DialogContent>
             <DialogActions>

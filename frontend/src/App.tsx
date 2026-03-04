@@ -55,6 +55,14 @@ function App() {
               }
             />
             <Route
+              path="/accounts"
+              element={
+                <ProtectedRoute>
+                  <AccountsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/upload"
               element={
                 <ProtectedRoute>

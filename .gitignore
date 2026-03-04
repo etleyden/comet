@@ -39,6 +39,7 @@ Thumbs.db
 # Testing
 coverage
 reports
+.testdb.json
 
 # Misc
 *.pem

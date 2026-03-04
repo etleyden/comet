@@ -7,6 +7,7 @@ import type {
     GetUploadRecordResponse,
     DeleteUploadRecordResponse,
     UpdateUploadRecordRequest,
+    HttpError,
 } from 'shared';
 import { validateMappingColumns } from '../utils/mappingUtils';
 
@@ -133,7 +134,7 @@ export class UploadRecordService {
             .getOne();
 
         if (!record) {
-            const err: any = new Error('Upload record not found');
+            const err: HttpError = new Error('Upload record not found') as HttpError;
             err.status = 404;
             throw err;
         }

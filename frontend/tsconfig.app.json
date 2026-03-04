@@ -23,7 +23,7 @@
     "noUncheckedSideEffectImports": true,
     /* Paths */
     "paths": {
-      "shared": ["../../shared/src/index.ts"]
+      "shared": ["../shared/src/index.ts"]
     }
   },
   "include": ["src", "api"]

@@ -116,6 +116,17 @@ export interface CreateAccountRequest {
   routing?: string;
 }
 
+export interface UpdateAccountRequest {
+  name?: string;
+  institution?: string;
+  account?: string;
+  routing?: string;
+}
+
+export interface DeleteAccountResponse {
+  deleted: boolean;
+}
+
 // ─── Transactions API Types ──────────────────────────────────────────
 
 export interface TransactionFilters {
@@ -195,4 +206,21 @@ export interface UpdateUploadRecordRequest {
 
 export interface DeleteUploadRecordResponse {
   deletedTransactionCount: number;
+}
+
+// ─── HTTP Error Types ─────────────────────────────────────────────
+
+export class HttpError extends Error {
+  status: number;
+  details?: unknown;
+
+  constructor(message: string, status?: number, details?: unknown) {
+    super(message);
+    this.name = 'HttpError';
+    this.status = status ?? 500;
+    this.details = details;
+
+    // Restore prototype chain (required when extending built-ins in TS)
+    Object.setPrototypeOf(this, new.target.prototype);
+  }
 }

@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
+import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import ScienceIcon from '@mui/icons-material/Science';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import LoginIcon from '@mui/icons-material/Login';
@@ -35,6 +36,7 @@ interface NavItem {
 
 const authenticatedNavItems: NavItem[] = [
     { label: 'Home', path: '/home', icon: <HomeIcon /> },
+    { label: 'Accounts', path: '/accounts', icon: <AccountBalanceIcon /> },
     { label: 'Upload', path: '/upload', icon: <UploadFileIcon /> },
     { label: 'Experiments', path: '/experiments', icon: <ScienceIcon /> },
 ];
