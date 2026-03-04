@@ -31,7 +31,7 @@ describe('User Routes (Integration)', () => {
     it('should register a new user and return auth data', async () => {
       const response = await request(app)
         .post('/auth/register')
-        .send({ name: 'New User', email: 'newuser@example.com', password: 'securepassword123' })
+        .send({ name: 'New User', email: 'newuser@example.com', password: 'securepassword123!' })
         .expect(200);
 
       expect(response.body.success).toBe(true);
@@ -58,11 +58,11 @@ describe('User Routes (Integration)', () => {
     it('should return 500 when user already exists', async () => {
       // Seed a user directly
       const userService = new UserService();
-      await userService.createUser('Existing', 'existing@example.com', 'password123');
+      await userService.createUser('Existing', 'existing@example.com', 'password123!');
 
       const response = await request(app)
         .post('/auth/register')
-        .send({ name: 'Duplicate', email: 'existing@example.com', password: 'password123' })
+        .send({ name: 'Duplicate', email: 'existing@example.com', password: 'password123!' })
         .expect(500);
 
       expect(response.body.success).toBe(false);

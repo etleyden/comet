@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { Role, meetsRoleRequirement } from 'shared';
 import { UserService } from '../services/userService';
 import User from '../entities/User';
 
@@ -16,28 +17,32 @@ declare global {
 
 export interface AuthOptions {
   required?: boolean;
-  roles?: string[]; // For future role-based access control
+  role?: Role;
 }
 
 /**
- * Authentication middleware that validates session tokens and attaches user to request.
+ * Authentication middleware that validates session tokens, attaches the user to
+ * the request, and optionally enforces a minimum role.
  *
- * @param options - Configuration options
- * @param options.required - If true, throws error when no valid session found (default: true)
- * @param options.roles - Array of allowed roles (for future RBAC implementation)
+ * @param optionsOrRole - A {@link Role} string **or** an {@link AuthOptions} object.
  *
  * @example
- * // Require authentication
+ * // Require authentication (any role, defaults to USER)
  * app.get('/api/protected', requireAuth(), handler);
+ *
+ * // Shorthand — require ADMIN role
+ * app.get('/api/admin', requireAuth(Role.ADMIN), handler);
+ *
+ * // Explicit options object
+ * app.get('/api/admin', requireAuth({ role: Role.ADMIN }), handler);
  *
  * // Optional authentication (user attached if logged in, but route is accessible without auth)
  * app.get('/api/public', requireAuth({ required: false }), handler);
- *
- * // Future: Role-based access control
- * // app.get('/api/admin', requireAuth({ roles: ['admin'] }), handler);
  */
-export function requireAuth(options: AuthOptions = {}) {
-  const { required = true, roles = [] } = options;
+export function requireAuth(optionsOrRole?: AuthOptions | Role) {
+  const options: AuthOptions =
+    typeof optionsOrRole === 'string' ? { role: optionsOrRole } : optionsOrRole ?? {};
+  const { required = true, role: requiredRole = Role.USER } = options;
   const userService = new UserService();
 
   return async (req: Request, res: Response, next: NextFunction) => {
@@ -77,17 +82,13 @@ export function requireAuth(options: AuthOptions = {}) {
         userId: session.user.id,
       };
 
-      // TODO: Future role-based access control
-      // if (roles.length > 0) {
-      //   const userRoles = req.user.roles || [];
-      //   const hasRequiredRole = roles.some(role => userRoles.includes(role));
-      //   if (!hasRequiredRole) {
-      //     return res.status(403).json({
-      //       success: false,
-      //       error: 'Insufficient permissions'
-      //     });
-      //   }
-      // }
+      // Role-based access control
+      if (!meetsRoleRequirement(req.user.role, requiredRole)) {
+        return res.status(403).json({
+          success: false,
+          error: 'Insufficient permissions',
+        });
+      }
 
       next();
     } catch (error) {

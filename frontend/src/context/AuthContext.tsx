@@ -1,11 +1,18 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { User } from 'shared';
+import { Role, meetsRoleRequirement } from 'shared';
 import { authApi } from '../../api';
 
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  /** True when the user must change their password before using the app. */
+  requiresPasswordReset: boolean;
+  /** Returns true when the current user's role meets or exceeds the required role. */
+  hasRole: (role: Role) => boolean;
+  /** Re-fetches the current user from the server (e.g. after a password reset). */
+  refreshUser: () => Promise<void>;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -75,17 +82,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const hasRole = useCallback(
+    (role: Role): boolean => {
+      if (!user) return false;
+      return meetsRoleRequirement(user.role, role);
+    },
+    [user],
+  );
+
+  const value = useMemo<AuthContextType>(
+    () => ({
+      user,
+      isAuthenticated: !!user,
+      isLoading,
+      requiresPasswordReset: !!user?.requiresPasswordReset,
+      hasRole,
+      refreshUser: checkAuth,
+      login,
+      register,
+      logout,
+    }),
+    [user, isLoading, hasRole],
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isAuthenticated: !!user,
-        isLoading,
-        login,
-        register,
-        logout,
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

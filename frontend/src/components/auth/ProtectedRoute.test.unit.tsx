@@ -20,7 +20,7 @@ function renderWithRouter(ui: React.ReactElement, initialEntries = ['/']) {
 
 describe('ProtectedRoute', () => {
   it('should show a loading spinner when auth is loading', () => {
-    mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: true });
+    mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: true, hasRole: () => false, requiresPasswordReset: false });
 
     renderWithRouter(
       <ProtectedRoute>
@@ -33,7 +33,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('should render children when user is authenticated', () => {
-    mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false });
+    mockUseAuth.mockReturnValue({ isAuthenticated: true, isLoading: false, hasRole: () => true, requiresPasswordReset: false });
 
     renderWithRouter(
       <ProtectedRoute>
@@ -45,7 +45,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('should redirect to / when user is not authenticated on a protected route', () => {
-    mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
+    mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false, hasRole: () => false, requiresPasswordReset: false });
 
     renderWithRouter(
       <ProtectedRoute>
@@ -57,7 +57,7 @@ describe('ProtectedRoute', () => {
   });
 
   it('should render children on a public route when user is not authenticated', () => {
-    mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false });
+    mockUseAuth.mockReturnValue({ isAuthenticated: false, isLoading: false, hasRole: () => false, requiresPasswordReset: false });
 
     renderWithRouter(
       <ProtectedRoute isPublic>

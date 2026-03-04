@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { Role } from 'shared';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { LandingPage } from './pages/LandingPage';
 import { LoginPage } from './pages/LoginPage';
@@ -6,6 +7,8 @@ import { HomePage } from './pages/HomePage';
 import UploadPage from './pages/UploadPage';
 import UploadRecordPage from './pages/UploadRecordPage';
 import ExperimentsPage from './pages/ExperimentsPage';
+import AdminPage from './pages/AdminPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 import SiteDrawer, { DRAWER_MARGIN } from './components/navigation/SiteDrawer';
 import { Box } from '@mui/material';
 
@@ -36,6 +39,14 @@ function App() {
 
             {/* Protected routes */}
             <Route
+              path="/reset-password"
+              element={
+                <ProtectedRoute>
+                  <ResetPasswordPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/home"
               element={
                 <ProtectedRoute>
@@ -64,6 +75,16 @@ function App() {
               element={
                 <ProtectedRoute>
                   <ExperimentsPage />
+                </ProtectedRoute>
+              }
+            />
+
+            {/* Admin-only routes */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute requiredRole={Role.ADMIN}>
+                  <AdminPage />
                 </ProtectedRoute>
               }
             />
