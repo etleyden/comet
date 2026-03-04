@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { createEndpoint } from '../utils/createEndpoint';
 import { requireAuth } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types/api';
-import type { Account, DeleteAccountResponse } from 'shared';
+import { Account, DeleteAccountResponse, HttpError } from 'shared';
 import { AccountService } from '../services/accountService';
 
 const CreateAccountSchema = z.object({
@@ -56,7 +56,7 @@ export function accountRoutes(app: Express) {
             handler: async (_input, req): Promise<Account> => {
                 const account = await accountService.getAccountById(req.params.id, req.user);
                 if (!account) {
-                    throw new Error('Account not found');
+                    throw new HttpError('Account not found', 404);
                 }
                 return account;
             },

@@ -185,11 +185,12 @@ describe('AccountsPage (Integration)', () => {
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
 
-        await userEvent.click(within(card).getByTitle('Edit'));
+        // await userEvent.click(within(card).getByTitle('Edit'));
+        await userEvent.click(within(card).getByLabelText('Edit'));
 
         // Save / Cancel icon buttons should appear
-        expect(screen.getByTitle('Save')).toBeInTheDocument();
-        expect(screen.getByTitle('Cancel')).toBeInTheDocument();
+        expect(screen.getByLabelText('Save')).toBeInTheDocument();
+        expect(screen.getByLabelText('Cancel')).toBeInTheDocument();
     });
 
     it('should cancel edit and restore original values', async () => {
@@ -199,18 +200,18 @@ describe('AccountsPage (Integration)', () => {
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(within(card).getByTitle('Edit'));
+        await userEvent.click(within(card).getByLabelText('Edit'));
 
         // Clear and type a new name
         const nameInput = screen.getByDisplayValue(testAccount.name);
         await userEvent.clear(nameInput);
         await userEvent.type(nameInput, 'Temporary Name');
 
-        await userEvent.click(screen.getByTitle('Cancel'));
+        await userEvent.click(screen.getByLabelText('Cancel'));
 
         // Original name should be back and edit mode gone
         expect(screen.getByTestId(`account-name-heading-${testAccount.id}`)).toBeInTheDocument();
-        expect(screen.queryByTitle('Save')).not.toBeInTheDocument();
+        expect(screen.queryByLabelText('Save')).not.toBeInTheDocument();
     });
 
     it('should save edits and exit edit mode', async () => {
@@ -236,16 +237,16 @@ describe('AccountsPage (Integration)', () => {
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(within(card).getByTitle('Edit'));
+        await userEvent.click(within(card).getByLabelText('Edit'));
 
         const nameInput = screen.getByDisplayValue(testAccount.name);
         await userEvent.clear(nameInput);
         await userEvent.type(nameInput, 'Updated Checking');
 
-        await userEvent.click(screen.getByTitle('Save'));
+        await userEvent.click(screen.getByLabelText('Save'));
 
         await waitFor(() => {
-            expect(screen.queryByTitle('Save')).not.toBeInTheDocument();
+            expect(screen.queryByLabelText('Save')).not.toBeInTheDocument();
             expect(screen.getByTestId(`account-name-heading-${testAccount.id}`)).toHaveTextContent('Updated Checking');
         });
     });
@@ -263,8 +264,8 @@ describe('AccountsPage (Integration)', () => {
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(within(card).getByTitle('Edit'));
-        await userEvent.click(screen.getByTitle('Save'));
+        await userEvent.click(within(card).getByLabelText('Edit'));
+        await userEvent.click(screen.getByLabelText('Save'));
 
         await waitFor(() => {
             expect(screen.getByRole('alert')).toHaveTextContent(/update failed/i);
@@ -280,7 +281,7 @@ describe('AccountsPage (Integration)', () => {
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(within(card).getByTitle('Delete'));
+        await userEvent.click(within(card).getByLabelText('Delete'));
 
         expect(screen.getByRole('dialog')).toBeInTheDocument();
         expect(screen.getByText(/are you sure you want to delete/i)).toBeInTheDocument();
@@ -293,7 +294,7 @@ describe('AccountsPage (Integration)', () => {
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(within(card).getByTitle('Delete'));
+        await userEvent.click(within(card).getByLabelText('Delete'));
 
         await userEvent.click(screen.getAllByRole('button', { name: /cancel/i })[0]);
 
@@ -320,7 +321,7 @@ describe('AccountsPage (Integration)', () => {
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(within(card).getByTitle('Delete'));
+        await userEvent.click(within(card).getByLabelText('Delete'));
 
         // Click the "Delete" button inside the dialog
         const dialog = screen.getByRole('dialog');
@@ -348,7 +349,7 @@ describe('AccountsPage (Integration)', () => {
 
         const card = screen.getByTestId(`account-card-${testAccount.id}`);
         await userEvent.hover(card);
-        await userEvent.click(within(card).getByTitle('Delete'));
+        await userEvent.click(within(card).getByLabelText('Delete'));
         await userEvent.click(screen.getByRole('button', { name: /^delete$/i }));
 
         await waitFor(() => {
