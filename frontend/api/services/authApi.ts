@@ -4,6 +4,7 @@ import type {
   LoginRequest,
   LogoutResponse,
   RegisterRequest,
+  ResetPasswordRequest,
   User,
 } from 'shared';
 import ApiClient from '../apiClient';
@@ -42,5 +43,13 @@ export const authApi = {
    */
   getMe(): Promise<ApiResponse<User>> {
     return ApiClient.get<ApiResponse<User>>('/auth/me');
+  },
+
+  /**
+   * POST /api/auth/reset-password
+   * Changes the current user's password. Used for forced resets and voluntary changes.
+   */
+  resetPassword(data: ResetPasswordRequest): Promise<ApiResponse<{ success: boolean }>> {
+    return ApiClient.post<ApiResponse<{ success: boolean }>>('/api/auth/reset-password', data);
   },
 };

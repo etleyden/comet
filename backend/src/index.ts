@@ -41,8 +41,12 @@ app.use(errorHandler);
 
 // Initialize the database connection before starting the server
 AppDataSource.initialize()
-  .then(() => {
+  .then(async () => {
     console.log('Database connected successfully!');
+
+    // Seed initial admin user from env vars (if configured)
+    const { UserService } = await import('./services/userService');
+    await new UserService().seedAdminUser();
 
     if (USE_HTTPS) {
       // Load SSL certificates

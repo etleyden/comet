@@ -7,9 +7,11 @@ import {
   IconButton,
   InputAdornment,
 } from '@mui/material';
-import { Visibility, VisibilityOff } from '@mui/icons-material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { validatePassword } from 'shared';
 
 export default function Register(props?: { onCancel?: () => void }) {
   const [name, setName] = useState('');
@@ -20,8 +22,15 @@ export default function Register(props?: { onCancel?: () => void }) {
   const { register } = useAuth();
 
   const handleRegistration = async () => {
+    setError('');
+
+    const { valid, errors: pwErrors } = validatePassword(password);
+    if (!valid) {
+      setError(`Password does not meet requirements: ${pwErrors.join(', ')}.`);
+      return;
+    }
+
     try {
-      setError('');
       await register(name, email, password);
       setName('');
       setEmail('');
