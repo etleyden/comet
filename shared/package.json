@@ -7,12 +7,13 @@
   "scripts": {
     "build": "echo 'Shared package does not require building'",
     "type-check": "tsc --noEmit",
-    "test": "vitest run",
-    "test:unit": "vitest run",
-    "test:watch": "vitest"
+    "test": "vitest run --passWithNoTests",
+    "test:unit": "vitest run --passWithNoTests",
+    "test:coverage": "vitest run --coverage --passWithNoTests"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.0.18",
     "typescript": "^5.0.0",
-    "vitest": "^2.0.0"
+    "vitest": "^4.0.18"
   }
 }
