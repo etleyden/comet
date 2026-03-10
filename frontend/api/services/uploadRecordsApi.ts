@@ -15,31 +15,31 @@ import ApiClient from '../apiClient';
  */
 export const uploadRecordsApi = {
     /**
-     * GET /api/upload-record/:id
+     * GET /api/upload-records/:id
      */
     getUploadRecord(id: string): Promise<ApiResponse<GetUploadRecordResponse>> {
-        return ApiClient.get<ApiResponse<GetUploadRecordResponse>>(`/api/upload-record/${id}`);
+        return ApiClient.get<ApiResponse<GetUploadRecordResponse>>(`/api/upload-records/${id}`);
     },
 
     /**
-     * PUT /api/upload-record/:id
+     * PUT /api/upload-records/:id
      */
     updateUploadRecord(
         id: string,
         data: UpdateUploadRecordRequest,
     ): Promise<ApiResponse<GetUploadRecordResponse>> {
         return ApiClient.put<ApiResponse<GetUploadRecordResponse>>(
-            `/api/upload-record/${id}`,
+            `/api/upload-records/${id}`,
             data,
         );
     },
 
     /**
-     * DELETE /api/upload-record/:id
+     * DELETE /api/upload-records/:id
      */
     deleteUploadRecord(id: string): Promise<ApiResponse<DeleteUploadRecordResponse>> {
         return ApiClient.delete<ApiResponse<DeleteUploadRecordResponse>>(
-            `/api/upload-record/${id}`,
+            `/api/upload-records/${id}`,
         );
     },
 };

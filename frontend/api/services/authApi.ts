@@ -14,11 +14,11 @@ import ApiClient from '../apiClient';
  */
 export const authApi = {
   /**
-   * POST /auth/register
+   * POST /api/auth/register
    * Creates a new user account and returns the authenticated user with a session token.
    */
   register(data: RegisterRequest): Promise<ApiResponse<AuthUser>> {
-    return ApiClient.post<ApiResponse<AuthUser>>('/auth/register', data);
+    return ApiClient.post<ApiResponse<AuthUser>>('/api/auth/register', data);
   },
 
   /**
@@ -38,18 +38,18 @@ export const authApi = {
   },
 
   /**
-   * GET /auth/me
+   * GET /api/auth/me
    * Returns the currently authenticated user based on the session cookie.
    */
   getMe(): Promise<ApiResponse<User>> {
-    return ApiClient.get<ApiResponse<User>>('/auth/me');
+    return ApiClient.get<ApiResponse<User>>('/api/auth/me');
   },
 
   /**
-   * POST /api/auth/reset-password
+   * PATCH /api/auth/password
    * Changes the current user's password. Used for forced resets and voluntary changes.
    */
   resetPassword(data: ResetPasswordRequest): Promise<ApiResponse<{ success: boolean }>> {
-    return ApiClient.post<ApiResponse<{ success: boolean }>>('/api/auth/reset-password', data);
+    return ApiClient.patch<ApiResponse<{ success: boolean }>>('/api/auth/password', data);
   },
 };

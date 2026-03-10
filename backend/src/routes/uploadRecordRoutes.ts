@@ -16,9 +16,9 @@ const UpdateMappingSchema = z.object({
 export function uploadRecordRoutes(app: Express) {
     const uploadRecordService = new UploadRecordService();
 
-    // GET /api/upload-record/:id — Fetch a single upload record
+    // GET /api/upload-records/:id — Fetch a single upload record
     app.get(
-        '/api/upload-record/:id',
+        '/api/upload-records/:id',
         requireAuth(),
         createEndpoint<unknown, GetUploadRecordResponse, AuthenticatedRequest>({
             handler: async (_input, req): Promise<GetUploadRecordResponse> => {
@@ -30,9 +30,9 @@ export function uploadRecordRoutes(app: Express) {
         })
     );
 
-    // PUT /api/upload-record/:id — Update the column mapping
+    // PUT /api/upload-records/:id — Update the column mapping
     app.put(
-        '/api/upload-record/:id',
+        '/api/upload-records/:id',
         requireAuth(),
         createEndpoint<z.infer<typeof UpdateMappingSchema>, GetUploadRecordResponse, AuthenticatedRequest>({
             schema: UpdateMappingSchema,
@@ -46,9 +46,9 @@ export function uploadRecordRoutes(app: Express) {
         })
     );
 
-    // DELETE /api/upload-record/:id — Delete the upload record and its transactions
+    // DELETE /api/upload-records/:id — Delete the upload record and its transactions
     app.delete(
-        '/api/upload-record/:id',
+        '/api/upload-records/:id',
         requireAuth(),
         createEndpoint<unknown, DeleteUploadRecordResponse, AuthenticatedRequest>({
             handler: async (_input, req): Promise<DeleteUploadRecordResponse> => {

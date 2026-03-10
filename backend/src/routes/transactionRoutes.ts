@@ -53,7 +53,7 @@ export function transactionRoutes(app: Express) {
 
     // POST /api/transactions/search - Get paginated/filtered transactions for current user (requires authentication)
     app.post(
-        '/api/transactions',
+        '/api/transactions/search',
         requireAuth(),
         createEndpoint<z.infer<typeof GetTransactionsSchema>, GetTransactionsResponse, AuthenticatedRequest>({
             inputSource: 'both',
@@ -69,9 +69,9 @@ export function transactionRoutes(app: Express) {
         })
     );
 
-    // POST /api/transactions/upload - Upload transactions (requires authentication)
+    // POST /api/transactions/import - Import transactions from CSV (requires authentication)
     app.post(
-        '/api/transactions/upload',
+        '/api/transactions/import',
         requireAuth(),
         createEndpoint<
             z.infer<typeof UploadTransactionsSchema>,

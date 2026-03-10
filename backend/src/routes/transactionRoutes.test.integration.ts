@@ -91,10 +91,10 @@ describe('Transaction Routes (Integration)', () => {
         mockedTransaction.mockImplementation(async (cb: any) => cb(mockTxManager));
     });
 
-    describe('POST /api/transactions/upload', () => {
+    describe('POST /api/transactions/import', () => {
         it('should return 401 when not authenticated', async () => {
             const response = await request(app)
-                .post('/api/transactions/upload')
+                .post('/api/transactions/import')
                 .send(validUploadPayload)
                 .expect(401);
 
@@ -105,7 +105,7 @@ describe('Transaction Routes (Integration)', () => {
             mockAuthenticatedUser(mockDB);
 
             const response = await request(app)
-                .post('/api/transactions/upload')
+                .post('/api/transactions/import')
                 .set('Cookie', 'session=test-session-id.secret')
                 .send({
                     ...validUploadPayload,
@@ -121,7 +121,7 @@ describe('Transaction Routes (Integration)', () => {
             mockAuthenticatedUser(mockDB);
 
             const response = await request(app)
-                .post('/api/transactions/upload')
+                .post('/api/transactions/import')
                 .set('Cookie', 'session=test-session-id.secret')
                 .send({
                     ...validUploadPayload,
@@ -137,7 +137,7 @@ describe('Transaction Routes (Integration)', () => {
             mockAuthenticatedUser(mockDB);
 
             const response = await request(app)
-                .post('/api/transactions/upload')
+                .post('/api/transactions/import')
                 .set('Cookie', 'session=test-session-id.secret')
                 .send({ mapping: {} })
                 .expect(400);
@@ -153,7 +153,7 @@ describe('Transaction Routes (Integration)', () => {
             mockQB.execute.mockResolvedValue({ identifiers: [{}] });
 
             const response = await request(app)
-                .post('/api/transactions/upload')
+                .post('/api/transactions/import')
                 .set('Cookie', 'session=test-session-id.secret')
                 .send(validUploadPayload)
                 .expect(200);
@@ -164,7 +164,7 @@ describe('Transaction Routes (Integration)', () => {
         });
     });
 
-    describe('POST /api/transactions', () => {
+    describe('POST /api/transactions/search', () => {
         const app = createTestApp();
         let sessionToken: string;
         let userEntity: any;
@@ -205,7 +205,7 @@ describe('Transaction Routes (Integration)', () => {
 
         it('returns 401 when not authenticated', async () => {
             const res = await request(app)
-                .post('/api/transactions/')
+                .post('/api/transactions/search')
                 .send({})
                 .expect(401);
 
@@ -219,7 +219,7 @@ describe('Transaction Routes (Integration)', () => {
             await seedTransaction({ account: account2, upload: uploadRecord, amount: 75, date: '2025-01-11' });
 
             const res = await request(app)
-                .post('/api/transactions/')
+                .post('/api/transactions/search')
                 .set('Cookie', `session=${sessionToken}`)
                 .send({})
                 .expect(200);
@@ -235,7 +235,7 @@ describe('Transaction Routes (Integration)', () => {
             await seedTransaction({ account: account1, upload: uploadRecord, amount: 30, date: '2025-02-10' });
 
             const res = await request(app)
-                .post('/api/transactions/')
+                .post('/api/transactions/search')
                 .set('Cookie', `session=${sessionToken}`)
                 .send({})
                 .expect(200);
@@ -252,7 +252,7 @@ describe('Transaction Routes (Integration)', () => {
             const otherSession = await userService.createSession(otherUser);
 
             const res = await request(app)
-                .post('/api/transactions/')
+                .post('/api/transactions/search')
                 .set('Cookie', `session=${otherSession.token}`)
                 .send({})
                 .expect(200);
@@ -272,7 +272,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('accepts YYYY-MM-DD', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { dateFrom: '2025-03-01' } })
                     .expect(200);
@@ -283,7 +283,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('rejects an invalid date string with 400', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { dateFrom: 'not-a-date' } })
                     .expect(400);
@@ -303,7 +303,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('filters to transactions on or after dateFrom', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { dateFrom: '2025-03-01' } })
                     .expect(200);
@@ -316,7 +316,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('filters to transactions on or before dateTo', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { dateTo: '2025-03-31' } })
                     .expect(200);
@@ -326,7 +326,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('filters to transactions within a date range', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { dateFrom: '2025-02-01', dateTo: '2025-05-01' } })
                     .expect(200);
@@ -337,7 +337,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns empty when no transactions fall within range', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { dateFrom: '2026-01-01' } })
                     .expect(200);
@@ -357,7 +357,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns only transactions for the specified account', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { accountIds: [account1.id] } })
                     .expect(200);
@@ -370,7 +370,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns transactions across multiple specified accounts', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { accountIds: [account1.id, account2.id] } })
                     .expect(200);
@@ -380,7 +380,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns empty when accountId does not belong to user', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { accountIds: ['00000000-0000-0000-0000-000000000000'] } })
                     .expect(200);
@@ -400,7 +400,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns transactions whose vendorLabel matches a vendor term (case-insensitive)', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { vendors: ['whole foods'] } })
                     .expect(200);
@@ -411,7 +411,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns partial match on vendor term', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { vendors: ['amazon'] } })
                     .expect(200);
@@ -421,7 +421,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns union of results when multiple vendor terms are given', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { vendors: ['whole foods', 'uber'] } })
                     .expect(200);
@@ -431,7 +431,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns empty when no vendor matches the vendor term', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { vendors: ['starbucks'] } })
                     .expect(200);
@@ -451,7 +451,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns only transactions matching a category', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { categoryIds: [category1.id] } })
                     .expect(200);
@@ -462,7 +462,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns transactions across multiple categories', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { categoryIds: [category1.id, category2.id] } })
                     .expect(200);
@@ -472,7 +472,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('does not return uncategorised transactions when filtering by category', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { categoryIds: [category1.id] } })
                     .expect(200);
@@ -493,7 +493,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns only uncategorized transactions when categoryIds is [null]', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { categoryIds: [null] } })
                     .expect(200);
@@ -506,7 +506,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns all transactions when no categoryIds filter is given', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({})
                     .expect(200);
@@ -516,7 +516,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns uncategorized and matching-category transactions when null and a category id are both provided (OR)', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { categoryIds: [null, category1.id] } })
                     .expect(200);
@@ -540,7 +540,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('filters to transactions at or above amountMin', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { amountMin: 50 } })
                     .expect(200);
@@ -553,7 +553,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('filters to transactions at or below amountMax', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { amountMax: 50 } })
                     .expect(200);
@@ -566,7 +566,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('filters to transactions within an amount range', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { amountMin: 20, amountMax: 100 } })
                     .expect(200);
@@ -577,7 +577,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns empty when no transactions fall within amount range', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { amountMin: 1000 } })
                     .expect(200);
@@ -603,7 +603,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('respects the limit query parameter', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/?limit=2')
+                    .post('/api/transactions/search?limit=2')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({})
                     .expect(200);
@@ -614,13 +614,13 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns the correct page of results', async () => {
                 const page1 = await request(app)
-                    .post('/api/transactions/?page=1&limit=2')
+                    .post('/api/transactions/search?page=1&limit=2')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({})
                     .expect(200);
 
                 const page2 = await request(app)
-                    .post('/api/transactions/?page=2&limit=2')
+                    .post('/api/transactions/search?page=2&limit=2')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({})
                     .expect(200);
@@ -636,7 +636,7 @@ describe('Transaction Routes (Integration)', () => {
 
             it('returns an empty page when page exceeds total results', async () => {
                 const res = await request(app)
-                    .post('/api/transactions/?page=99&limit=25')
+                    .post('/api/transactions/search?page=99&limit=25')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({})
                     .expect(200);
@@ -655,7 +655,7 @@ describe('Transaction Routes (Integration)', () => {
                 await seedTransaction({ account: account1, upload: uploadRecord, amount: 300, date: '2025-06-01' });
 
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({
                         filter: {
@@ -676,7 +676,7 @@ describe('Transaction Routes (Integration)', () => {
                 await seedTransaction({ account: account1, upload: uploadRecord, amount: 80, date: '2025-01-03', vendorLabel: 'Whole Foods' });
 
                 const res = await request(app)
-                    .post('/api/transactions/')
+                    .post('/api/transactions/search')
                     .set('Cookie', `session=${sessionToken}`)
                     .send({ filter: { vendors: ['starbucks'], amountMin: 100 } })
                     .expect(200);
