@@ -35,7 +35,7 @@ export const handlers = [
     return HttpResponse.json(response);
   }),
 
-  http.get(`${BASE_URL}/auth/me`, () => {
+  http.get(`${BASE_URL}/api/auth/me`, () => {
     const response: ApiResponse<User> = {
       success: true,
       data: testUser,

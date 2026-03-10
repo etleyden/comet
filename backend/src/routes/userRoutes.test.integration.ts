@@ -134,10 +134,10 @@ describe('User Routes (Integration)', () => {
 
   // ── Current User ──────────────────────────────────────────────────
 
-  describe('GET /auth/me', () => {
+  describe('GET /api/auth/me', () => {
     it('should return 401 when not authenticated', async () => {
       const response = await request(app)
-        .get('/auth/me')
+        .get('/api/auth/me')
         .expect(401);
 
       expect(response.body.success).toBe(false);
@@ -150,7 +150,7 @@ describe('User Routes (Integration)', () => {
       const session = await userService.createSession(user);
 
       const response = await request(app)
-        .get('/auth/me')
+        .get('/api/auth/me')
         .set('Cookie', `session=${session.token}`)
         .expect(200);
 

@@ -104,9 +104,9 @@ export function userRoutes(app: Express) {
     })
   );
 
-  // GET /auth/me - Get current user
+  // GET /api/auth/me - Get current user
   app.get(
-    '/auth/me',
+    '/api/auth/me',
     requireAuth(),
     createEndpoint<unknown, ApiUser, AuthenticatedRequest>({
       handler: async (input, req) => {

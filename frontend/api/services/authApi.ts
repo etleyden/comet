@@ -38,11 +38,11 @@ export const authApi = {
   },
 
   /**
-   * GET /auth/me
+   * GET /api/auth/me
    * Returns the currently authenticated user based on the session cookie.
    */
   getMe(): Promise<ApiResponse<User>> {
-    return ApiClient.get<ApiResponse<User>>('/auth/me');
+    return ApiClient.get<ApiResponse<User>>('/api/auth/me');
   },
 
   /**
