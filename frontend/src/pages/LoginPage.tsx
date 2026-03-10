@@ -3,7 +3,7 @@ import Login from '../components/auth/Login';
 
 export function LoginPage() {
   return (
-    <Container maxWidth="sm" sx={{ mt: 4 }}>
+    <Container maxWidth="xs" sx={{ mt: 4 }}>
       <Box sx={{ mb: 4, textAlign: 'center' }}>
         <Typography variant="h3" gutterBottom>
           Welcome

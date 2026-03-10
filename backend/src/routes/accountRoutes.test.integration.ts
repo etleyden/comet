@@ -6,10 +6,8 @@ import { seedAccount, seedUploadRecord, seedTransaction } from '@test/utils/seed
 import { UserService } from '../services/userService';
 
 // Redirect ALL data-source imports (routes, middleware, services) to the test DB
-vi.mock('../data-source', async () => {
-  const testDb = await import('@test/utils/testDb');
-  return { getDB: () => testDb.getTestDB() };
-});
+vi.mock('../data-source');
+vi.mock('resend');
 
 describe('Account Routes (Integration)', () => {
   const app = createTestApp();

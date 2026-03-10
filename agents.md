@@ -278,10 +278,10 @@ server.use(
 
 ## Important Notes for Agents
 
-- **All new features must have tests** (at minimum unit tests)
+- **All new features must have tests**: follow the testing trophy (more integration tests than anything else, but still need unit tests for small edge cases and individual components)
+- Make sure to follow the DRY (don't repeat yourself) principle, and favor consolidated implementations over continuously rewriting code. 
 - Use existing test fixtures from `__tests__/fixtures/`
 - Mock external dependencies in unit tests
-- Prefer functional components and hooks in React
 - Use async/await over promises
 - Follow existing patterns in the codebase
 - MSW handlers may need updating if new endpoints are added

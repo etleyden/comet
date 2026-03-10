@@ -17,6 +17,7 @@ vi.mock('../data-source', () => ({
         transaction: vi.fn(),
     },
 }));
+vi.mock('resend');
 
 import { getDB } from '../data-source';
 import { AppDataSource } from '../data-source';

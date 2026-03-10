@@ -1,8 +1,10 @@
 import Session from '../entities/Session';
+import PasswordResetToken from '../entities/PasswordResetToken';
 import { getDB } from '../data-source';
 import User from '../entities/User';
 import { Role } from 'shared';
 import bcrypt from 'bcrypt';
+import { Resend } from 'resend';
 
 interface SessionWithToken extends Session {
   token: string;
@@ -10,8 +12,14 @@ interface SessionWithToken extends Session {
 
 const SESSION_TIMEOUT_SEC = 60 * 60 * 24; // 1 day
 const BCRYPT_SALT_ROUNDS = 10;
+const RESET_TOKEN_EXPIRY_MIN = 30; // 30 minutes
 
 export class UserService {
+  private resend: Resend;
+
+  constructor() {
+    this.resend = new Resend(process.env.RESEND_API_KEY!);
+  }
   /**
    * Generates sesssion IDs and secrets using 120 bits of entropy. See more: https://lucia-auth.com/sessions/basic
    * @returns a cryptographically secure random string
@@ -37,6 +45,16 @@ export class UserService {
     const secretHashBuffer = await crypto.subtle.digest('SHA-256', secretBytes);
     return new Uint8Array(secretHashBuffer);
   }
+  private parseToken(token: string): [string, string] | null {
+    const parts = token.split('.');
+    if (parts.length !== 2) return null;
+    return [parts[0], parts[1]];
+  }
+  /**
+   * Constant time comparison helps prevent timing attacks where
+   * attackers can measure how long it takes for the system to reject 
+   * invalid tokens and use that information to guess valid tokens.
+   */
   private constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
     if (a.byteLength !== b.byteLength) {
       return false;
@@ -48,12 +66,9 @@ export class UserService {
     return c === 0;
   }
   async validateSessionToken(token: string): Promise<Session | null> {
-    const tokenParts = token.split('.');
-    if (tokenParts.length !== 2) {
-      return null;
-    }
-    const sessionId = tokenParts[0];
-    const sessionSecret = tokenParts[1];
+    const parsed = this.parseToken(token);
+    if (!parsed) return null;
+    const [sessionId, sessionSecret] = parsed;
 
     const session = await this.getSession(sessionId);
     if (!session) {
@@ -146,6 +161,115 @@ export class UserService {
     await db.save(User, user);
   }
 
+  async requestResetPassword(email: string): Promise<void> {
+    const db = getDB();
+    const user = await db.findOneBy(User, { email });
+    if (!user) {
+      // For security, don't reveal whether the email exists or not
+      console.warn(`Password reset requested for non-existent email: ${email}`);
+      return;
+    }
+
+    // Invalidate any existing reset tokens for this user
+    await db
+      .createQueryBuilder()
+      .update(PasswordResetToken)
+      .set({ used: true })
+      .where('userId = :userId AND used = false', { userId: user.id })
+      .execute();
+
+    // Generate a one-time-use token
+    const id = this.generateSecureRandomString();
+    const secret = this.generateSecureRandomString();
+    const secretHash = await this.hashSecret(secret);
+    const token = `${id}.${secret}`;
+
+    const expiresAt = new Date(Date.now() + RESET_TOKEN_EXPIRY_MIN * 60 * 1000);
+
+    await db.save(PasswordResetToken, {
+      id,
+      secretHash: Buffer.from(secretHash).toString('base64'),
+      expiresAt,
+      used: false,
+      user,
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || 'https://localhost:3000';
+    const resetLink = `${frontendUrl}/reset-password/token?token=${encodeURIComponent(token)}`;
+
+    console.log('Sending password reset email to:', email);
+    this.resend.emails.send({
+      from: "onboarding@resend.dev",
+      to: email,
+      subject: 'Password Reset Request',
+      html: `
+        <p>Hi ${user.name},</p>
+        <p>You requested a password reset. Click the link below to set a new password:</p>
+        <p><a href="${resetLink}">${resetLink}</a></p>
+        <p>This link expires in ${RESET_TOKEN_EXPIRY_MIN} minutes and can only be used once.</p>
+        <p>If you didn't request this, you can safely ignore this email.</p>
+      `,
+    });
+  }
+
+  private async findValidResetToken(token: string): Promise<PasswordResetToken> {
+    const parsed = this.parseToken(token);
+    if (!parsed) throw new Error('Invalid reset token');
+    const [tokenId, tokenSecret] = parsed;
+
+    const db = getDB();
+    const resetToken = await db.findOne(PasswordResetToken, {
+      where: { id: tokenId },
+      relations: ['user'],
+    });
+
+    if (!resetToken) throw new Error('Invalid reset token');
+    if (resetToken.used) throw new Error('Reset token has already been used');
+    if (new Date() > resetToken.expiresAt) throw new Error('Reset token has expired');
+
+    const secretHash = await this.hashSecret(tokenSecret);
+    const isValid = this.constantTimeEqual(
+      secretHash,
+      new Uint8Array(Buffer.from(resetToken.secretHash, 'base64'))
+    );
+    if (!isValid) throw new Error('Invalid reset token');
+
+    return resetToken;
+  }
+
+  /**
+   * Validates a password-reset token (id.secret format).
+   * Returns the associated user if the token is valid, unused, and not expired.
+   * Does NOT mark it as used — call resetPasswordWithToken to consume it.
+   */
+  async validateResetToken(token: string): Promise<User | null> {
+    try {
+      const resetToken = await this.findValidResetToken(token);
+      return resetToken.user;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Resets a user's password using a valid reset token.
+   * Marks the token as used so it cannot be reused.
+   * Returns the user so the caller can create a session.
+   */
+  async resetPasswordWithToken(token: string, newPassword: string): Promise<User> {
+    const resetToken = await this.findValidResetToken(token);
+    const db = getDB();
+
+    const user = resetToken.user;
+    user.passwordHash = await this.hashPassword(newPassword);
+    user.requiresPasswordReset = false;
+    resetToken.used = true;
+
+    await db.save(User, user);
+    await db.save(PasswordResetToken, resetToken);
+
+    return user;
+  }
   async createSession(user: Partial<User>): Promise<SessionWithToken> {
     // validate user
     if (!user.id) {
@@ -206,9 +330,9 @@ export class UserService {
    * Extracts the session ID and deletes it.
    */
   async invalidateSessionByToken(token: string): Promise<void> {
-    const tokenParts = token.split('.');
-    if (tokenParts.length === 2) {
-      await this.deleteSession(tokenParts[0]);
+    const parsed = this.parseToken(token);
+    if (parsed) {
+      await this.deleteSession(parsed[0]);
     }
   }
   async listUsers(): Promise<User[]> {

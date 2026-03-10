@@ -45,6 +45,7 @@ services:
         condition: service_healthy
     volumes:
       - .:/workspace
+      - /workspace/node_modules
       - ./backend:/app
       - /app/node_modules
       - ./certs:/app/certs:ro

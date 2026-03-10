@@ -9,8 +9,10 @@ import UploadRecordPage from './pages/UploadRecordPage';
 import ExperimentsPage from './pages/ExperimentsPage';
 import AdminPage from './pages/AdminPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import ResetPasswordViaTokenPage from './pages/ResetPasswordViaTokenPage';
 import SiteDrawer, { DRAWER_MARGIN } from './components/navigation/SiteDrawer';
 import { Box } from '@mui/material';
+import AccountsPage from './pages/AccountsPage';
 
 function App() {
   return (
@@ -33,6 +35,14 @@ function App() {
               element={
                 <ProtectedRoute isPublic>
                   <LoginPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reset-password/token"
+              element={
+                <ProtectedRoute isPublic>
+                  <ResetPasswordViaTokenPage />
                 </ProtectedRoute>
               }
             />
