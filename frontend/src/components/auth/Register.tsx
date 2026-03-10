@@ -106,6 +106,7 @@ export default function Register(props?: { onCancel?: () => void }) {
             </Button>
           </Box>
         </FormGroup>
-      )}</>
+      )}
+    </>
   );
 }

@@ -2,7 +2,6 @@ import { Box, Button, FormGroup, TextField, Typography } from "@mui/material";
 import { useState } from "react";
 import { authApi } from "../../../api";
 import { useNotification } from "../../context/NotificationContext";
-import { HttpError } from "shared";
 
 export default function ForgotPassword(props?: { onCancel?: () => void }) {
     const { notify } = useNotification();
@@ -13,8 +12,9 @@ export default function ForgotPassword(props?: { onCancel?: () => void }) {
             await authApi.requestResetPassword({ email })
             notify('If an account with that email exists, a reset link has been sent.', 'info');
         } catch (err: unknown) {
-            notify(`Error: ${(err as HttpError).status}`, 'error');
-        };
+            const message = err instanceof Error ? err.message : 'Something went wrong';
+            notify(`Error: ${message}`, 'error');
+        }
         setEmail('');
     };
 
@@ -29,7 +29,7 @@ export default function ForgotPassword(props?: { onCancel?: () => void }) {
                 onChange={e => setEmail(e.target.value)}
             />
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Button variant="contained" onClick={handleForgotPassword}>
+                <Button variant="contained" onClick={handleForgotPassword} disabled={!email}>
                     Send Reset Link
                 </Button>
                 {props?.onCancel && (

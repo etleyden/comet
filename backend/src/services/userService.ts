@@ -15,10 +15,13 @@ const BCRYPT_SALT_ROUNDS = 10;
 const RESET_TOKEN_EXPIRY_MIN = 30; // 30 minutes
 
 export class UserService {
-  private resend: Resend;
+  private _resend: Resend | null = null;
 
-  constructor() {
-    this.resend = new Resend(process.env.RESEND_API_KEY!);
+  private get resend(): Resend {
+    if (!this._resend) {
+      this._resend = new Resend(process.env.RESEND_API_KEY);
+    }
+    return this._resend;
   }
   /**
    * Generates sesssion IDs and secrets using 120 bits of entropy. See more: https://lucia-auth.com/sessions/basic
@@ -52,7 +55,7 @@ export class UserService {
   }
   /**
    * Constant time comparison helps prevent timing attacks where
-   * attackers can measure how long it takes for the system to reject 
+   * attackers can measure how long it takes for the system to reject
    * invalid tokens and use that information to guess valid tokens.
    */
   private constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
@@ -198,8 +201,8 @@ export class UserService {
     const resetLink = `${frontendUrl}/reset-password/token?token=${encodeURIComponent(token)}`;
 
     console.log('Sending password reset email to:', email);
-    this.resend.emails.send({
-      from: "onboarding@resend.dev",
+    await this.resend.emails.send({
+      from: 'onboarding@resend.dev',
       to: email,
       subject: 'Password Reset Request',
       html: `
@@ -214,7 +217,11 @@ export class UserService {
 
   private async findValidResetToken(token: string): Promise<PasswordResetToken> {
     const parsed = this.parseToken(token);
-    if (!parsed) throw new Error('Invalid reset token');
+    if (!parsed) {
+      const err = new Error('Invalid reset token');
+      (err as any).status = 400;
+      throw err;
+    }
     const [tokenId, tokenSecret] = parsed;
 
     const db = getDB();
@@ -223,16 +230,32 @@ export class UserService {
       relations: ['user'],
     });
 
-    if (!resetToken) throw new Error('Invalid reset token');
-    if (resetToken.used) throw new Error('Reset token has already been used');
-    if (new Date() > resetToken.expiresAt) throw new Error('Reset token has expired');
+    if (!resetToken) {
+      const err = new Error('Invalid reset token');
+      (err as any).status = 400;
+      throw err;
+    }
+    if (resetToken.used) {
+      const err = new Error('Reset token has already been used');
+      (err as any).status = 409;
+      throw err;
+    }
+    if (new Date() > resetToken.expiresAt) {
+      const err = new Error('Reset token has expired');
+      (err as any).status = 410;
+      throw err;
+    }
 
     const secretHash = await this.hashSecret(tokenSecret);
     const isValid = this.constantTimeEqual(
       secretHash,
       new Uint8Array(Buffer.from(resetToken.secretHash, 'base64'))
     );
-    if (!isValid) throw new Error('Invalid reset token');
+    if (!isValid) {
+      const err = new Error('Invalid reset token');
+      (err as any).status = 400;
+      throw err;
+    }
 
     return resetToken;
   }
@@ -265,8 +288,10 @@ export class UserService {
     user.requiresPasswordReset = false;
     resetToken.used = true;
 
-    await db.save(User, user);
-    await db.save(PasswordResetToken, resetToken);
+    await db.transaction(async transactionalManager => {
+      await transactionalManager.save(User, user);
+      await transactionalManager.save(PasswordResetToken, resetToken);
+    });
 
     return user;
   }

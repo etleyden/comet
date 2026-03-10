@@ -1,5 +1,4 @@
 import { Box, Typography } from '@mui/material';
-import ForgotPassword from '../components/auth/ForgotPassword';
 
 export default function AdminPage() {
   return (
@@ -10,7 +9,6 @@ export default function AdminPage() {
       <Typography variant="body1" color="text.secondary">
         Site-wide configuration and analytics will appear here.
       </Typography>
-      <ForgotPassword />
     </Box>
   );
 }

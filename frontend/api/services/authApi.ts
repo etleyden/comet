@@ -1,11 +1,13 @@
 import type {
   ApiResponse,
   AuthUser,
+  ForgotPasswordRequest,
   LoginRequest,
   LogoutResponse,
   RegisterRequest,
   ResetPasswordRequest,
   ResetPasswordWithTokenRequest,
+  User,
   ValidateResetTokenRequest,
 } from 'shared';
 import ApiClient from '../apiClient';
@@ -52,7 +54,7 @@ export const authApi = {
    * link to a frontend page where they can enter a new password along with the token 
    * from the email.
    */
-  requestResetPassword(data: { email: string }): Promise<ApiResponse<{ success: boolean }>> {
+  requestResetPassword(data: ForgotPasswordRequest): Promise<ApiResponse<{ success: boolean }>> {
     return ApiClient.post<ApiResponse<{ success: boolean }>>('/api/auth/reset-password/request', data);
   },
 
@@ -70,5 +72,13 @@ export const authApi = {
    */
   confirmResetPassword(data: ResetPasswordWithTokenRequest): Promise<ApiResponse<AuthUser>> {
     return ApiClient.post<ApiResponse<AuthUser>>('/api/auth/reset-password/confirm', data);
+  },
+
+  /**
+   * GET /auth/me
+   * Returns the currently authenticated user based on the session cookie.
+   */
+  getMe(): Promise<ApiResponse<User>> {
+    return ApiClient.get<ApiResponse<User>>('/auth/me');
   },
 };

@@ -4,7 +4,7 @@ import { createEndpoint } from '../utils/createEndpoint';
 import { UserService } from '../services/userService';
 import { requireAuth } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types/api';
-import type { AuthUser, LogoutResponse } from 'shared';
+import type { AuthUser, User as ApiUser, LogoutResponse } from 'shared';
 import { validatePassword } from 'shared';
 import UserEntity from '../entities/User';
 
@@ -101,6 +101,23 @@ export function userRoutes(app: Express) {
         }
         clearSessionCookie(res);
         return { success: true };
+      },
+    })
+  );
+
+  // GET /auth/me - Get current user
+  app.get(
+    '/auth/me',
+    requireAuth(),
+    createEndpoint<unknown, ApiUser, AuthenticatedRequest>({
+      handler: async (input, req) => {
+        return {
+          id: req.user.id,
+          name: req.user.name,
+          email: req.user.email,
+          role: req.user.role,
+          requiresPasswordReset: req.user.requiresPasswordReset,
+        };
       },
     })
   );

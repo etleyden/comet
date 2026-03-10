@@ -259,16 +259,16 @@ describe('User Routes (Integration)', () => {
       expect(authed.id).toBe(user.id);
     });
 
-    it('should return 500 for an invalid token', async () => {
+    it('should return 400 for an invalid token', async () => {
       const response = await request(app)
         .post('/api/auth/reset-password/confirm')
         .send({ token: 'nonexistent.secret', newPassword: 'NewPassword1!' })
-        .expect(500);
+        .expect(400);
 
       expect(response.body.success).toBe(false);
     });
 
-    it('should return 500 for an already-used token', async () => {
+    it('should return 409 for an already-used token', async () => {
       const { token } = await createUserAndToken();
 
       // Use the token once
@@ -281,7 +281,7 @@ describe('User Routes (Integration)', () => {
       const response = await request(app)
         .post('/api/auth/reset-password/confirm')
         .send({ token, newPassword: 'AnotherPassword2!' })
-        .expect(500);
+        .expect(409);
 
       expect(response.body.success).toBe(false);
       expect(response.body.error).toContain('already been used');
