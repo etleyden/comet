@@ -27,10 +27,10 @@ describe('User Routes (Integration)', () => {
 
   // ── Registration ──────────────────────────────────────────────────
 
-  describe('POST /auth/register', () => {
+  describe('POST /api/auth/register', () => {
     it('should register a new user and return auth data', async () => {
       const response = await request(app)
-        .post('/auth/register')
+        .post('/api/auth/register')
         .send({ name: 'New User', email: 'newuser@example.com', password: 'securepassword123!' })
         .expect(200);
 
@@ -47,7 +47,7 @@ describe('User Routes (Integration)', () => {
 
     it('should return 400 for invalid registration data', async () => {
       const response = await request(app)
-        .post('/auth/register')
+        .post('/api/auth/register')
         .send({ name: 'A', email: 'not-an-email', password: 'short' })
         .expect(400);
 
@@ -61,7 +61,7 @@ describe('User Routes (Integration)', () => {
       await userService.createUser('Existing', 'existing@example.com', 'password123!');
 
       const response = await request(app)
-        .post('/auth/register')
+        .post('/api/auth/register')
         .send({ name: 'Duplicate', email: 'existing@example.com', password: 'password123!' })
         .expect(500);
 

@@ -106,7 +106,7 @@ export const handlers = [
 
   // ─── Transaction Handlers ────────────────────────────────────────────
 
-  http.post(`${BASE_URL}/api/transactions/upload`, async ({ request }) => {
+  http.post(`${BASE_URL}/api/transactions/import`, async ({ request }) => {
     const body = await request.json() as Record<string, unknown>;
     const transactions = body.transactions as unknown[];
     const response: ApiResponse<UploadTransactionsResponse> = {

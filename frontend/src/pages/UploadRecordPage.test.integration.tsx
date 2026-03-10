@@ -46,7 +46,7 @@ describe('UploadRecordPage (Integration)', () => {
     // Default handler — returns a successful upload record response
     beforeEach(() => {
         server.use(
-            http.get(`${BASE_URL}/api/upload-record/:id`, () => {
+            http.get(`${BASE_URL}/api/upload-records/:id`, () => {
                 const response: ApiResponse<GetUploadRecordResponse> = {
                     success: true,
                     data: mockRecord,
@@ -121,7 +121,7 @@ describe('UploadRecordPage (Integration)', () => {
         let capturedMapping: Record<string, string> | null = null;
 
         server.use(
-            http.put(`${BASE_URL}/api/upload-record/:id`, async ({ request }) => {
+            http.put(`${BASE_URL}/api/upload-records/:id`, async ({ request }) => {
                 const body = (await request.json()) as { mapping: Record<string, string> };
                 capturedMapping = body.mapping;
 
@@ -186,7 +186,7 @@ describe('UploadRecordPage (Integration)', () => {
 
     it('should show an error when the API returns a failure on load', async () => {
         server.use(
-            http.get(`${BASE_URL}/api/upload-record/:id`, () => {
+            http.get(`${BASE_URL}/api/upload-records/:id`, () => {
                 const response: ApiResponse<GetUploadRecordResponse> = {
                     success: false,
                     error: 'Upload record not found',
@@ -204,7 +204,7 @@ describe('UploadRecordPage (Integration)', () => {
 
     it('should show an error notification when saving fails', async () => {
         server.use(
-            http.put(`${BASE_URL}/api/upload-record/:id`, () => {
+            http.put(`${BASE_URL}/api/upload-records/:id`, () => {
                 const response: ApiResponse<GetUploadRecordResponse> = {
                     success: false,
                     error: 'Mapping contains columns not found in CSV',
