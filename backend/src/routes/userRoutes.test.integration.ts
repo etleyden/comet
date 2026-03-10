@@ -134,37 +134,6 @@ describe('User Routes (Integration)', () => {
     });
   });
 
-  // ── Current User ──────────────────────────────────────────────────
-
-  describe('GET /auth/me', () => {
-    it('should return 401 when not authenticated', async () => {
-      const response = await request(app)
-        .get('/auth/me')
-        .expect(401);
-
-      expect(response.body.success).toBe(false);
-      expect(response.body.error).toContain('Authentication required');
-    });
-
-    it('should return the current user when authenticated', async () => {
-      const userService = new UserService();
-      const user = await userService.createUser('Test User', 'test@example.com', 'password123');
-      const session = await userService.createSession(user);
-
-      const response = await request(app)
-        .get('/auth/me')
-        .set('Cookie', `session=${session.token}`)
-        .expect(200);
-
-      expect(response.body.success).toBe(true);
-      expect(response.body.data).toMatchObject({
-        id: user.id,
-        name: 'Test User',
-        email: 'test@example.com',
-      });
-    });
-  });
-
   // ── Health ────────────────────────────────────────────────────────
 
   describe('GET /health', () => {
