@@ -66,10 +66,7 @@ export interface Vendor {
   name: string;
   url?: string;
   logoUrl?: string;
-}
-
-export interface VendorWithTransactionCount extends Vendor {
-  transactionCount: number;
+  transactionCount?: number;
 }
 
 export interface Post {
@@ -82,9 +79,7 @@ export interface Post {
 
 // ─── API Response Wrapper ────────────────────────────────────────────
 
-export type ApiResponse<T> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+export type ApiResponse<T> = { success: true; data: T } | { success: false; error: string };
 
 // ─── Auth API Types ──────────────────────────────────────────────────
 

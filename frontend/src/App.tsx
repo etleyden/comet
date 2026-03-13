@@ -7,6 +7,7 @@ import { HomePage } from './pages/HomePage';
 import UploadPage from './pages/UploadPage';
 import UploadRecordPage from './pages/UploadRecordPage';
 import ExperimentsPage from './pages/ExperimentsPage';
+import AccountsPage from './pages/AccountsPage';
 import AdminPage from './pages/AdminPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import SiteDrawer, { DRAWER_MARGIN } from './components/navigation/SiteDrawer';

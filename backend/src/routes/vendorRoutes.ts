@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { createEndpoint } from '../utils/createEndpoint';
 import { requireAuth } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types/api';
-import type { Vendor, VendorWithTransactionCount, AssignVendorRequest } from 'shared';
+import type { Vendor, AssignVendorRequest } from 'shared';
 import { HttpError } from 'shared';
 import { VendorService } from '../services/vendorService';
 
@@ -30,13 +30,9 @@ export function vendorRoutes(app: Express) {
   app.get(
     '/api/vendors/search',
     requireAuth(),
-    createEndpoint<
-      { query?: string; limit?: string },
-      VendorWithTransactionCount[],
-      AuthenticatedRequest
-    >({
+    createEndpoint<{ query?: string; limit?: string }, Vendor[], AuthenticatedRequest>({
       inputSource: 'query',
-      handler: async (input): Promise<VendorWithTransactionCount[]> => {
+      handler: async (input): Promise<Vendor[]> => {
         const limit = input.limit ? parseInt(input.limit, 10) : 20;
         return vendorService.searchVendors(input.query, limit);
       },
