@@ -1,6 +1,5 @@
 import { Express } from 'express';
 import { userRoutes } from './userRoutes';
-import { postRoutes } from './postRoutes';
 import { accountRoutes } from './accountRoutes';
 import { transactionRoutes } from './transactionRoutes';
 import { uploadRecordRoutes } from './uploadRecordRoutes';
@@ -11,7 +10,6 @@ export function registerRoutes(app: Express) {
   });
 
   userRoutes(app);
-  postRoutes(app);
   accountRoutes(app);
   transactionRoutes(app);
   uploadRecordRoutes(app);

@@ -62,9 +62,9 @@ function toAuthUser(user: UserEntity, token: string): AuthUser {
 export function userRoutes(app: Express) {
   const userService = new UserService();
 
-  // POST /auth/register - Create user
+  // POST /api/auth/register - Create user
   app.post(
-    '/auth/register',
+    '/api/auth/register',
     createEndpoint({
       schema: CreateUserSchema,
       handler: async (input, req, res): Promise<AuthUser> => {
@@ -105,9 +105,9 @@ export function userRoutes(app: Express) {
     })
   );
 
-  // GET /auth/me - Get current user
+  // GET /api/auth/me - Get current user
   app.get(
-    '/auth/me',
+    '/api/auth/me',
     requireAuth(),
     createEndpoint<unknown, ApiUser, AuthenticatedRequest>({
       handler: async (input, req) => {
@@ -122,14 +122,14 @@ export function userRoutes(app: Express) {
     })
   );
 
-  // POST /api/auth/reset-password - Change password (requires authentication)
+  // PATCH /api/auth/password - Change password (requires authentication)
   const ResetPasswordSchema = z.object({
     currentPassword: z.string().min(1, 'Current password is required'),
     newPassword: passwordField(),
   });
 
-  app.post(
-    '/api/auth/reset-password',
+  app.patch(
+    '/api/auth/password',
     requireAuth(),
     createEndpoint<z.infer<typeof ResetPasswordSchema>, { success: boolean }, AuthenticatedRequest>({
       schema: ResetPasswordSchema,

@@ -35,7 +35,7 @@ export const handlers = [
     return HttpResponse.json(response);
   }),
 
-  http.get(`${BASE_URL}/auth/me`, () => {
+  http.get(`${BASE_URL}/api/auth/me`, () => {
     const response: ApiResponse<User> = {
       success: true,
       data: testUser,
@@ -106,7 +106,7 @@ export const handlers = [
 
   // ─── Transaction Handlers ────────────────────────────────────────────
 
-  http.post(`${BASE_URL}/api/transactions/upload`, async ({ request }) => {
+  http.post(`${BASE_URL}/api/transactions/import`, async ({ request }) => {
     const body = await request.json() as Record<string, unknown>;
     const transactions = body.transactions as unknown[];
     const response: ApiResponse<UploadTransactionsResponse> = {

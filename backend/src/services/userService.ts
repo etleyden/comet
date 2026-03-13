@@ -169,7 +169,7 @@ export class UserService {
     const user = await db.findOneBy(User, { email });
     if (!user) {
       // For security, don't reveal whether the email exists or not
-      console.warn(`Password reset requested for non-existent email: ${email}`);
+      console.warn(`Password reset requested for non-existent email (hashed): ${this.hashSecret(email)}`);
       return;
     }
 
@@ -200,14 +200,14 @@ export class UserService {
     const frontendUrl = process.env.FRONTEND_URL || 'https://localhost:3000';
     const resetLink = `${frontendUrl}/reset-password/token?token=${encodeURIComponent(token)}`;
 
-    console.log('Sending password reset email to:', email);
+    console.log('Sending password reset email to user ', user.id);
     await this.resend.emails.send({
       from: 'onboarding@resend.dev',
       to: email,
       subject: 'Password Reset Request',
       html: `
-        <p>Hi ${user.name},</p>
-        <p>You requested a password reset. Click the link below to set a new password:</p>
+        <p>Hello there,</p>
+        <p>Someone has requested a password reset for their Comet account at this email. If this wasn't you, ignore this email. If this was you, click the link below to set a new password:</p>
         <p><a href="${resetLink}">${resetLink}</a></p>
         <p>This link expires in ${RESET_TOKEN_EXPIRY_MIN} minutes and can only be used once.</p>
         <p>If you didn't request this, you can safely ignore this email.</p>

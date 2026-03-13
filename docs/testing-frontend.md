@@ -61,7 +61,7 @@ The `handlers` array in `src/__tests__/mocks/handlers.ts` defines happy-path def
 | `POST /auth/register` | `{ success: true, data: { ...testUser, token: 'mock-session-token' } }` |
 | `POST /api/auth/login` | `{ success: true, data: { ...testUser, token: 'mock-session-token' } }` |
 | `POST /api/auth/logout` | `{ success: true, data: { success: true } }` |
-| `GET /auth/me` | `{ success: true, data: testUser }` |
+| `GET /api/auth/me` | `{ success: true, data: testUser }` |
 | `GET /api/accounts` | `{ success: true, data: [testAccount, testAccount2] }` |
 | `POST /api/accounts` | Echoes request body as a new `Account` |
 | `GET /health` | `{ status: 'ok' }` |

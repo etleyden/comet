@@ -13,7 +13,7 @@ import ApiClient from '../apiClient';
  */
 export const transactionsApi = {
     /**
-     * GET /api/transactions
+     * POST /api/transactions/search
      * Fetches paginated and optionally filtered transactions for the current user.
      */
     getTransactions(request?: Pick<GetTransactionsRequest, 'page' | 'limit'> & { filter?: TransactionFilters }): Promise<ApiResponse<GetTransactionsResponse>> {
@@ -23,21 +23,21 @@ export const transactionsApi = {
         if (request?.limit !== undefined) params.limit = request.limit;
 
         return ApiClient.post<ApiResponse<GetTransactionsResponse>>(
-            '/api/transactions',
+            '/api/transactions/search',
             { filter: request?.filter },
             { params: Object.keys(params).length > 0 ? params : undefined },
         );
     },
 
     /**
-     * POST /api/transactions/upload
-     * Uploads parsed CSV transactions with column mappings to an account.
+     * POST /api/transactions/import
+     * Imports parsed CSV transactions with column mappings to an account.
      */
     uploadTransactions(
         data: UploadTransactionsRequest
     ): Promise<ApiResponse<UploadTransactionsResponse>> {
         return ApiClient.post<ApiResponse<UploadTransactionsResponse>>(
-            '/api/transactions/upload',
+            '/api/transactions/import',
             data
         );
     },

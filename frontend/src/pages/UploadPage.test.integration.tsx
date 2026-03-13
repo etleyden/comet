@@ -112,7 +112,7 @@ describe('UploadPage (Integration)', () => {
     it('should show error when upload API returns failure', async () => {
         // Override the upload handler to return an error
         server.use(
-            http.post('https://localhost:86/api/transactions/upload', () => {
+            http.post('https://localhost:86/api/transactions/import', () => {
                 const response: ApiResponse<UploadTransactionsResponse> = {
                     success: false,
                     error: 'Account not found or does not belong to the current user',
@@ -145,7 +145,7 @@ describe('UploadPage (Integration)', () => {
 
     it('should show error when network request fails', async () => {
         server.use(
-            http.post('https://localhost:86/api/transactions/upload', () => {
+            http.post('https://localhost:86/api/transactions/import', () => {
                 return HttpResponse.error();
             })
         );
