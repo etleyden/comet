@@ -13,7 +13,6 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import ResetPasswordViaTokenPage from './pages/ResetPasswordViaTokenPage';
 import SiteDrawer, { DRAWER_MARGIN } from './components/navigation/SiteDrawer';
 import { Box } from '@mui/material';
-import AccountsPage from './pages/AccountsPage';
 
 function App() {
   return (
