@@ -107,6 +107,19 @@ export interface ResetPasswordRequest {
   newPassword: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordWithTokenRequest {
+  token: string;
+  newPassword: string;
+}
+
+export interface ValidateResetTokenRequest {
+  token: string;
+}
+
 // ─── Posts API Types ─────────────────────────────────────────────────
 
 export interface CreatePostRequest {

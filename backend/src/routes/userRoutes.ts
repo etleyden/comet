@@ -4,9 +4,10 @@ import { createEndpoint } from '../utils/createEndpoint';
 import { UserService } from '../services/userService';
 import { requireAuth } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types/api';
-import type { AuthUser, User as ApiUser, LogoutResponse, ResetPasswordRequest } from 'shared';
+import type { AuthUser, User as ApiUser, LogoutResponse } from 'shared';
 import { validatePassword } from 'shared';
 import UserEntity from '../entities/User';
+
 
 /** Zod refinement that delegates to the shared validatePassword rules. */
 const passwordField = () =>
@@ -136,6 +137,50 @@ export function userRoutes(app: Express) {
         await userService.resetPassword(req.user.id, input.currentPassword, input.newPassword);
         return { success: true };
       },
+    })
+  );
+
+  app.post(
+    `/api/auth/reset-password/request`,
+    createEndpoint({
+      schema: z.object({
+        email: z.string().email(),
+      }),
+      handler: async (input, req) => {
+        await userService.requestResetPassword(input.email);
+        return { success: true };
+      }
+    })
+  );
+
+  // POST /api/auth/reset-password/validate - Check if a reset token is still valid
+  app.post(
+    `/api/auth/reset-password/validate`,
+    createEndpoint({
+      schema: z.object({
+        token: z.string().min(1),
+      }),
+      handler: async (input) => {
+        const user = await userService.validateResetToken(input.token);
+        return { valid: user !== null };
+      }
+    })
+  );
+
+  // POST /api/auth/reset-password/confirm - Set a new password using a reset token
+  app.post(
+    `/api/auth/reset-password/confirm`,
+    createEndpoint({
+      schema: z.object({
+        token: z.string().min(1),
+        newPassword: passwordField(),
+      }),
+      handler: async (input, req, res): Promise<AuthUser> => {
+        const user = await userService.resetPasswordWithToken(input.token, input.newPassword);
+        const session = await userService.createSession(user);
+        setSessionCookie(res, session.token);
+        return toAuthUser(user, session.token);
+      }
     })
   );
 }

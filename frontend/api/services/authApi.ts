@@ -1,11 +1,14 @@
 import type {
   ApiResponse,
   AuthUser,
+  ForgotPasswordRequest,
   LoginRequest,
   LogoutResponse,
   RegisterRequest,
   ResetPasswordRequest,
+  ResetPasswordWithTokenRequest,
   User,
+  ValidateResetTokenRequest,
 } from 'shared';
 import ApiClient from '../apiClient';
 
@@ -52,4 +55,31 @@ export const authApi = {
   resetPassword(data: ResetPasswordRequest): Promise<ApiResponse<{ success: boolean }>> {
     return ApiClient.patch<ApiResponse<{ success: boolean }>>('/api/auth/password', data);
   },
+
+  /**
+   * POST /api/auth/reset-password/request
+   * Requests a password reset email to be sent to the user. The email contains a 
+   * link to a frontend page where they can enter a new password along with the token 
+   * from the email.
+   */
+  requestResetPassword(data: ForgotPasswordRequest): Promise<ApiResponse<{ success: boolean }>> {
+    return ApiClient.post<ApiResponse<{ success: boolean }>>('/api/auth/reset-password/request', data);
+  },
+
+  /**
+   * POST /api/auth/reset-password/validate
+   * Checks whether a reset token is still valid (not expired, not used).
+   */
+  validateResetToken(data: ValidateResetTokenRequest): Promise<ApiResponse<{ valid: boolean }>> {
+    return ApiClient.post<ApiResponse<{ valid: boolean }>>('/api/auth/reset-password/validate', data);
+  },
+
+  /**
+   * POST /api/auth/reset-password/confirm
+   * Resets the user's password using a one-time token. Returns the authenticated user with a session.
+   */
+  confirmResetPassword(data: ResetPasswordWithTokenRequest): Promise<ApiResponse<AuthUser>> {
+    return ApiClient.post<ApiResponse<AuthUser>>('/api/auth/reset-password/confirm', data);
+  },
+
 };

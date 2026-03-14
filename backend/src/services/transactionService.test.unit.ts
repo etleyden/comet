@@ -14,19 +14,8 @@ import Transaction from '../entities/Transaction';
 import UploadRecord from '../entities/UploadRecord';
 
 // Redirect data-source imports to the testcontainer-backed database.
-// AppDataSource must use a lazy proxy because the mock factory runs before
-// beforeAll has a chance to initialise the DataSource.
-vi.mock('../data-source', async () => {
-    const testDb = await import('@test/utils/testDb');
-    return {
-        getDB: () => testDb.getTestDB(),
-        AppDataSource: new Proxy({} as any, {
-            get(_target, prop) {
-                return (testDb.getTestDataSource() as any)[prop];
-            },
-        }),
-    };
-});
+vi.mock('../data-source');
+vi.mock('resend');
 
 describe('TransactionService', () => {
     let transactionService: TransactionService;

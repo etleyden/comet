@@ -8,10 +8,8 @@ import TransactionEntity from '../entities/Transaction';
 import UploadRecord from '../entities/UploadRecord';
 
 // Redirect data-source imports to the testcontainer-backed database
-vi.mock('../data-source', async () => {
-    const testDb = await import('@test/utils/testDb');
-    return { getDB: () => testDb.getTestDB() };
-});
+vi.mock('../data-source');
+vi.mock('resend');
 
 describe('AccountService', () => {
     let accountService: AccountService;
