@@ -135,7 +135,7 @@ export class VendorService {
       await db
         .createQueryBuilder()
         .update(Transaction)
-        .set({ vendor: null as any })
+        .set({ vendor: null })
         .where('id = :id', { id: tx.id })
         .execute();
     }

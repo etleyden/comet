@@ -11,7 +11,7 @@ export const vendorsApi = {
   searchVendors(query?: string, limit?: number): Promise<ApiResponse<Vendor[]>> {
     const params: Record<string, string | number> = {};
     if (query) params.query = query;
-    if (limit) params.limit = limit;
+    if (limit !== undefined) params.limit = limit;
     return ApiClient.get<ApiResponse<Vendor[]>>('/api/vendors/search', {
       params: Object.keys(params).length > 0 ? params : undefined,
     });

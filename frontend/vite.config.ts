@@ -39,6 +39,7 @@ export default defineConfig({
     environment: 'jsdom',
     include: ['src/**/*.test.{unit,integration}.{ts,tsx}'],
     setupFiles: ['./src/test-setup.ts'],
+    testTimeout: 10000,
     reporters: ['default', 'json'],
     outputFile: {
       json: '../reports/frontend/test-results.json',

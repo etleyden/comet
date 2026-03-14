@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -35,14 +35,16 @@ export default function VendorCreateModal({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  // Reset form when modal opens with a new initialName
-  const handleEnter = () => {
-    setName(initialName);
-    setUrl('');
-    setLogoUrl('');
-    setError('');
-    setSaving(false);
-  };
+  // Reset form whenever the dialog opens
+  useEffect(() => {
+    if (open) {
+      setName(initialName);
+      setUrl('');
+      setLogoUrl('');
+      setError('');
+      setSaving(false);
+    }
+  }, [open, initialName]);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -79,7 +81,6 @@ export default function VendorCreateModal({
       onClose={onClose}
       maxWidth="xs"
       fullWidth
-      slotProps={{ transition: { onEnter: handleEnter } }}
     >
       <DialogTitle>Create New Vendor</DialogTitle>
       <DialogContent>

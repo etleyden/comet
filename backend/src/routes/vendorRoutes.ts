@@ -7,6 +7,11 @@ import type { Vendor, AssignVendorRequest } from 'shared';
 import { HttpError } from 'shared';
 import { VendorService } from '../services/vendorService';
 
+const SearchVendorSchema = z.object({
+  query: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+
 const CreateVendorSchema = z.object({
   name: z.string().min(1, 'Vendor name is required'),
   url: z.string().url().optional(),
@@ -30,11 +35,11 @@ export function vendorRoutes(app: Express) {
   app.get(
     '/api/vendors/search',
     requireAuth(),
-    createEndpoint<{ query?: string; limit?: string }, Vendor[], AuthenticatedRequest>({
+    createEndpoint<z.infer<typeof SearchVendorSchema>, Vendor[], AuthenticatedRequest>({
       inputSource: 'query',
+      schema: SearchVendorSchema,
       handler: async (input): Promise<Vendor[]> => {
-        const limit = input.limit ? parseInt(input.limit, 10) : 20;
-        return vendorService.searchVendors(input.query, limit);
+        return vendorService.searchVendors(input.query, input.limit);
       },
     })
   );

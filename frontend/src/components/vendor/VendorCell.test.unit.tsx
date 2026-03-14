@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '../../theme';
 import VendorCell from '../transactionTable/VendorCell';
@@ -75,8 +76,11 @@ describe('VendorCell', () => {
 
     renderVendorCell({ ...baseTx, vendorLabel: 'WAL*MART' });
 
-    // Find and click the edit button
-    const editButton = screen.getByRole('button');
+    // Hover over the cell to reveal the edit button (hidden until hover)
+    const editButton = screen.getByLabelText('Edit vendor');
+    await userEvent.hover(editButton.parentElement!);
+
+    // Click the now-visible edit button
     fireEvent.click(editButton);
 
     // Dropdown should open and show results
@@ -105,8 +109,11 @@ describe('VendorCell', () => {
 
     renderVendorCell({ ...baseTx, vendorLabel: 'WAL*MART' }, onAssigned);
 
+    // Hover over the cell to reveal the edit button (hidden until hover)
+    const editButton = screen.getByLabelText('Edit vendor');
+    await userEvent.hover(editButton.parentElement!);
+
     // Open the dropdown
-    const editButton = screen.getByRole('button');
     fireEvent.click(editButton);
 
     // Wait for results

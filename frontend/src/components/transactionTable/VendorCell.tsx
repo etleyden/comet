@@ -75,7 +75,7 @@ export default function VendorCell({ transaction, onVendorAssigned }: VendorCell
       >
         <Box sx={{ minWidth: 0, overflow: 'hidden' }}>
           {hasCanonicalVendor ? (
-            <Tooltip title={transaction.vendorLabel ? `Raw: ${transaction.vendorLabel}` : ''} arrow>
+            <Tooltip title={transaction.vendorLabel ? `Raw: ${transaction.vendorLabel}` : undefined} arrow>
               <Box>
                 <VendorDisplay
                   name={transaction.vendorName!}
@@ -104,9 +104,12 @@ export default function VendorCell({ transaction, onVendorAssigned }: VendorCell
         {/* Edit button — visible on hover */}
         <IconButton
           size="small"
+          aria-label="Edit vendor"
           onClick={() => setSearchOpen(true)}
           sx={{
             opacity: hovered || searchOpen ? 1 : 0,
+            visibility: hovered || searchOpen ? 'visible' : 'hidden',
+            pointerEvents: hovered || searchOpen ? 'auto' : 'none',
             transition: 'opacity 0.15s',
             flexShrink: 0,
             p: 0.25,
