@@ -39,6 +39,7 @@ export interface Transaction {
   amount: number;
   date: string;
   vendorLabel?: string;
+  vendorId?: string;
   categoryLabel?: string;
   description?: string;
   status: 'pending' | 'completed' | 'cancelled';
@@ -60,6 +61,14 @@ export interface Category {
   description?: string;
 }
 
+export interface Vendor {
+  id: string;
+  name: string;
+  url?: string;
+  logoUrl?: string;
+  transactionCount?: number;
+}
+
 export interface Post {
   id: string;
   title: string;
@@ -70,9 +79,7 @@ export interface Post {
 
 // ─── API Response Wrapper ────────────────────────────────────────────
 
-export type ApiResponse<T> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+export type ApiResponse<T> = { success: true; data: T } | { success: false; error: string };
 
 // ─── Auth API Types ──────────────────────────────────────────────────
 
@@ -178,6 +185,8 @@ export interface UploadTransactionsResponse {
 export interface TransactionWithAccount extends Transaction {
   accountName: string;
   categoryName?: string;
+  vendorName?: string;
+  vendorLogoUrl?: string;
   uploadRecordId?: string;
   uploadCreatedAt?: string;
 }
@@ -206,6 +215,29 @@ export interface UpdateUploadRecordRequest {
 
 export interface DeleteUploadRecordResponse {
   deletedTransactionCount: number;
+}
+
+// ─── Vendor API Types ─────────────────────────────────────────────
+
+export interface CreateVendorRequest {
+  name: string;
+  url?: string;
+  logoUrl?: string;
+}
+
+export interface UpdateVendorRequest {
+  name?: string;
+  url?: string;
+  logoUrl?: string;
+}
+
+export interface SearchVendorsRequest {
+  query?: string;
+  limit?: number;
+}
+
+export interface AssignVendorRequest {
+  vendorId: string | null;
 }
 
 // ─── HTTP Error Types ─────────────────────────────────────────────

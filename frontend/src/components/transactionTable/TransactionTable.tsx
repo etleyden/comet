@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   IconButton,
   ListItemText,
@@ -14,7 +14,7 @@ import {
   Paper,
   CircularProgress,
   Typography,
-  Link
+  Link,
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { TransactionFilters, TransactionWithAccount } from 'shared';
@@ -26,6 +26,7 @@ import {
   CategoryFilterHeader,
   AmountFilterHeader,
 } from './headers';
+import VendorCell from './VendorCell';
 
 export interface TransactionTableProps {
   /**
@@ -46,7 +47,7 @@ const cellStyle = {
   whiteSpace: 'nowrap',
   overflow: 'hidden',
   textOverflow: 'ellipsis',
-}
+};
 export default function TransactionTable({ filter: externalFilter }: TransactionTableProps) {
   // ── Filter state managed by column header popovers ─────────────
   const [headerFilter, setHeaderFilter] = useState<TransactionFilters>({});
@@ -73,6 +74,9 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
   const [transactions, setTransactions] = useState<TransactionWithAccount[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [refetchKey, setRefetchKey] = useState(0);
+
+  const triggerRefetch = useCallback(() => setRefetchKey(k => k + 1), []);
 
   // Merge external & header filters (external wins on overlap)
   const mergedFilter: TransactionFilters = {
@@ -90,7 +94,7 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
 
     const timer = setTimeout(() => {
       const currentFilter: TransactionFilters = JSON.parse(filterKey);
-      const hasFilter = Object.values(currentFilter).some((v) => v !== undefined);
+      const hasFilter = Object.values(currentFilter).some(v => v !== undefined);
 
       transactionsApi
         .getTransactions({
@@ -98,14 +102,14 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
           limit: rowsPerPage,
           filter: hasFilter ? currentFilter : undefined,
         })
-        .then((res) => {
+        .then(res => {
           if (cancelled) return;
           if (res.success) {
             setTransactions(res.data.transactions);
             setTotal(res.data.total);
           }
         })
-        .catch((err) => {
+        .catch(err => {
           if (!cancelled) console.error('Failed to fetch transactions:', err);
         })
         .finally(() => {
@@ -117,7 +121,7 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [page, rowsPerPage, filterKey]);
+  }, [page, rowsPerPage, filterKey, refetchKey]);
 
   // ── Filter helpers ─────────────────────────────────────────────
   const updateFilter = (patch: Partial<TransactionFilters>) => {
@@ -149,7 +153,16 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
   return (
     <Paper>
       <TableContainer>
-        <Table size="small">
+        <Table size="small" sx={{ tableLayout: 'fixed', width: '100%' }}>
+          <colgroup>
+            <col style={{ width: '44px' }} /> {/* actions */}
+            <col style={{ width: '115px' }} /> {/* date */}
+            <col style={{ width: '120px' }} /> {/* account */}
+            <col style={{ width: '160px' }} /> {/* vendor */}
+            <col /> {/* description — takes remaining space */}
+            <col style={{ width: '170px' }} /> {/* category */}
+            <col style={{ width: '130px' }} /> {/* amount */}
+          </colgroup>
           <TableHead>
             <TableRow>
               {/* Empty header for the actions column */}
@@ -161,24 +174,26 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
               />
               <AccountFilterHeader
                 selectedAccountIds={headerFilter.accountIds ?? []}
-                onChange={(accountIds) =>
+                onChange={accountIds =>
                   updateFilter({ accountIds: accountIds.length > 0 ? accountIds : undefined })
                 }
               />
               <VendorFilterHeader
                 vendors={headerFilter.vendors ?? []}
-                onChange={(vendors) =>
+                onChange={vendors =>
                   updateFilter({ vendors: vendors.length > 0 ? vendors : undefined })
                 }
               />
-              <TableCell sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <TableCell
+                sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+              >
                 <Typography variant="subtitle2" fontWeight="bold" noWrap>
                   Description
                 </Typography>
               </TableCell>
               <CategoryFilterHeader
                 selectedCategoryIds={headerFilter.categoryIds ?? []}
-                onChange={(categoryIds) =>
+                onChange={categoryIds =>
                   updateFilter({ categoryIds: categoryIds.length > 0 ? categoryIds : undefined })
                 }
               />
@@ -203,34 +218,24 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
                 </TableCell>
               </TableRow>
             ) : (
-              transactions.map((tx) => (
+              transactions.map(tx => (
                 <TableRow key={tx.id} hover>
                   <TableCell padding="checkbox">
-                    <IconButton size="small" onClick={(e) => openMenu(e, tx)}>
+                    <IconButton size="small" onClick={e => openMenu(e, tx)}>
                       <MoreVertIcon fontSize="small" />
                     </IconButton>
                   </TableCell>
-                  <TableCell sx={cellStyle}>
-                    {formatDate(tx.date)}
-                  </TableCell>
+                  <TableCell sx={cellStyle}>{formatDate(tx.date)}</TableCell>
                   <TableCell>
-                    <Link
-                      href={`/accounts`}
-                      color='inherit'
-                      underline='hover'
-                    >
+                    <Link href={`/accounts`} color="inherit" underline="hover">
                       {tx.accountName}
                     </Link>
                   </TableCell>
                   <TableCell sx={cellStyle}>
-                    {tx.vendorLabel ?? '—'}
+                    <VendorCell transaction={tx} onVendorAssigned={triggerRefetch} />
                   </TableCell>
-                  <TableCell sx={cellStyle}>
-                    {tx.description ?? '—'}
-                  </TableCell>
-                  <TableCell sx={cellStyle}>
-                    {tx.categoryLabel ?? tx.categoryName ?? '—'}
-                  </TableCell>
+                  <TableCell sx={cellStyle}>{tx.description ?? '—'}</TableCell>
+                  <TableCell sx={cellStyle}>{tx.categoryLabel ?? tx.categoryName ?? '—'}</TableCell>
                   <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                     {formatAmount(tx.amount)}
                   </TableCell>
@@ -272,7 +277,7 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
         page={page}
         onPageChange={(_, newPage) => setPage(newPage)}
         rowsPerPage={rowsPerPage}
-        onRowsPerPageChange={(e) => {
+        onRowsPerPageChange={e => {
           setRowsPerPage(parseInt(e.target.value, 10));
           setPage(0);
         }}

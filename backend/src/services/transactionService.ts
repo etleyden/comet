@@ -43,6 +43,7 @@ export class TransactionService {
             .innerJoinAndSelect('tx.account', 'account')
             .leftJoinAndSelect('tx.category', 'category')
             .leftJoinAndSelect('tx.upload', 'upload')
+            .leftJoinAndSelect('tx.vendor', 'vendor')
             .innerJoin('account.users', 'u')
             .where('u.id = :userId', { userId: user.id });
 
@@ -91,6 +92,9 @@ export class TransactionService {
             amount: Number(tx.amount),
             date: toISOString(tx.date),
             vendorLabel: tx.vendorLabel,
+            vendorId: tx.vendor?.id,
+            vendorName: tx.vendor?.name,
+            vendorLogoUrl: tx.vendor?.logoUrl,
             categoryLabel: tx.categoryLabel,
             description: tx.description,
             status: tx.status,

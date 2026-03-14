@@ -4,6 +4,7 @@ import Account from '../../entities/Account';
 import Category from '../../entities/Category';
 import UploadRecord from '../../entities/UploadRecord';
 import User from '../../entities/User';
+import Vendor from '../../entities/Vendor';
 
 export async function seedAccount(name: string, user: User): Promise<Account> {
     const db = getTestDB();
@@ -39,6 +40,7 @@ export interface SeedTransactionOptions {
     categoryLabel?: string;
     description?: string;
     category?: Category;
+    vendor?: Vendor;
     status?: Transaction['status'];
 }
 
@@ -54,7 +56,19 @@ export async function seedTransaction(opts: SeedTransactionOptions): Promise<Tra
         description: opts.description ?? '',
         status: opts.status ?? 'completed',
         category: opts.category,
+        vendor: opts.vendor,
         raw: {},
     });
     return db.save(Transaction, tx);
+}
+
+export async function seedVendor(name: string, user: User, opts?: { url?: string; logoUrl?: string }): Promise<Vendor> {
+    const db = getTestDB();
+    const vendor = db.create(Vendor, {
+        name,
+        url: opts?.url,
+        logoUrl: opts?.logoUrl,
+        updatedBy: user,
+    });
+    return db.save(Vendor, vendor);
 }

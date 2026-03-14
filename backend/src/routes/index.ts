@@ -3,6 +3,7 @@ import { userRoutes } from './userRoutes';
 import { accountRoutes } from './accountRoutes';
 import { transactionRoutes } from './transactionRoutes';
 import { uploadRecordRoutes } from './uploadRecordRoutes';
+import { vendorRoutes } from './vendorRoutes';
 
 export function registerRoutes(app: Express) {
   app.get('/health', (req, res) => {
@@ -13,4 +14,5 @@ export function registerRoutes(app: Express) {
   accountRoutes(app);
   transactionRoutes(app);
   uploadRecordRoutes(app);
+  vendorRoutes(app);
 }
