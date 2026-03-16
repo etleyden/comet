@@ -37,6 +37,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    env: {
+      VITE_API_URL: 'https://localhost:86',
+    },
     include: ['src/**/*.test.{unit,integration}.{ts,tsx}'],
     setupFiles: ['./src/test-setup.ts'],
     testTimeout: 10000,

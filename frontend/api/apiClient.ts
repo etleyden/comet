@@ -5,7 +5,7 @@ interface RequestOptions {
 }
 
 class ApiClientClass {
-  private baseUrl = 'https://localhost:86';
+  private baseUrl = import.meta.env.VITE_API_URL ?? '';
 
   private async request<T>(
     route: string,

@@ -4,7 +4,10 @@
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
     "build": "tsc",
-    "start": "node dist/backend/src/index.js",
+    "start": "tsx src/index.ts",
+    "migration:generate": "typeorm-ts-node-commonjs migration:generate src/migrations/%npm_config_name% -d src/data-source.ts",
+    "migration:run": "typeorm-ts-node-commonjs migration:run -d src/data-source.ts",
+    "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/data-source.ts",
     "test": "vitest run",
     "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
@@ -23,6 +26,7 @@
     "resend": "^6.9.3",
     "shared": "*",
     "ts-node": "^10.9.2",
+    "tsx": "^4.7.0",
     "typeorm": "^0.3.28",
     "zod": "^3.25.76"
   },
@@ -38,7 +42,6 @@
     "@vitest/coverage-v8": "^4.0.18",
     "supertest": "^7.2.2",
     "testcontainers": "^11.12.0",
-    "tsx": "^4.7.0",
     "typescript": "^5.3.3",
     "unplugin-swc": "^1.5.9",
     "vitest": "^4.0.18"

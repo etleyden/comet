@@ -3,6 +3,7 @@ networks:
     driver: bridge
 
 services:
+  # ── Database (always runs) ────────────────────────────────────
   postgres:
     image: postgres:17
     container_name: db
@@ -12,26 +13,31 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     ports:
-      - "5431:5432"
+      - '5431:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${DB_USERNAME} -d ${DB_NAME}" ]
+      test: ['CMD-SHELL', 'pg_isready -U ${DB_USERNAME} -d ${DB_NAME}']
       interval: 10s
       timeout: 5s
       retries: 5
     networks:
       - app_network
 
-  backend:
+  # ── Backend: development (hot-reload) ─────────────────────────
+  backend-dev:
+    profiles: ['dev']
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
+      target: dev
     container_name: backend
     restart: unless-stopped
     ports:
-      - "86:86" # HTTPS requests
-      - "9229:9229" # debugger
+      - '86:86'
+      - '9229:9229'
     environment:
+      - NODE_ENV=development
       - CHOKIDAR_USEPOLLING=true
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -46,26 +52,77 @@ services:
     volumes:
       - .:/workspace
       - /workspace/node_modules
-      - ./backend:/app
-      - /app/node_modules
-      - ./certs:/app/certs:ro
+      - /workspace/backend/node_modules
+      - ./certs:/workspace/certs:ro
     networks:
-      - app_network
+      app_network:
+        aliases: [api]
 
-  frontend:
+  # ── Backend: production ───────────────────────────────────────
+  backend:
+    profiles: ['prod']
     build:
-      context: ./frontend
+      context: .
+      dockerfile: backend/Dockerfile
+      target: prod
+    container_name: backend
+    restart: unless-stopped
+    ports:
+      - '86:86'
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - USE_HTTPS=false
+      - FRONTEND_URL=${FRONTEND_URL}
+      - ADMIN_NAME=${ADMIN_NAME}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      app_network:
+        aliases: [api]
+
+  # ── Frontend: development (Vite HMR) ─────────────────────────
+  frontend-dev:
+    profiles: ['dev']
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      target: dev
     container_name: frontend
     restart: unless-stopped
     ports:
-      - "3000:5173"
+      - '3000:5173'
+    environment:
+      - VITE_API_URL=https://localhost:86
     depends_on:
-      - backend
+      - backend-dev
     volumes:
       - .:/workspace
-      - ./frontend:/app
-      - /app/node_modules
-      - ./certs:/app/certs:ro
+      - /workspace/node_modules
+      - /workspace/frontend/node_modules
+      - ./certs:/workspace/certs:ro
+    networks:
+      - app_network
+
+  # ── Frontend: production (nginx) ──────────────────────────────
+  frontend:
+    profiles: ['prod']
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      target: prod
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - '80:80'
+    depends_on:
+      - backend
     networks:
       - app_network
 

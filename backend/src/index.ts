@@ -5,12 +5,19 @@ import fs from 'fs';
 import path from 'path';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
 import { registerRoutes } from './routes/index';
 import { errorHandler } from './middleware/errorHandler';
 import { AppDataSource } from './data-source';
+import { validateEnv } from './utils/validateEnv';
 
-dotenv.config();
+// Only load .env file in development — in production, env vars come from the
+// deployment platform (Docker environment: / Coolify settings).
+if (process.env.NODE_ENV !== 'production') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('dotenv').config({ path: '../.env' });
+}
+
+validateEnv(['DB_HOST', 'DB_PORT', 'DB_USERNAME', 'DB_PASSWORD', 'DB_NAME', 'RESEND_API_KEY']);
 
 const app = express();
 const PORT = process.env.API_PORT || 86;
