@@ -2,7 +2,8 @@ import { useState, useRef } from 'react';
 import { Box, Typography, IconButton, Tooltip } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import type { TransactionWithAccount, Vendor } from 'shared';
-import { vendorsApi } from '../../../api';
+import { vendorsApi, parseApiError } from '../../../api';
+import { useNotification } from '../../context/NotificationContext';
 import { VendorDisplay, VendorSearch, VendorCreateModal } from '../vendor';
 
 export interface VendorCellProps {
@@ -19,6 +20,7 @@ export interface VendorCellProps {
  * - Hover reveals an edit button that opens the VendorSearch dropdown.
  */
 export default function VendorCell({ transaction, onVendorAssigned }: VendorCellProps) {
+  const { notify } = useNotification();
   const [hovered, setHovered] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
@@ -36,8 +38,8 @@ export default function VendorCell({ transaction, onVendorAssigned }: VendorCell
       if (res.success) {
         onVendorAssigned?.();
       }
-    } catch {
-      // TODO: surface error via notification context
+    } catch (err) {
+      notify(parseApiError(err), 'error');
     }
   };
 
@@ -55,8 +57,8 @@ export default function VendorCell({ transaction, onVendorAssigned }: VendorCell
       if (res.success) {
         onVendorAssigned?.();
       }
-    } catch {
-      // TODO: surface error
+    } catch (err) {
+      notify(parseApiError(err), 'error');
     }
   };
 

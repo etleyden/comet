@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ThemeProvider } from '@mui/material/styles';
 import { theme } from '../../theme';
+import { NotificationProvider } from '../../context/NotificationContext';
 import VendorCell from '../transactionTable/VendorCell';
 import type { TransactionWithAccount } from 'shared';
 
@@ -12,6 +13,9 @@ vi.mock('../../../api', () => ({
     assignVendorToTransaction: vi.fn(),
     createVendor: vi.fn(),
   },
+  parseApiError: vi.fn((err: unknown, fallback?: string) =>
+    err instanceof Error ? err.message : (fallback ?? 'Something went wrong')
+  ),
 }));
 
 import { vendorsApi } from '../../../api';
@@ -31,7 +35,9 @@ const baseTx: TransactionWithAccount = {
 function renderVendorCell(tx: TransactionWithAccount, onVendorAssigned = vi.fn()) {
   return render(
     <ThemeProvider theme={theme}>
-      <VendorCell transaction={tx} onVendorAssigned={onVendorAssigned} />
+      <NotificationProvider>
+        <VendorCell transaction={tx} onVendorAssigned={onVendorAssigned} />
+      </NotificationProvider>
     </ThemeProvider>
   );
 }
@@ -98,9 +104,7 @@ describe('VendorCell', () => {
     const onAssigned = vi.fn();
     mockedSearchVendors.mockResolvedValue({
       success: true,
-      data: [
-        { id: 'v-1', name: 'Walmart', transactionCount: 10 },
-      ],
+      data: [{ id: 'v-1', name: 'Walmart', transactionCount: 10 }],
     });
     mockedAssignVendor.mockResolvedValue({
       success: true,

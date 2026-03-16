@@ -13,7 +13,7 @@ import {
 } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import type { Vendor } from 'shared';
-import { vendorsApi } from '../../../api';
+import { vendorsApi, parseApiError } from '../../../api';
 
 export interface VendorCreateModalProps {
   open: boolean;
@@ -68,8 +68,8 @@ export default function VendorCreateModal({
       } else {
         setError(res.error);
       }
-    } catch {
-      setError('Failed to create vendor');
+    } catch (err) {
+      setError(parseApiError(err));
     } finally {
       setSaving(false);
     }

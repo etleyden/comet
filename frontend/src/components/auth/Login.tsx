@@ -11,6 +11,7 @@ import {
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useAuth } from '../../context/AuthContext';
+import { parseApiError } from '../../../api';
 import Register from './Register';
 
 /**
@@ -32,7 +33,7 @@ export default function Login() {
       setEmail('');
       setPassword('');
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed');
+      setError(parseApiError(err));
     }
   };
 

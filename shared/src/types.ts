@@ -255,17 +255,27 @@ export interface AssignVendorRequest {
 
 // ─── HTTP Error Types ─────────────────────────────────────────────
 
-export class HttpError extends Error {
+/**
+ * Typed error used on both the backend (thrown by services/routes to signal
+ * an HTTP error response) and the frontend (thrown by the API client when
+ * a non-ok response is received).  The `details` field carries optional
+ * structured context such as Zod validation issues.
+ */
+export class ApiError extends Error {
   status: number;
   details?: unknown;
 
-  constructor(message: string, status?: number, details?: unknown) {
+  constructor(message: string, status: number, details?: unknown) {
     super(message);
-    this.name = 'HttpError';
-    this.status = status ?? 500;
+    this.name = 'ApiError';
+    this.status = status;
     this.details = details;
 
     // Restore prototype chain (required when extending built-ins in TS)
     Object.setPrototypeOf(this, new.target.prototype);
   }
 }
+
+/** @deprecated Use {@link ApiError} instead. */
+export const HttpError = ApiError;
+export type HttpError = ApiError;

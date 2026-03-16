@@ -11,6 +11,7 @@ import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { parseApiError } from '../../../api';
 import { validatePassword } from 'shared';
 import ForgotPassword from './ForgotPassword';
 
@@ -39,7 +40,7 @@ export default function Register(props?: { onCancel?: () => void }) {
       setPassword('');
       props?.onCancel?.();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Registration failed');
+      setError(parseApiError(err, 'Registration failed: ${message}'));
     }
   };
 
