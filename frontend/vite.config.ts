@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs';
 
 const isVitest = !!process.env.VITEST;
+const isServe = process.argv.includes('serve') || process.argv.some(a => a.endsWith('/vite'));
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -20,11 +21,9 @@ export default defineConfig({
       '@test': path.resolve(__dirname, 'src/__tests__'),
     },
   },
-  // SSL certs are only needed for the dev server, not tests.
-  // Guard with isVitest so fs.readFileSync is never called during vitest runs.
-  server: isVitest
-    ? undefined
-    : {
+  // SSL certs are only needed for the Vite dev server, not tests or production builds.
+  server: isServe && !isVitest
+    ? {
       host: '0.0.0.0',
       https: {
         key: fs.readFileSync(path.resolve(__dirname, '../certs/localhost-key.pem')),
@@ -33,7 +32,8 @@ export default defineConfig({
       watch: {
         usePolling: true,
       },
-    },
+    }
+    : undefined,
   test: {
     globals: true,
     environment: 'jsdom',
