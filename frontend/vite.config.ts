@@ -4,7 +4,13 @@ import path from 'path';
 import fs from 'fs';
 
 const isVitest = !!process.env.VITEST;
-const isServe = process.argv.includes('serve') || process.argv.some(a => a.endsWith('/vite'));
+// do we need to serve SSL certs (development only)
+const isServe = process.argv.includes('serve') ||
+  (process.argv.some(a => a.endsWith('/vite')) && !process.argv.includes('build'));
+
+const keyPath = path.resolve(__dirname, '../certs/localhost-key.pem');
+const certPath = path.resolve(__dirname, '../certs/localhost-cert.pem');
+const hasCerts = fs.existsSync(keyPath) && fs.existsSync(certPath);
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -22,12 +28,12 @@ export default defineConfig({
     },
   },
   // SSL certs are only needed for the Vite dev server, not tests or production builds.
-  server: isServe && !isVitest
+  server: isServe && !isVitest && hasCerts
     ? {
       host: '0.0.0.0',
       https: {
-        key: fs.readFileSync(path.resolve(__dirname, '../certs/localhost-key.pem')),
-        cert: fs.readFileSync(path.resolve(__dirname, '../certs/localhost-cert.pem')),
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath),
       },
       watch: {
         usePolling: true,
