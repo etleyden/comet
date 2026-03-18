@@ -22,9 +22,7 @@ COPY shared/   ./shared/
 COPY frontend/ ./frontend/
 ARG VITE_API_URL
 ENV VITE_API_URL=${VITE_API_URL}
-RUN mkdir -p /build-logs && \
-    npm run build -w frontend > /build-logs/frontend-build.log 2>&1 || \
-    { cat /build-logs/frontend-build.log; exit 1; }
+RUN npm run build -w frontend
 
 # ── Prod target (nginx serves static files + proxies API) ─────
 FROM nginx:alpine AS prod
