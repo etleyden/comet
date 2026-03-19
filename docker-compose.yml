@@ -83,7 +83,7 @@ services:
       - ADMIN_NAME=${ADMIN_NAME}
       - ADMIN_EMAIL=${ADMIN_EMAIL}
     healthcheck:
-      test: ['CMD-SHELL', 'curl -fs http://localhost:86/health || exit 1']
+      test: ['CMD-SHELL', 'curl -fs http://localhost:86/api/health || exit 1']
       interval: 10s
       timeout: 5s
       retries: 5

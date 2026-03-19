@@ -51,6 +51,16 @@ AppDataSource.initialize()
   .then(async () => {
     console.log('Database connected successfully!');
 
+    // If the schema is empty (fresh DB), run a one-time sync to create tables.
+    const tables = await AppDataSource.query(
+      `SELECT tablename FROM pg_tables WHERE schemaname = 'public'`
+    );
+    if (tables.length === 0) {
+      console.log('Empty schema detected — running initial synchronization…');
+      await AppDataSource.synchronize();
+      console.log('Schema synchronized.');
+    }
+
     // Seed initial admin user from env vars (if configured)
     const { UserService } = await import('./services/userService');
     await new UserService().seedAdminUser();

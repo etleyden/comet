@@ -6,7 +6,7 @@ import { uploadRecordRoutes } from './uploadRecordRoutes';
 import { vendorRoutes } from './vendorRoutes';
 
 export function registerRoutes(app: Express) {
-  app.get('/health', (req, res) => {
+  app.get('/api/health', (req, res) => {
     res.json({ status: 'ok' });
   });
 
