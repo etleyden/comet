@@ -51,12 +51,13 @@ AppDataSource.initialize()
   .then(async () => {
     console.log('Database connected successfully!');
 
-    // If the schema is empty (fresh DB), run a one-time sync to create tables.
-    const tables = await AppDataSource.query(
-      `SELECT tablename FROM pg_tables WHERE schemaname = 'public'`
+    // If application tables are missing (fresh or partially-initialized DB), sync the schema.
+    // the user table is a good indicator of whether the application tables exist
+    const appTables = await AppDataSource.query(
+      `SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user'`
     );
-    if (tables.length === 0) {
-      console.log('Empty schema detected — running initial synchronization…');
+    if (appTables.length === 0) {
+      console.log('Application tables not found — running schema synchronization…');
       await AppDataSource.synchronize();
       console.log('Schema synchronized.');
     }
