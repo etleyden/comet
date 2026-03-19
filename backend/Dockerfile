@@ -24,7 +24,7 @@ COPY package.json package-lock.json ./
 COPY backend/package.json  ./backend/
 COPY frontend/package.json ./frontend/
 COPY shared/package.json   ./shared/
-RUN npm ci --workspaces --omit=dev
+RUN npm ci --workspaces --omit=dev && apk add --no-cache curl
 
 # Copy only the source code needed at runtime
 COPY shared/  ./shared/
