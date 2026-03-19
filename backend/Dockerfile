@@ -19,12 +19,12 @@ CMD ["npm", "run", "dev:backend"]
 # ── Prod target ───────────────────────────────────────────────
 FROM base AS prod
 
-# Install production deps only, then add tsx for TS runtime
+# Install production deps only (ts-node + typescript are in dependencies)
 COPY package.json package-lock.json ./
 COPY backend/package.json  ./backend/
 COPY frontend/package.json ./frontend/
 COPY shared/package.json   ./shared/
-RUN npm ci --workspaces --omit=dev && npm install tsx -w backend
+RUN npm ci --workspaces --omit=dev
 
 # Copy only the source code needed at runtime
 COPY shared/  ./shared/
