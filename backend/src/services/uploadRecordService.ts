@@ -4,188 +4,193 @@ import UploadRecord from '../entities/UploadRecord';
 import Transaction from '../entities/Transaction';
 import User from '../entities/User';
 import type {
-    GetUploadRecordResponse,
-    DeleteUploadRecordResponse,
-    UpdateUploadRecordRequest,
-    HttpError,
+  GetUploadRecordResponse,
+  DeleteUploadRecordResponse,
+  UpdateUploadRecordRequest,
 } from 'shared';
+import { ApiError } from 'shared';
 import { validateMappingColumns } from '../utils/mappingUtils';
 
 export interface GetUploadRecordInput {
-    id: string;
-    user: User;
+  id: string;
+  user: User;
 }
 
 export interface UpdateUploadRecordInput extends UpdateUploadRecordRequest {
-    id: string;
-    user: User;
+  id: string;
+  user: User;
 }
 
 export interface DeleteUploadRecordInput {
-    id: string;
-    user: User;
+  id: string;
+  user: User;
 }
 
 export class UploadRecordService {
-    /**
-     * Fetches a single upload record owned by the given user.
-     * Returns the record with its transaction count and linked account name.
-     */
-    async getUploadRecord(input: GetUploadRecordInput): Promise<GetUploadRecordResponse> {
-        const { id, user } = input;
-        const record = await this.findOwnedRecord(id, user.id);
+  /**
+   * Fetches a single upload record owned by the given user.
+   * Returns the record with its transaction count and linked account name.
+   */
+  async getUploadRecord(input: GetUploadRecordInput): Promise<GetUploadRecordResponse> {
+    const { id, user } = input;
+    const record = await this.findOwnedRecord(id, user.id);
 
-        const { transactionCount, accountName } = await this.getRecordMetadata(record.id);
+    const { transactionCount, accountName } = await this.getRecordMetadata(record.id);
 
-        return {
-            id: record.id,
-            userId: user.id,
-            mapping: record.mapping,
-            availableColumns: record.availableColumns ?? [],
-            createdAt: toISOString(record.createdAt),
-            transactionCount,
-            accountName,
-        };
+    return {
+      id: record.id,
+      userId: user.id,
+      mapping: record.mapping,
+      availableColumns: record.availableColumns ?? [],
+      createdAt: toISOString(record.createdAt),
+      transactionCount,
+      accountName,
+    };
+  }
+
+  /**
+   * Updates the column mapping on an existing upload record.
+   * Also re-derives the vendorLabel and categoryLabel fields on all linked
+   * transactions from the new mapping and each transaction's stored raw row.
+   */
+  async updateUploadRecord(input: UpdateUploadRecordInput): Promise<GetUploadRecordResponse> {
+    const { id, user, mapping } = input;
+    const db = getDB();
+
+    const record = await this.findOwnedRecord(id, user.id);
+
+    // Validate mapping columns against the stored available columns
+    const availableColumns = record.availableColumns ?? [];
+    if (availableColumns.length > 0) {
+      const invalidColumns = validateMappingColumns(mapping, availableColumns);
+      if (invalidColumns.length > 0) {
+        throw new ApiError(
+            `Mapping contains columns not found in CSV: ${invalidColumns.join(', ')}`,
+            400,
+            { invalidColumns}
+        )
+      }
     }
 
-    /**
-     * Updates the column mapping on an existing upload record.
-     * Also re-derives the vendorLabel and categoryLabel fields on all linked
-     * transactions from the new mapping and each transaction's stored raw row.
-     */
-    async updateUploadRecord(input: UpdateUploadRecordInput): Promise<GetUploadRecordResponse> {
-        const { id, user, mapping } = input;
-        const db = getDB();
+    record.mapping = mapping;
+    const saved = await db.save(UploadRecord, record);
 
-        const record = await this.findOwnedRecord(id, user.id);
+    // Re-derive vendorLabel and categoryLabel from the updated mapping
+    await this.remapTransactionFields(saved.id, mapping);
 
-        // Validate mapping columns against the stored available columns
-        const availableColumns = record.availableColumns ?? [];
-        if (availableColumns.length > 0) {
-            const invalidColumns = validateMappingColumns(mapping, availableColumns);
-            if (invalidColumns.length > 0) {
-                const err: any = new Error(
-                    `Mapping contains columns not found in CSV: ${invalidColumns.join(', ')}`,
-                );
-                err.status = 400;
-                throw err;
-            }
-        }
+    const { transactionCount, accountName } = await this.getRecordMetadata(saved.id);
 
-        record.mapping = mapping;
-        const saved = await db.save(UploadRecord, record);
+    return {
+      id: saved.id,
+      userId: user.id,
+      mapping: saved.mapping,
+      availableColumns: saved.availableColumns ?? [],
+      createdAt: toISOString(saved.createdAt),
+      transactionCount,
+      accountName,
+    };
+  }
 
-        // Re-derive vendorLabel and categoryLabel from the updated mapping
-        await this.remapTransactionFields(saved.id, mapping);
+  /**
+   * Deletes an upload record and all of its linked transactions.
+   * Transactions are removed first to satisfy FK constraints.
+   */
+  async deleteUploadRecord(input: DeleteUploadRecordInput): Promise<DeleteUploadRecordResponse> {
+    const { id, user } = input;
+    const db = getDB();
 
-        const { transactionCount, accountName } = await this.getRecordMetadata(saved.id);
+    const record = await this.findOwnedRecord(id, user.id);
 
-        return {
-            id: saved.id,
-            userId: user.id,
-            mapping: saved.mapping,
-            availableColumns: saved.availableColumns ?? [],
-            createdAt: toISOString(saved.createdAt),
-            transactionCount,
-            accountName,
-        };
+    // Delete transactions first (FK constraint)
+    const deleteResult = await db
+      .createQueryBuilder()
+      .delete()
+      .from(Transaction)
+      .where('uploadId = :uploadId', { uploadId: record.id })
+      .execute();
+
+    // Delete the upload record
+    await db.remove(UploadRecord, record);
+
+    return {
+      deletedTransactionCount: deleteResult.affected ?? 0,
+    };
+  }
+
+  // ── Private helpers ──────────────────────────────────────────────
+
+  /**
+   * Loads an upload record and verifies the caller owns it.
+   * Throws a 404-status error if not found or not owned.
+   */
+  private async findOwnedRecord(recordId: string, userId: string): Promise<UploadRecord> {
+    const db = getDB();
+
+    const record = await db
+      .createQueryBuilder(UploadRecord, 'ur')
+      .innerJoin('ur.user', 'user')
+      .where('ur.id = :id', { id: recordId })
+      .andWhere('user.id = :userId', { userId })
+      .getOne();
+
+    if (!record) {
+      throw new ApiError('Upload record not found', 404);
     }
 
-    /**
-     * Deletes an upload record and all of its linked transactions.
-     * Transactions are removed first to satisfy FK constraints.
-     */
-    async deleteUploadRecord(input: DeleteUploadRecordInput): Promise<DeleteUploadRecordResponse> {
-        const { id, user } = input;
-        const db = getDB();
+    return record;
+  }
 
-        const record = await this.findOwnedRecord(id, user.id);
+  /**
+   * Returns the transaction count and account name for a given upload record.
+   */
+  private async getRecordMetadata(
+    uploadId: string
+  ): Promise<{ transactionCount: number; accountName: string }> {
+    const db = getDB();
 
-        // Delete transactions first (FK constraint)
-        const deleteResult = await db
-            .createQueryBuilder()
-            .delete()
-            .from(Transaction)
-            .where('uploadId = :uploadId', { uploadId: record.id })
-            .execute();
+    const transactionCount = await db
+      .createQueryBuilder(Transaction, 'tx')
+      .where('tx.uploadId = :uploadId', { uploadId })
+      .getCount();
 
-        // Delete the upload record
-        await db.remove(UploadRecord, record);
+    const sampleTx = await db
+      .createQueryBuilder(Transaction, 'tx')
+      .innerJoinAndSelect('tx.account', 'account')
+      .where('tx.uploadId = :uploadId', { uploadId })
+      .getOne();
 
-        return {
-            deletedTransactionCount: deleteResult.affected ?? 0,
-        };
+    return {
+      transactionCount,
+      accountName: sampleTx?.account?.name ?? 'Unknown',
+    };
+  }
+
+  /**
+   * Re-derives the vendorLabel and categoryLabel fields on all transactions
+   * linked to the given upload record, using each transaction's stored
+   * raw row and the new mapping.
+   */
+  private async remapTransactionFields(
+    uploadId: string,
+    mapping: Record<string, string>
+  ): Promise<void> {
+    const db = getDB();
+
+    const transactions = await db
+      .createQueryBuilder(Transaction, 'tx')
+      .where('tx.uploadId = :uploadId', { uploadId })
+      .getMany();
+
+    for (const tx of transactions) {
+      (tx as any).vendorLabel = mapping.vendor ? String(tx.raw[mapping.vendor] ?? '') : null;
+      (tx as any).categoryLabel = mapping.category ? String(tx.raw[mapping.category] ?? '') : null;
+      (tx as any).description = mapping.description
+        ? String(tx.raw[mapping.description] ?? '')
+        : null;
     }
 
-    // ── Private helpers ──────────────────────────────────────────────
-
-    /**
-     * Loads an upload record and verifies the caller owns it.
-     * Throws a 404-status error if not found or not owned.
-     */
-    private async findOwnedRecord(recordId: string, userId: string): Promise<UploadRecord> {
-        const db = getDB();
-
-        const record = await db
-            .createQueryBuilder(UploadRecord, 'ur')
-            .innerJoin('ur.user', 'user')
-            .where('ur.id = :id', { id: recordId })
-            .andWhere('user.id = :userId', { userId })
-            .getOne();
-
-        if (!record) {
-            const err: HttpError = new Error('Upload record not found') as HttpError;
-            err.status = 404;
-            throw err;
-        }
-
-        return record;
+    if (transactions.length > 0) {
+      await db.save(Transaction, transactions);
     }
-
-    /**
-     * Returns the transaction count and account name for a given upload record.
-     */
-    private async getRecordMetadata(uploadId: string): Promise<{ transactionCount: number; accountName: string }> {
-        const db = getDB();
-
-        const transactionCount = await db
-            .createQueryBuilder(Transaction, 'tx')
-            .where('tx.uploadId = :uploadId', { uploadId })
-            .getCount();
-
-        const sampleTx = await db
-            .createQueryBuilder(Transaction, 'tx')
-            .innerJoinAndSelect('tx.account', 'account')
-            .where('tx.uploadId = :uploadId', { uploadId })
-            .getOne();
-
-        return {
-            transactionCount,
-            accountName: sampleTx?.account?.name ?? 'Unknown',
-        };
-    }
-
-    /**
-     * Re-derives the vendorLabel and categoryLabel fields on all transactions
-     * linked to the given upload record, using each transaction's stored
-     * raw row and the new mapping.
-     */
-    private async remapTransactionFields(uploadId: string, mapping: Record<string, string>): Promise<void> {
-        const db = getDB();
-
-        const transactions = await db
-            .createQueryBuilder(Transaction, 'tx')
-            .where('tx.uploadId = :uploadId', { uploadId })
-            .getMany();
-
-        for (const tx of transactions) {
-            (tx as any).vendorLabel = mapping.vendor ? String(tx.raw[mapping.vendor] ?? '') : null;
-            (tx as any).categoryLabel = mapping.category ? String(tx.raw[mapping.category] ?? '') : null;
-            (tx as any).description = mapping.description ? String(tx.raw[mapping.description] ?? '') : null;
-        }
-
-        if (transactions.length > 0) {
-            await db.save(Transaction, transactions);
-        }
-    }
+  }
 }

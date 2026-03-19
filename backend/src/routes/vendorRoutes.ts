@@ -4,7 +4,7 @@ import { createEndpoint } from '../utils/createEndpoint';
 import { requireAuth } from '../middleware/auth';
 import { AuthenticatedRequest } from '../types/api';
 import type { Vendor, AssignVendorRequest } from 'shared';
-import { HttpError } from 'shared';
+import { ApiError } from 'shared';
 import { VendorService } from '../services/vendorService';
 
 const SearchVendorSchema = z.object({
@@ -65,7 +65,7 @@ export function vendorRoutes(app: Express) {
       handler: async (_input, req): Promise<Vendor> => {
         const vendor = await vendorService.getVendorById(req.params.id);
         if (!vendor) {
-          throw new HttpError('Vendor not found', 404);
+          throw new ApiError('Vendor not found', 404);
         }
         return vendor;
       },

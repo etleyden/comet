@@ -31,7 +31,7 @@ import SaveIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Cancel';
 import type { GetUploadRecordResponse } from 'shared';
 import { MAPPING_ATTRIBUTES } from 'shared';
-import { uploadRecordsApi } from '../../api';
+import { uploadRecordsApi, parseApiError } from '../../api';
 import { useNotification } from '../context/NotificationContext';
 
 type PageState = 'loading' | 'ready' | 'error';
@@ -72,7 +72,7 @@ export default function UploadRecordPage() {
                 }
             })
             .catch((err) => {
-                setError(err instanceof Error ? err.message : 'Failed to load upload record');
+                setError(parseApiError(err));
                 setPageState('error');
             });
     }, [id]);
@@ -101,7 +101,7 @@ export default function UploadRecordPage() {
                 notify(res.error, 'error');
             }
         } catch (err) {
-            notify(err instanceof Error ? err.message : 'Failed to save mapping', 'error');
+            notify(parseApiError(err), 'error');
         }
     };
 
@@ -131,7 +131,7 @@ export default function UploadRecordPage() {
                 setDeleting(false);
             }
         } catch (err) {
-            notify(err instanceof Error ? err.message : 'Failed to delete upload record', 'error');
+            notify(parseApiError(err), 'error');
             setDeleting(false);
         } finally {
             setDeleteDialogOpen(false);

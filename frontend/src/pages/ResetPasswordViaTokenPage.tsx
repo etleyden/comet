@@ -16,7 +16,7 @@ import {
 import Visibility from '@mui/icons-material/Visibility';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import { useAuth } from '../context/AuthContext';
-import { authApi } from '../../api';
+import { authApi, parseApiError } from '../../api';
 import { validatePassword } from 'shared';
 import { useNotification } from '../context/NotificationContext';
 
@@ -69,7 +69,9 @@ export default function ResetPasswordViaTokenPage() {
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [token]);
 
   const handleSubmit = async () => {
@@ -94,14 +96,14 @@ export default function ResetPasswordViaTokenPage() {
         // Sync auth context with the new session
         await refreshUser();
         // redirect with a success message
-        notify('Password reset successful! Redirecting to dashboard…', "success");
+        notify('Password reset successful! Redirecting to dashboard…', 'success');
         navigate('/home', { replace: true });
       } else {
         setError(response.error);
-        notify('Failed to reset password.', "error");
+        notify('Failed to reset password.', 'error');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to reset password.');
+      setError(parseApiError(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -128,7 +130,11 @@ export default function ResetPasswordViaTokenPage() {
             This password reset link is invalid or has expired.
           </Alert>
           <Typography variant="body2">
-            Please <Link component={RouterLink} to="/login">return to login</Link> and request a new reset link.
+            Please{' '}
+            <Link component={RouterLink} to="/login">
+              return to login
+            </Link>{' '}
+            and request a new reset link.
           </Typography>
         </Paper>
       </Container>
@@ -165,15 +171,15 @@ export default function ResetPasswordViaTokenPage() {
             label="New Password"
             type={showPassword ? 'text' : 'password'}
             value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
+            onChange={e => setNewPassword(e.target.value)}
             slotProps={{
               input: {
                 endAdornment: (
                   <InputAdornment position="end">
                     <IconButton
                       aria-label={showPassword ? 'Hide password' : 'Show password'}
-                      onClick={() => setShowPassword((v) => !v)}
-                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => setShowPassword(v => !v)}
+                      onMouseDown={e => e.preventDefault()}
                       edge="end"
                     >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
@@ -187,7 +193,7 @@ export default function ResetPasswordViaTokenPage() {
             label="Confirm New Password"
             type={showPassword ? 'text' : 'password'}
             value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
+            onChange={e => setConfirmPassword(e.target.value)}
           />
 
           {error && <Alert severity="error">{error}</Alert>}
@@ -204,4 +210,3 @@ export default function ResetPasswordViaTokenPage() {
     </Container>
   );
 }
-

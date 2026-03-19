@@ -6,7 +6,7 @@ import Button from "@mui/material/Button";
 import { Alert, Box, CircularProgress, Typography, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ImportCSVButton from "../components/upload/ImportCSVButton";
-import { transactionsApi, accountsApi } from "../../api";
+import { transactionsApi, accountsApi, parseApiError } from "../../api";
 import { useNotification } from "../context/NotificationContext";
 
 type UploadPageState = "EMPTY" | "MAPPING" | "LOADING" | "SUCCESS" | "ERROR";
@@ -51,8 +51,9 @@ export default function UploadPage() {
                 setPageState("ERROR");
             }
         } catch (err) {
-            setError(err instanceof Error ? err.message : "Upload failed");
-            notify("Upload failed: " + (err instanceof Error ? err.message : "Unknown error"), "error");
+            const message = parseApiError(err);
+            setError(message);
+            notify(message, 'error');
             setPageState("ERROR");
         }
     };

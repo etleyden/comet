@@ -3,7 +3,7 @@ import VendorEntity from '../entities/Vendor';
 import Transaction from '../entities/Transaction';
 import User from '../entities/User';
 import type { Vendor, CreateVendorRequest, UpdateVendorRequest } from 'shared';
-import { HttpError } from 'shared';
+import { ApiError } from 'shared';
 
 export class VendorService {
   private toVendor(entity: VendorEntity): Vendor {
@@ -84,7 +84,7 @@ export class VendorService {
 
     const vendor = await db.findOne(VendorEntity, { where: { id } });
     if (!vendor) {
-      throw new HttpError('Vendor not found', 404);
+      throw new ApiError('Vendor not found', 404);
     }
 
     if (input.name !== undefined) vendor.name = input.name;
@@ -117,13 +117,13 @@ export class VendorService {
       .getOne();
 
     if (!tx) {
-      throw new HttpError('Transaction not found', 404);
+      throw new ApiError('Transaction not found', 404);
     }
 
     if (vendorId) {
       const vendor = await db.findOne(VendorEntity, { where: { id: vendorId } });
       if (!vendor) {
-        throw new HttpError('Vendor not found', 404);
+        throw new ApiError('Vendor not found', 404);
       }
       await db
         .createQueryBuilder()
