@@ -64,11 +64,11 @@ export class UploadRecordService {
     if (availableColumns.length > 0) {
       const invalidColumns = validateMappingColumns(mapping, availableColumns);
       if (invalidColumns.length > 0) {
-        const err: any = new Error(
-          `Mapping contains columns not found in CSV: ${invalidColumns.join(', ')}`
-        );
-        err.status = 400;
-        throw err;
+        throw new ApiError(
+            `Mapping contains columns not found in CSV: ${invalidColumns.join(', ')}`,
+            400,
+            { invalidColumns}
+        )
       }
     }
 

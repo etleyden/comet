@@ -1,6 +1,17 @@
 import { ApiError } from './errors';
 
 // API Routes constants
+
+/**
+ * Minimal subset of Zod's `ZodIssue` type used when parsing validation error
+ * details returned by the backend. Mirrors the relevant fields of `ZodIssue`
+ * without requiring `zod` as a frontend dependency.
+ */
+interface ZodIssueLike {
+  message?: unknown;
+  path?: unknown;
+}
+
 interface RequestOptions {
   params?: Record<string, string | number>;
   headers?: Record<string, string>;
@@ -32,12 +43,9 @@ function extractZodDetails(details: unknown): string | null {
 
   const messages = details.flatMap(issue => {
     if (typeof issue !== 'object' || issue === null) return [];
-    const { message, path } = issue as { message?: unknown; path?: unknown };
+    const { message } = issue as ZodIssueLike;
     if (typeof message !== 'string' || !message.trim()) return [];
 
-    if (Array.isArray(path) && path.length > 0) {
-      return [`${message}`];
-    }
     return [message];
   });
 
@@ -75,8 +83,10 @@ class ApiClientClass {
         headers,
         body: body ? JSON.stringify(body) : undefined,
       });
-    } catch {
-      throw new ApiError('Unable to reach the server. Please check your connection.', 0);
+    } catch (err) {
+      const apiError = new ApiError('Unable to reach the server. Please check your connection.', 0);
+      (apiError as any).details = err;
+      throw apiError;
     }
 
     if (!response.ok) {
@@ -97,8 +107,18 @@ class ApiClientClass {
     try {
       body = await response.json();
     } catch {
-      // Response isn't JSON — fall back to status-based message
-      return new ApiError(STATUS_MESSAGES[status] ?? `Request failed (${status})`, status);
+      // Response isn't JSON — fall back to status-based message, but
+      // preserve any raw text body to aid debugging (e.g. HTML error pages).
+      let rawText = '';
+      try {
+        rawText = await response.text();
+      } catch {
+        rawText = '';
+      }
+      const message =
+        STATUS_MESSAGES[status] ?? `Request failed (${status})`;
+      const details = rawText && rawText.trim().length > 0 ? rawText : undefined;
+      return new ApiError(message, status, details);
     }
 
     // Backend returns { success: false, error: string, details?: unknown }

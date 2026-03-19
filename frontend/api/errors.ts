@@ -59,7 +59,11 @@ export function parseApiError(error: unknown, template = `Error: ${MESSAGE_PLACE
 
 /** Pulls a raw message string out of any caught value. */
 function extractMessage(error: unknown): string {
-  if (error instanceof ApiError) return error.message;
+  if (error instanceof ApiError) {
+    const raw = error.message ?? '';
+    const trimmed = raw.trim();
+    return trimmed || FALLBACK_MESSAGE;
+  }
   if (error instanceof Error) return error.message.trim() || FALLBACK_MESSAGE;
   if (typeof error === 'string' && error.trim()) return error.trim();
   return FALLBACK_MESSAGE;
