@@ -131,6 +131,9 @@ services:
     restart: unless-stopped
     expose:
       - '80'
+    labels:
+      - traefik.enable=true
+      - traefik.http.services.frontend.loadbalancer.server.port=80
     healthcheck:
       test: ['CMD-SHELL', 'curl -fs http://localhost:80/ || exit 1']
       interval: 10s
