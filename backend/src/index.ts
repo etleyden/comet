@@ -17,7 +17,7 @@ if (process.env.NODE_ENV !== 'production') {
   require('dotenv').config({ path: '../.env' });
 }
 
-validateEnv(['DB_HOST', 'DB_PORT', 'DB_USERNAME', 'DB_PASSWORD', 'DB_NAME', 'RESEND_API_KEY']);
+validateEnv(['DB_USERNAME', 'DB_PASSWORD', 'DB_NAME', 'RESEND_API_KEY']);
 
 const app = express();
 const PORT = process.env.API_PORT || 86;
@@ -51,15 +51,22 @@ AppDataSource.initialize()
   .then(async () => {
     console.log('Database connected successfully!');
 
-    // If application tables are missing (fresh or partially-initialized DB), sync the schema.
-    // the user table is a good indicator of whether the application tables exist
+    // If application tables are missing (fresh or partially-initialized DB), sync the schema
+    // in non-production environments. In production, rely on migrations instead.
+    // The "user" table is a good indicator of whether the application tables exist.
     const appTables = await AppDataSource.query(
       `SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user'`
     );
-    if (appTables.length === 0) {
-      console.log('Application tables not found — running schema synchronization…');
+    if (process.env.NODE_ENV !== 'production' && appTables.length === 0) {
+      console.log(
+        'Application tables not found — running schema synchronization (non-production)…'
+      );
       await AppDataSource.synchronize();
       console.log('Schema synchronized.');
+    } else if (process.env.NODE_ENV === 'production' && appTables.length === 0) {
+      console.warn(
+        'Application tables not found in production. Ensure migrations have been executed and `migrationsRun` is correctly configured.'
+      );
     }
 
     // Seed initial admin user from env vars (if configured)

@@ -8,7 +8,7 @@ COPY package.json package-lock.json ./
 COPY backend/package.json  ./backend/
 COPY frontend/package.json ./frontend/
 COPY shared/package.json   ./shared/
-RUN npm ci --workspaces
+RUN npm ci --workspace frontend --workspace shared
 
 # ── Dev target (HMR via bind mount) ──────────────────────────
 FROM deps AS dev

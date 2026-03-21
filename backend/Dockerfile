@@ -19,16 +19,16 @@ CMD ["npm", "run", "dev:backend"]
 # ── Prod target ───────────────────────────────────────────────
 FROM base AS prod
 
-# Install production deps only (ts-node + typescript are in dependencies)
+# Install production deps only (typescript is in dependencies for tsc build)
 COPY package.json package-lock.json ./
 COPY backend/package.json  ./backend/
-COPY frontend/package.json ./frontend/
 COPY shared/package.json   ./shared/
-RUN npm ci --workspaces --omit=dev && apk add --no-cache curl
+RUN npm ci --omit=dev --workspace backend --workspace shared
 
 # Copy only the source code needed at runtime
 COPY shared/  ./shared/
 COPY backend/ ./backend/
+RUN npm run build -w backend
 
 ENV NODE_ENV=production
 EXPOSE 86
