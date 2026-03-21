@@ -28,6 +28,9 @@ RUN npm ci --omit=dev --workspace backend --workspace shared
 # Copy only the source code needed at runtime
 COPY shared/  ./shared/
 COPY backend/ ./backend/
+
+# Build shared first (backend's compiled JS requires it at runtime)
+RUN npm run build -w shared
 RUN npm run build -w backend
 
 ENV NODE_ENV=production
