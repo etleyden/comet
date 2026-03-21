@@ -6,11 +6,11 @@ import ApiClient from '../apiClient';
  */
 export const healthApi = {
   /**
-   * GET /health
+   * GET /api/health
    * Returns the current API health status.
    * Note: this endpoint does not use the ApiResponse wrapper.
    */
   check(): Promise<HealthStatus> {
-    return ApiClient.get<HealthStatus>('/health');
+    return ApiClient.get<HealthStatus>('/api/health');
   },
 };

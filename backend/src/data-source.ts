@@ -1,21 +1,27 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
-import * as dotenv from 'dotenv';
 import { entities } from './entities';
 
-// Load environment variables from .env file at root or use environment variables
-dotenv.config({ path: process.env.NODE_ENV === 'production' ? '.env' : '../.env' });
+// Only load .env file in development — in production, env vars come from the
+// deployment platform (Docker environment: / Coolify settings).
+if (process.env.NODE_ENV !== 'production') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('dotenv').config({ path: '../.env' });
+}
+
+const isProduction = process.env.NODE_ENV === 'production';
 
 // Configure the TypeORM DataSource
 export const AppDataSource = new DataSource({
-  type: 'postgres', // Change to your database type (e.g., mysql, sqlite, etc.)
+  type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432'),
   username: process.env.DB_USERNAME,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-  synchronize: true, // Set to false in production
-  logging: true,
+  synchronize: !isProduction,
+  migrationsRun: isProduction,
+  logging: !isProduction,
   entities: entities,
   migrations: ['src/migrations/**/*.ts'],
   subscribers: ['src/subscribers/**/*.ts'],

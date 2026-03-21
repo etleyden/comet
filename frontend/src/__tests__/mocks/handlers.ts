@@ -121,7 +121,7 @@ export const handlers = [
 
   // ─── Health Handler ─────────────────────────────────────────────────
 
-  http.get(`${BASE_URL}/health`, () => {
+  http.get(`${BASE_URL}/api/health`, () => {
     return HttpResponse.json({ status: 'ok' });
   }),
 ];

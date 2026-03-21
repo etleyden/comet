@@ -4,6 +4,13 @@ import path from 'path';
 import fs from 'fs';
 
 const isVitest = !!process.env.VITEST;
+// do we need to serve SSL certs (development only)
+const isServe = process.argv.includes('serve') ||
+  (process.argv.some(a => a.endsWith('/vite')) && !process.argv.includes('build'));
+
+const keyPath = path.resolve(__dirname, '../certs/localhost-key.pem');
+const certPath = path.resolve(__dirname, '../certs/localhost-cert.pem');
+const hasCerts = fs.existsSync(keyPath) && fs.existsSync(certPath);
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -20,23 +27,25 @@ export default defineConfig({
       '@test': path.resolve(__dirname, 'src/__tests__'),
     },
   },
-  // SSL certs are only needed for the dev server, not tests.
-  // Guard with isVitest so fs.readFileSync is never called during vitest runs.
-  server: isVitest
-    ? undefined
-    : {
+  // SSL certs are only needed for the Vite dev server, not tests or production builds.
+  server: isServe && !isVitest && hasCerts
+    ? {
       host: '0.0.0.0',
       https: {
-        key: fs.readFileSync(path.resolve(__dirname, '../certs/localhost-key.pem')),
-        cert: fs.readFileSync(path.resolve(__dirname, '../certs/localhost-cert.pem')),
+        key: fs.readFileSync(keyPath),
+        cert: fs.readFileSync(certPath),
       },
       watch: {
         usePolling: true,
       },
-    },
+    }
+    : undefined,
   test: {
     globals: true,
     environment: 'jsdom',
+    env: {
+      VITE_API_URL: 'https://localhost:86',
+    },
     include: ['src/**/*.test.{unit,integration}.{ts,tsx}'],
     setupFiles: ['./src/test-setup.ts'],
     testTimeout: 10000,

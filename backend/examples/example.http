@@ -1,5 +1,5 @@
 # Health check
-GET https://localhost:86/health
+GET https://localhost:86/api/health
 
 ### get all posts
 GET https://localhost:86/api/posts
