@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "nodemon --watch src --ext ts --exec ts-node src/index.ts",
-    "build": "tsc",
+    "build": "npx tsc -p tsconfig.build.json",
     "start": "node dist/backend/src/index.js",
     "migration:generate": "typeorm-ts-node-commonjs migration:generate src/migrations/%npm_config_name% -d src/data-source.ts",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/data-source.ts",
