@@ -26,6 +26,7 @@ RUN npm run build -w frontend
 
 # ── Prod target (nginx serves static files + proxies API) ─────
 FROM nginx:alpine AS prod
+RUN apk add --no-cache curl
 COPY --from=build /workspace/frontend/dist /usr/share/nginx/html
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
