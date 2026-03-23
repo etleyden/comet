@@ -19,6 +19,9 @@ CMD ["npm", "run", "dev:backend"]
 # ── Prod target ───────────────────────────────────────────────
 FROM base AS prod
 
+# curl is required for the Docker health check
+RUN apk add --no-cache curl
+
 # Install production deps only (typescript is in dependencies for tsc build)
 COPY package.json package-lock.json ./
 COPY backend/package.json  ./backend/
