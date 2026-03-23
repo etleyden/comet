@@ -2,7 +2,7 @@ networks:
   app_network:
     driver: bridge
   coolify: # once deployment happens on other infrastructure we'll have to revisit this
-    driver: bridge
+    external: true
 
 services:
   # ── Database (always runs) ────────────────────────────────────
