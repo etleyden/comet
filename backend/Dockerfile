@@ -1,14 +1,41 @@
-# Backend Dockerfile
-FROM node:22
+# ── Base ──────────────────────────────────────────────────────
+FROM node:22-alpine AS base
+WORKDIR /workspace
 
-# Set working directory
-WORKDIR /app
+# ── Dependencies (all workspaces) ─────────────────────────────
+FROM base AS deps
+COPY package.json package-lock.json ./
+COPY backend/package.json  ./backend/
+COPY frontend/package.json ./frontend/
+COPY shared/package.json   ./shared/
+RUN npm ci --workspaces
 
-# Set environment to development
-ENV NODE_ENV=development
-
-# Expose the backend port
+# ── Dev target (hot-reload via bind mount) ────────────────────
+FROM deps AS dev
+COPY . .
 EXPOSE 86 9229
+CMD ["npm", "run", "dev:backend"]
 
-# Install dependencies and start dev server
-CMD ["sh", "-c", "cd /workspace && npm install --workspaces && npm run dev:backend"]
+# ── Prod target ───────────────────────────────────────────────
+FROM base AS prod
+
+# curl is required for the Docker health check
+RUN apk add --no-cache curl
+
+# Install production deps only (typescript is in dependencies for tsc build)
+COPY package.json package-lock.json ./
+COPY backend/package.json  ./backend/
+COPY shared/package.json   ./shared/
+RUN npm ci --omit=dev --workspace backend --workspace shared
+
+# Copy only the source code needed at runtime
+COPY shared/  ./shared/
+COPY backend/ ./backend/
+
+# Build shared first (backend's compiled JS requires it at runtime)
+RUN npm run build -w shared
+RUN npm run build -w backend
+
+ENV NODE_ENV=production
+EXPOSE 86
+CMD ["npm", "run", "start:backend"]

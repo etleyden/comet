@@ -5,12 +5,19 @@ import fs from 'fs';
 import path from 'path';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
-import dotenv from 'dotenv';
 import { registerRoutes } from './routes/index';
 import { errorHandler } from './middleware/errorHandler';
 import { AppDataSource } from './data-source';
+import { validateEnv } from './utils/validateEnv';
 
-dotenv.config();
+// Only load .env file in development — in production, env vars come from the
+// deployment platform (Docker environment: / Coolify settings).
+if (process.env.NODE_ENV !== 'production') {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('dotenv').config({ path: '../.env' });
+}
+
+validateEnv(['DB_USERNAME', 'DB_PASSWORD', 'DB_NAME', 'RESEND_API_KEY']);
 
 const app = express();
 const PORT = process.env.API_PORT || 86;
@@ -43,6 +50,24 @@ app.use(errorHandler);
 AppDataSource.initialize()
   .then(async () => {
     console.log('Database connected successfully!');
+
+    // If application tables are missing (fresh or partially-initialized DB), sync the schema
+    // in non-production environments. In production, rely on migrations instead.
+    // The "user" table is a good indicator of whether the application tables exist.
+    const appTables = await AppDataSource.query(
+      `SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user'`
+    );
+    if (process.env.NODE_ENV !== 'production' && appTables.length === 0) {
+      console.log(
+        'Application tables not found — running schema synchronization (non-production)…'
+      );
+      await AppDataSource.synchronize();
+      console.log('Schema synchronized.');
+    } else if (process.env.NODE_ENV === 'production' && appTables.length === 0) {
+      console.warn(
+        'Application tables not found in production. Ensure migrations have been executed and `migrationsRun` is correctly configured.'
+      );
+    }
 
     // Seed initial admin user from env vars (if configured)
     const { UserService } = await import('./services/userService');

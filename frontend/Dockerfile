@@ -1,13 +1,33 @@
-# Frontend Dockerfile
-FROM node:22
+# ── Base ──────────────────────────────────────────────────────
+FROM node:22-alpine AS base
+WORKDIR /workspace
 
-# Set working directory
-WORKDIR /app
+# ── Dependencies (all workspaces) ─────────────────────────────
+FROM base AS deps
+COPY package.json package-lock.json ./
+COPY backend/package.json  ./backend/
+COPY frontend/package.json ./frontend/
+COPY shared/package.json   ./shared/
+RUN npm ci --workspace frontend --workspace shared
 
-# Install dependencies will happen via volume mounts
-# The entrypoint script will handle npm install
-
+# ── Dev target (HMR via bind mount) ──────────────────────────
+FROM deps AS dev
+COPY . .
 EXPOSE 5173
+CMD ["npm", "run", "dev:frontend"]
 
-# Install dependencies and start dev server
-CMD ["sh", "-c", "cd /workspace && npm install --workspaces && npm run dev:frontend"]
+# ── Build stage (produces static bundle) ──────────────────────
+FROM deps AS build
+COPY shared/   ./shared/
+COPY frontend/ ./frontend/
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
+RUN npm run build -w frontend
+
+# ── Prod target (nginx serves static files + proxies API) ─────
+FROM nginx:alpine AS prod
+RUN apk add --no-cache curl
+COPY --from=build /workspace/frontend/dist /usr/share/nginx/html
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
