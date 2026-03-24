@@ -8,6 +8,7 @@
     "migration:generate": "typeorm-ts-node-commonjs migration:generate src/migrations/%npm_config_name% -d src/data-source.ts",
     "migration:run": "typeorm-ts-node-commonjs migration:run -d src/data-source.ts",
     "migration:revert": "typeorm-ts-node-commonjs migration:revert -d src/data-source.ts",
+    "migration:show": "typeorm-ts-node-commonjs migration:show -d src/data-source.ts",
     "test": "vitest run",
     "test:unit": "vitest run --config vitest.unit.config.ts",
     "test:integration": "vitest run --config vitest.integration.config.ts",
@@ -38,6 +39,7 @@
   },
   "devDependencies": {
     "@swc/core": "^1.15.11",
+    "tsconfig-paths": "^4.2.0",
     "@testcontainers/postgresql": "^11.12.0",
     "@types/supertest": "^6.0.3",
     "@vitest/coverage-v8": "^4.0.18",

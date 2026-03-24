@@ -21,10 +21,9 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME,
   synchronize: !isProduction,
   migrationsRun: isProduction,
-  logging: !isProduction,
+  logging: isProduction ? ['error', 'warn', 'migration'] : true,
   entities: entities,
-  migrations: ['src/migrations/**/*.ts'],
-  subscribers: ['src/subscribers/**/*.ts'],
+  migrations: [__dirname + '/migrations/*{.ts,.js}'],
 });
 
 export const getDB = () => AppDataSource.manager;
