@@ -47,26 +47,25 @@ registerRoutes(app);
 app.use(errorHandler);
 
 // Initialize the database connection before starting the server
+// In production, TypeORM automatically runs pending migrations during
+// initialization (migrationsRun: true in data-source.ts).
 AppDataSource.initialize()
   .then(async () => {
     console.log('Database connected successfully!');
 
-    // If application tables are missing (fresh or partially-initialized DB), sync the schema
-    // in non-production environments. In production, rely on migrations instead.
-    // The "user" table is a good indicator of whether the application tables exist.
-    const appTables = await AppDataSource.query(
-      `SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user'`
-    );
-    if (process.env.NODE_ENV !== 'production' && appTables.length === 0) {
-      console.log(
-        'Application tables not found — running schema synchronization (non-production)…'
+    if (process.env.NODE_ENV === 'production') {
+      // Migrations ran during initialize(). Verify tables exist as a safety check.
+      const appTables = await AppDataSource.query(
+        `SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename = 'user'`
       );
-      await AppDataSource.synchronize();
-      console.log('Schema synchronized.');
-    } else if (process.env.NODE_ENV === 'production' && appTables.length === 0) {
-      console.warn(
-        'Application tables not found in production. Ensure migrations have been executed and `migrationsRun` is correctly configured.'
-      );
+      if (appTables.length === 0) {
+        console.error(
+          'FATAL: Application tables not found after migration run. ' +
+            'Check that migrations are compiled into the build output and the migrations directory is not empty.'
+        );
+        process.exit(1);
+      }
+      console.log('Migrations applied successfully.');
     }
 
     // Seed initial admin user from env vars (if configured)
