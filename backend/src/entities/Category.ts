@@ -6,11 +6,12 @@ import {
     UpdateDateColumn,
     ManyToOne,
     OneToMany,
+    Unique,
 } from 'typeorm';
 import User from './User';
-import Transaction from './Transaction';
 
 @Entity()
+@Unique('UQ_category_name_parent', ['name', 'parent'])
 export default class Category {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
@@ -18,14 +19,26 @@ export default class Category {
     @Column()
     name!: string;
 
-    @Column({ nullable: true })
-    description?: string;
+    @ManyToOne(() => Category, category => category.children, { nullable: true })
+    parent?: Category | null;
 
-    @ManyToOne(() => User, user => user.id)
-    user?: User;
+    @OneToMany(() => Category, category => category.parent)
+    children?: Category[];
+
+    @Column({ nullable: true })
+    defaultDescription?: string;
+
+    @Column({ default: false })
+    isDeprecated!: boolean;
+
+    @ManyToOne(() => User)
+    createdBy!: User;
 
     @CreateDateColumn()
     createdAt!: Date;
+
+    @ManyToOne(() => User, { nullable: true })
+    updatedBy?: User;
 
     @UpdateDateColumn()
     updatedAt!: Date;

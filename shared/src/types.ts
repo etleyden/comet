@@ -60,7 +60,20 @@ export interface Account {
 export interface Category {
   id: string;
   name: string;
-  description?: string;
+  parentId?: string;
+  parentName?: string;
+  defaultDescription?: string;
+  isDeprecated: boolean;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserCategoryOverride {
+  id: string;
+  userId: string;
+  categoryId: string;
+  customDescription?: string;
 }
 
 export interface Vendor {
@@ -253,6 +266,43 @@ export interface SearchVendorsRequest {
 
 export interface AssignVendorRequest {
   vendorId: string | null;
+}
+
+// ─── Category API Types ──────────────────────────────────────────────
+
+export interface CreateCategoryRequest {
+  name: string;
+  parentId?: string;
+  defaultDescription?: string;
+}
+
+export interface UpdateCategoryRequest {
+  name?: string;
+  defaultDescription?: string;
+  isDeprecated?: boolean;
+}
+
+export interface CategoryWithChildren extends Category {
+  children?: Category[];
+}
+
+export interface GetCategoriesResponse {
+  categories: CategoryWithChildren[];
+}
+
+// ─── User Category Override API Types ────────────────────────────────
+
+export interface SetCategoryOverrideRequest {
+  customDescription?: string | null;
+}
+
+export interface DeleteCategoryResponse {
+  deleted: boolean;
+}
+
+export interface SeedTaxonomyResponse {
+  created: number;
+  skipped: number;
 }
 
 // ─── HTTP Error Types ─────────────────────────────────────────────

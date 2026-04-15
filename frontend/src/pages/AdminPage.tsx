@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
-import { Box, Typography, Paper, Button } from '@mui/material';
+import { Box, Typography, Paper, Button, Alert, CircularProgress } from '@mui/material';
 import type { Vendor } from 'shared';
 import { VendorDisplay, VendorSearch, VendorCreateModal } from '../components/vendor';
+import { categoriesApi } from '../../api';
 
 const MOCK_VENDORS: Vendor[] = [
   { id: '1', name: 'Walmart', logoUrl: undefined, transactionCount: 1000 },
@@ -25,7 +26,29 @@ export default function AdminPage() {
   const [createInitialName, setCreateInitialName] = useState('');
   const anchorRef = useRef<HTMLButtonElement>(null);
 
+  const [seedLoading, setSeedLoading] = useState(false);
+  const [seedResult, setSeedResult] = useState<{ created: number; skipped: number } | null>(null);
+  const [seedError, setSeedError] = useState<string | null>(null);
+
   const selectedVendor = MOCK_VENDORS.find(v => v.id === selectedVendorId);
+
+  const handleSeedCategories = async () => {
+    setSeedLoading(true);
+    setSeedResult(null);
+    setSeedError(null);
+    try {
+      const res = await categoriesApi.seedDefaultTaxonomy();
+      if (res.success) {
+        setSeedResult(res.data);
+      } else {
+        setSeedError(res.error);
+      }
+    } catch (err: any) {
+      setSeedError(err.message ?? 'Failed to seed categories');
+    } finally {
+      setSeedLoading(false);
+    }
+  };
 
   return (
     <Box sx={{ p: 3 }}>
@@ -85,6 +108,37 @@ export default function AdminPage() {
           }}
           initialName={createInitialName}
         />
+      </Paper>
+
+      {/* Category Seed */}
+      <Paper sx={{ p: 3, maxWidth: 500, mt: 3 }}>
+        <Typography variant="h6" gutterBottom>
+          Category Management
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Populate the default category taxonomy. Categories that already exist will be skipped.
+        </Typography>
+
+        <Button
+          variant="contained"
+          onClick={handleSeedCategories}
+          disabled={seedLoading}
+          startIcon={seedLoading ? <CircularProgress size={16} /> : undefined}
+        >
+          {seedLoading ? 'Seeding...' : 'Seed Default Categories'}
+        </Button>
+
+        {seedResult && (
+          <Alert severity="success" sx={{ mt: 2 }}>
+            Created {seedResult.created} categories, skipped {seedResult.skipped} (already existed).
+          </Alert>
+        )}
+
+        {seedError && (
+          <Alert severity="error" sx={{ mt: 2 }}>
+            {seedError}
+          </Alert>
+        )}
       </Paper>
     </Box>
   );
