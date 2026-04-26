@@ -40,9 +40,10 @@ export class CategoryService {
     }
 
     /**
-     * Returns all categories organized as a flat list with parent info.
-     * Optionally includes children nested under parents.
-     * Will not return user overrides for descriptions. Must call 
+     * Returns top-level categories with their children nested under each parent.
+     * When `includeDeprecated` is false, deprecated categories are excluded from
+     * both the top-level results and the nested children.
+     * Will not return user overrides for descriptions. Must call
      * getUserOverrides separately and merge on client if needed.
      */
     async getCategories(includeDeprecated = false): Promise<CategoryWithChildren[]> {
