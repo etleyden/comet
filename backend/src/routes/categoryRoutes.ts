@@ -39,7 +39,7 @@ const GetCategoriesSchema = z.object({
 });
 
 const SetOverrideSchema = z.object({
-    customDescription: z.string().max(500).nullable().optional(),
+    customDescription: z.string().max(500).nullable(),
 });
 
 const categoryService = new CategoryService();

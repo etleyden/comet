@@ -31,7 +31,7 @@ export default class Category {
     @Column({ default: false })
     isDeprecated!: boolean;
 
-    @ManyToOne(() => User)
+    @ManyToOne(() => User, { nullable: false })
     createdBy!: User;
 
     @CreateDateColumn()

@@ -14,7 +14,7 @@ RUN npm ci --workspaces
 FROM deps AS dev
 COPY . .
 EXPOSE 86 9229
-CMD npm ci --workspaces && npm run dev:backend
+CMD ["npm", "run", "dev:backend"]
 
 # ── Prod target ───────────────────────────────────────────────
 FROM base AS prod

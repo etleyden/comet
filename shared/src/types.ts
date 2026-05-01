@@ -64,7 +64,7 @@ export interface Category {
   parentName?: string;
   defaultDescription?: string;
   isDeprecated: boolean;
-  createdBy: string;
+  createdBy?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -293,7 +293,7 @@ export interface GetCategoriesResponse {
 // ─── User Category Override API Types ────────────────────────────────
 
 export interface SetCategoryOverrideRequest {
-  customDescription?: string | null;
+  customDescription: string | null;
 }
 
 export interface DeleteCategoryResponse {

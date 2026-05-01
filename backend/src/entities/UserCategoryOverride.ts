@@ -21,7 +21,7 @@ export default class UserCategoryOverride {
     @ManyToOne(() => User, { nullable: false })
     user!: User;
 
-    @ManyToOne(() => Category, { nullable: false })
+    @ManyToOne(() => Category, { nullable: false, onDelete: 'CASCADE' })
     category!: Category;
 
     @Column({ nullable: true })
