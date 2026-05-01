@@ -69,7 +69,11 @@ export class CategoryService {
             ...this.toCategory(c),
             children: (c.children ?? [])
                 .filter(child => includeDeprecated || !child.isDeprecated)
-                .map(child => this.toCategory(child)),
+                .map(child => ({
+                    ...this.toCategory(child),
+                    parentId: c.id,
+                    parentName: c.name,
+                })),
         }));
     }
 
