@@ -5,6 +5,7 @@ export { accountsApi } from './services/accountsApi';
 export { transactionsApi } from './services/transactionsApi';
 export { uploadRecordsApi } from './services/uploadRecordsApi';
 export { vendorsApi } from './services/vendorsApi';
+export { categoriesApi } from './services/categoriesApi';
 
 // Re-export error handling utilities
 export { ApiError, parseApiError } from './errors';

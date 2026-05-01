@@ -2,6 +2,7 @@ import { getTestDB } from './testDb';
 import Transaction from '../../entities/Transaction';
 import Account from '../../entities/Account';
 import Category from '../../entities/Category';
+import UserCategoryOverride from '../../entities/UserCategoryOverride';
 import UploadRecord from '../../entities/UploadRecord';
 import User from '../../entities/User';
 import Vendor from '../../entities/Vendor';
@@ -18,10 +19,38 @@ export async function seedAccount(name: string, user: User): Promise<Account> {
     return db.save(Account, account);
 }
 
-export async function seedCategory(name: string): Promise<Category> {
+export interface SeedCategoryOptions {
+    name: string;
+    parent?: Category;
+    defaultDescription?: string;
+    isDeprecated?: boolean;
+    createdBy: User;
+}
+
+export async function seedCategory(opts: SeedCategoryOptions): Promise<Category> {
     const db = getTestDB();
-    const cat = db.create(Category, { name });
+    const cat = db.create(Category, {
+        name: opts.name,
+        parent: opts.parent,
+        defaultDescription: opts.defaultDescription,
+        isDeprecated: opts.isDeprecated ?? false,
+        createdBy: opts.createdBy,
+    });
     return db.save(Category, cat);
+}
+
+export async function seedUserCategoryOverride(
+    user: User,
+    category: Category,
+    customDescription?: string,
+): Promise<UserCategoryOverride> {
+    const db = getTestDB();
+    const override = db.create(UserCategoryOverride, {
+        user,
+        category,
+        customDescription,
+    });
+    return db.save(UserCategoryOverride, override);
 }
 
 export async function seedUploadRecord(user: User): Promise<UploadRecord> {

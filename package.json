@@ -9,7 +9,7 @@
   ],
   "scripts": {
     "setup": "node scripts/setup.js",
-    "dev": "docker compose --profile dev up --build",
+    "dev": "docker compose --profile dev up --build -d",
     "dev:down": "docker compose --profile dev down",
     "dev:backend": "npm --prefix backend run dev",
     "dev:frontend": "npm --prefix frontend run dev",

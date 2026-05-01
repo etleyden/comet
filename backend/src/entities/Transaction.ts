@@ -31,17 +31,21 @@ export default class Transaction {
   @Column()
   date!: Date;
 
+  /** Application category associated with the transaction */
   @ManyToOne(() => Category, { nullable: true })
   category?: Category;
 
+  /** Label for the category parsed from the CSV */
+  @Column({ nullable: true })
+  categoryLabel?: string;
+
+  /** Label for the vendor parsed from the CSV */
   @Column({ nullable: true })
   vendorLabel?: string;
 
+  /** Application vendor associated with the transaction */
   @ManyToOne(() => Vendor, { nullable: true })
   vendor?: Vendor;
-
-  @Column({ nullable: true })
-  categoryLabel?: string;
 
   @Column({ nullable: true })
   description?: string;

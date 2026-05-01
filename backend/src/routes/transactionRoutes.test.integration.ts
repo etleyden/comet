@@ -193,8 +193,8 @@ describe('Transaction Routes (Integration)', () => {
 
             account1 = await seedAccount('Checking', userEntity);
             account2 = await seedAccount('Savings', userEntity);
-            category1 = await seedCategory('Groceries');
-            category2 = await seedCategory('Transport');
+            category1 = await seedCategory({ name: 'Groceries', createdBy: userEntity });
+            category2 = await seedCategory({ name: 'Transport', createdBy: userEntity });
             uploadRecord = await seedUploadRecord(userEntity);
         });
 
