@@ -272,20 +272,14 @@ export class CategoryService {
         let skipped = 0;
 
         for (const parentDef of DEFAULT_TAXONOMY) {
-            // Check if parent already exists at root level
-            let parentEntity = await db.findOne(CategoryEntity, {
-                where: { name: parentDef.name, parent: undefined },
-            });
+            // Check if parent already exists at root level using an explicit IS NULL.
+            const parentAtRoot = await db
+                .createQueryBuilder(CategoryEntity, 'cat')
+                .where('cat.name = :name', { name: parentDef.name })
+                .andWhere('cat.parentId IS NULL')
+                .getOne();
 
-            // TypeORM treats `parent: undefined` differently from a true IS NULL.
-            // Use a query builder for an explicit IS NULL check.
-            if (!parentEntity) {
-                parentEntity = await db
-                    .createQueryBuilder(CategoryEntity, 'cat')
-                    .where('cat.name = :name', { name: parentDef.name })
-                    .andWhere('cat.parentId IS NULL')
-                    .getOne();
-            }
+            let parentEntity = parentAtRoot;
 
             if (!parentEntity) {
                 parentEntity = db.create(CategoryEntity, {
