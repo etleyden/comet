@@ -91,7 +91,7 @@ This will:
 - **Backend API**: https://localhost:86
 - **Database**: localhost:5431
 
-**Important**: Before using the frontend, visit `https://localhost:86/health` in your browser and accept the certificate. Browsers require explicit trust per port — skipping this step will cause CORS errors when the frontend tries to reach the API.
+**Important**: Before using the frontend, visit `https://localhost:86/api/health` in your browser and accept the certificate. Browsers require explicit trust per port — skipping this step will cause CORS errors when the frontend tries to reach the API.
 
 ## Development
 
