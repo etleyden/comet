@@ -50,6 +50,10 @@ export default class Transaction {
   @Column({ nullable: true })
   description?: string;
 
+  /** Transaction hash for deduplication associated with the transaction */
+  @Column({ unique: true })
+  transactionHash!: string;
+  
   @Column({
     type: 'enum',
     enum: ['pending', 'completed', 'cancelled'],

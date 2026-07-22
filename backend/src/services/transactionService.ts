@@ -5,6 +5,7 @@ import Transaction from '../entities/Transaction';
 import UploadRecord from '../entities/UploadRecord';
 import Account from '../entities/Account';
 import User from '../entities/User';
+import * as crypto from 'crypto';
 import type {
     UploadTransactionsResponse,
     TransactionWithAccount,
@@ -209,7 +210,12 @@ export class TransactionService {
 
                 // Store the full raw row for future reference
                 tx.raw = raw;
-
+                // 1. sort keys & stringify raw
+                const sorted = JSON.stringify(raw, Object.keys(raw).sort());
+                // 2. hash stringified
+                const hashed = crypto.createHash('sha256').update(sorted).digest('hex');
+                // 3. store hash on transaction for dedups
+                tx.transactionHash = hashed;
                 return tx;
             });
 
