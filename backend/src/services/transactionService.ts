@@ -74,11 +74,12 @@ export class TransactionService {
             }
             qb = qb.andWhere(`(${conditions.join(' OR ')})`, params);
         }
+        // ABS() so you can filter it even if it's a negative value.
         if (amountMin !== undefined) {
-            qb = qb.andWhere('tx.amount >= :amountMin', { amountMin });
+            qb = qb.andWhere('ABS(tx.amount) >= :amountMin', { amountMin });
         }
         if (amountMax !== undefined) {
-            qb = qb.andWhere('tx.amount <= :amountMax', { amountMax });
+            qb = qb.andWhere('ABS(tx.amount) <= :amountMax', { amountMax });
         }
 
         const [rows, total] = await qb
