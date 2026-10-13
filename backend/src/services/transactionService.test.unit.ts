@@ -12,6 +12,7 @@ import UserEntity from '../entities/User';
 import AccountEntity from '../entities/Account';
 import Transaction from '../entities/Transaction';
 import UploadRecord from '../entities/UploadRecord';
+import { seedAccount, seedCategory, seedUploadRecord, seedTransaction } from '@test/utils/seeds';
 
 // Redirect data-source imports to the testcontainer-backed database.
 vi.mock('../data-source');
@@ -324,6 +325,112 @@ describe('TransactionService', () => {
             const txns = await db.find(Transaction);
             expect(uploads).toHaveLength(0);
             expect(txns).toHaveLength(0);
+        });
+    });
+
+    // ── Category label & auto-match ──────────────────────────────────
+
+    describe('categoryLabel population and auto-match', () => {
+        it('should store categoryLabel from the mapped CSV column', async () => {
+            const input = makeInput({
+                mapping: { amount: 'Amount', date: 'Date', category: 'Cat' },
+                transactions: [{ Amount: '10', Date: '2025-01-01', Cat: 'Groceries' }],
+            });
+            await transactionService.uploadTransactions(input);
+
+            const db = getTestDB();
+            const [tx] = await db.find(Transaction);
+            expect(tx.categoryLabel).toBe('Groceries');
+        });
+
+        it('should auto-match categoryLabel to an existing Category entity (case-insensitive)', async () => {
+            const category = await seedCategory({ name: 'Groceries', createdBy: testUser });
+
+            const input = makeInput({
+                mapping: { amount: 'Amount', date: 'Date', category: 'Cat' },
+                transactions: [{ Amount: '10', Date: '2025-01-01', Cat: 'groceries' }],
+            });
+            await transactionService.uploadTransactions(input);
+
+            const db = getTestDB();
+            const [tx] = await db.find(Transaction, { relations: ['category'] });
+            expect(tx.categoryLabel).toBe('groceries');
+            expect(tx.category?.id).toBe(category.id);
+        });
+
+        it('should leave category unset when no matching Category entity exists', async () => {
+            const input = makeInput({
+                mapping: { amount: 'Amount', date: 'Date', category: 'Cat' },
+                transactions: [{ Amount: '10', Date: '2025-01-01', Cat: 'Unknown Category' }],
+            });
+            await transactionService.uploadTransactions(input);
+
+            const db = getTestDB();
+            const [tx] = await db.find(Transaction, { relations: ['category'] });
+            expect(tx.categoryLabel).toBe('Unknown Category');
+            expect(tx.category).toBeNull();
+        });
+    });
+
+    // ── assignCategoryToTransaction ──────────────────────────────────
+
+    describe('assignCategoryToTransaction', () => {
+        it('should assign a category to a transaction', async () => {
+            const account = await seedAccount('Checking', testUser);
+            const upload = await seedUploadRecord(testUser);
+            const tx = await seedTransaction({ account, upload, amount: 50, date: '2025-01-01' });
+            const category = await seedCategory({ name: 'Food', createdBy: testUser });
+
+            await transactionService.assignCategoryToTransaction(tx.id, category.id, testUser);
+
+            const db = getTestDB();
+            const updated = await db.findOne(Transaction, {
+                where: { id: tx.id },
+                relations: ['category'],
+            });
+            expect(updated?.category?.id).toBe(category.id);
+        });
+
+        it('should unassign a category from a transaction when categoryId is null', async () => {
+            const account = await seedAccount('Checking', testUser);
+            const upload = await seedUploadRecord(testUser);
+            const category = await seedCategory({ name: 'Food', createdBy: testUser });
+            const tx = await seedTransaction({ account, upload, amount: 50, date: '2025-01-01', category });
+
+            await transactionService.assignCategoryToTransaction(tx.id, null, testUser);
+
+            const db = getTestDB();
+            const updated = await db.findOne(Transaction, {
+                where: { id: tx.id },
+                relations: ['category'],
+            });
+            expect(updated?.category).toBeNull();
+        });
+
+        it('should throw 404 when the transaction does not belong to the user', async () => {
+            const otherUser = await userService.createUser('Other', 'other@test.com', 'password123');
+            const account = await seedAccount('Checking', testUser);
+            const upload = await seedUploadRecord(testUser);
+            const tx = await seedTransaction({ account, upload, amount: 50, date: '2025-01-01' });
+            const category = await seedCategory({ name: 'Food', createdBy: testUser });
+
+            await expect(
+                transactionService.assignCategoryToTransaction(tx.id, category.id, otherUser),
+            ).rejects.toMatchObject({ status: 404 });
+        });
+
+        it('should throw 404 when categoryId does not exist', async () => {
+            const account = await seedAccount('Checking', testUser);
+            const upload = await seedUploadRecord(testUser);
+            const tx = await seedTransaction({ account, upload, amount: 50, date: '2025-01-01' });
+
+            await expect(
+                transactionService.assignCategoryToTransaction(
+                    tx.id,
+                    '00000000-0000-0000-0000-000000000000',
+                    testUser,
+                ),
+            ).rejects.toMatchObject({ status: 404 });
         });
     });
 });

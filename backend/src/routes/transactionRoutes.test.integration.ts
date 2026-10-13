@@ -687,4 +687,101 @@ describe('Transaction Routes (Integration)', () => {
             });
         });
     });
+
+    // ── PATCH /api/transactions/:id/category ────────────────────────
+
+    describe('PATCH /api/transactions/:id/category', () => {
+        const app = createTestApp();
+        let sessionToken: string;
+        let userEntity: any;
+
+        beforeAll(async () => {
+            await setupTestDb();
+            mockedGetDB.mockImplementation(() => getTestDB());
+        });
+
+        beforeEach(async () => {
+            mockedGetDB.mockImplementation(() => getTestDB());
+            await resetTestDb();
+
+            const userService = new UserService();
+            userEntity = await userService.createUser('Test User', 'patch@example.com', 'password123');
+            const session = await userService.createSession(userEntity);
+            sessionToken = session.token;
+        });
+
+        afterAll(async () => {
+            await teardownTestDb();
+        });
+
+        it('returns 401 when not authenticated', async () => {
+            const res = await request(app)
+                .patch('/api/transactions/some-id/category')
+                .send({ categoryId: null })
+                .expect(401);
+            expect(res.body.success).toBe(false);
+        });
+
+        it('assigns a category to a transaction', async () => {
+            const account = await seedAccount('Checking', userEntity);
+            const upload = await seedUploadRecord(userEntity);
+            const tx = await seedTransaction({ account, upload, amount: 50, date: '2025-01-01' });
+            const category = await seedCategory({ name: 'Groceries', createdBy: userEntity });
+
+            const res = await request(app)
+                .patch(`/api/transactions/${tx.id}/category`)
+                .set('Cookie', `session=${sessionToken}`)
+                .send({ categoryId: category.id })
+                .expect(200);
+
+            expect(res.body.success).toBe(true);
+            expect(res.body.data.updated).toBe(true);
+        });
+
+        it('unassigns a category from a transaction when categoryId is null', async () => {
+            const account = await seedAccount('Checking', userEntity);
+            const upload = await seedUploadRecord(userEntity);
+            const category = await seedCategory({ name: 'Groceries', createdBy: userEntity });
+            const tx = await seedTransaction({ account, upload, amount: 50, date: '2025-01-01', category });
+
+            const res = await request(app)
+                .patch(`/api/transactions/${tx.id}/category`)
+                .set('Cookie', `session=${sessionToken}`)
+                .send({ categoryId: null })
+                .expect(200);
+
+            expect(res.body.success).toBe(true);
+        });
+
+        it('returns 404 for a transaction that does not belong to the user', async () => {
+            const userService = new UserService();
+            const otherUser = await userService.createUser('Other', 'other-cat@example.com', 'pass123');
+            const account = await seedAccount('Checking', otherUser);
+            const upload = await seedUploadRecord(otherUser);
+            const tx = await seedTransaction({ account, upload, amount: 50, date: '2025-01-01' });
+            const category = await seedCategory({ name: 'Groceries', createdBy: userEntity });
+
+            const res = await request(app)
+                .patch(`/api/transactions/${tx.id}/category`)
+                .set('Cookie', `session=${sessionToken}`)
+                .send({ categoryId: category.id })
+                .expect(404);
+
+            expect(res.body.success).toBe(false);
+        });
+
+        it('returns 400 when categoryId is not a valid UUID', async () => {
+            const account = await seedAccount('Checking', userEntity);
+            const upload = await seedUploadRecord(userEntity);
+            const tx = await seedTransaction({ account, upload, amount: 50, date: '2025-01-01' });
+
+            const res = await request(app)
+                .patch(`/api/transactions/${tx.id}/category`)
+                .set('Cookie', `session=${sessionToken}`)
+                .send({ categoryId: 'not-a-uuid' })
+                .expect(400);
+
+            expect(res.body.success).toBe(false);
+        });
+    });
 });

@@ -48,6 +48,10 @@ const UploadTransactionsSchema = z.object({
         .min(1, 'At least one transaction is required'),
 });
 
+const AssignCategorySchema = z.object({
+    categoryId: z.string().uuid().nullable(),
+});
+
 export function transactionRoutes(app: Express) {
     const transactionService = new TransactionService();
 
@@ -86,6 +90,19 @@ export function transactionRoutes(app: Express) {
                     transactions: input.transactions,
                     user: req.user,
                 });
+            },
+        })
+    );
+
+    // PATCH /api/transactions/:id/category — Assign category to transaction
+    app.patch(
+        '/api/transactions/:id/category',
+        requireAuth(),
+        createEndpoint<z.infer<typeof AssignCategorySchema>, { updated: boolean }, AuthenticatedRequest>({
+            schema: AssignCategorySchema,
+            handler: async (input, req): Promise<{ updated: boolean }> => {
+                await transactionService.assignCategoryToTransaction(req.params.id, input.categoryId, req.user);
+                return { updated: true };
             },
         })
     );
