@@ -27,6 +27,7 @@ import {
   AmountFilterHeader,
 } from './headers';
 import VendorCell from './VendorCell';
+import CategoryCell from './CategoryCell';
 
 export interface TransactionTableProps {
   /**
@@ -235,7 +236,9 @@ export default function TransactionTable({ filter: externalFilter }: Transaction
                     <VendorCell transaction={tx} onVendorAssigned={triggerRefetch} />
                   </TableCell>
                   <TableCell sx={cellStyle}>{tx.description ?? '—'}</TableCell>
-                  <TableCell sx={cellStyle}>{tx.categoryLabel ?? tx.categoryName ?? '—'}</TableCell>
+                  <TableCell sx={cellStyle}>
+                    <CategoryCell transaction={tx} onCategoryAssigned={triggerRefetch} />
+                  </TableCell>
                   <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                     {formatAmount(tx.amount)}
                   </TableCell>

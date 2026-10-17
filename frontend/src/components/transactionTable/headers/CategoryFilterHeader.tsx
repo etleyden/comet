@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import FilterableColumnHeader from './FilterableColumnHeader';
 import type { Category } from 'shared';
+import { categoriesApi } from '../../../../api';
 
 export interface CategoryFilterHeaderProps {
   selectedCategoryIds: (string | null)[];
@@ -34,13 +35,23 @@ export default function CategoryFilterHeader({
   const [searchText, setSearchText] = useState('');
 
   useEffect(() => {
-    // TODO: Replace with actual API call when the categories endpoint is available.
-    // Example:
-    //   categoriesApi.getCategories().then((res) => {
-    //     if (res.success) setCategories(res.data);
-    //   });
-    setCategories([]);
-    setLoading(false);
+    categoriesApi.getCategories().then(res => {
+      if (res.success) {
+        // Flatten hierarchy into a simple list for filtering
+        const flat: Category[] = [];
+        for (const parent of res.data.categories) {
+          flat.push(parent);
+          for (const child of parent.children ?? []) {
+            flat.push(child);
+          }
+        }
+        setCategories(flat);
+      }
+    }).catch(() => {
+      // silently fail
+    }).finally(() => {
+      setLoading(false);
+    });
   }, []);
 
   const handleToggle = (categoryId: string | null) => {

@@ -268,6 +268,10 @@ export interface AssignVendorRequest {
   vendorId: string | null;
 }
 
+export interface AssignCategoryRequest {
+  categoryId: string | null;
+}
+
 // ─── Category API Types ──────────────────────────────────────────────
 
 export interface CreateCategoryRequest {

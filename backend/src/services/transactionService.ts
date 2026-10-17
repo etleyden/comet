@@ -4,6 +4,7 @@ import { toISOString } from '../utils/dateUtils';
 import Transaction from '../entities/Transaction';
 import UploadRecord from '../entities/UploadRecord';
 import Account from '../entities/Account';
+import Category from '../entities/Category';
 import User from '../entities/User';
 import type {
     UploadTransactionsResponse,
@@ -12,6 +13,7 @@ import type {
     TransactionFilters,
     UploadTransactionsRequest,
 } from 'shared';
+import { ApiError } from 'shared';
 import { validateMappingColumns } from '../utils/mappingUtils';
 
 export interface UploadTransactionsInput extends UploadTransactionsRequest {
@@ -150,6 +152,22 @@ export class TransactionService {
             }
             const availableColumns = Array.from(columnSet);
 
+            // Pre-load categories for auto-matching by label
+            const categoryMap = new Map<string, Category>();
+            if (mapping.category) {
+                const uniqueLabels = new Set(
+                    transactions
+                        .map(row => String(row[mapping.category!] ?? '').trim())
+                        .filter(Boolean),
+                );
+                if (uniqueLabels.size > 0) {
+                    const matched = await txManager.find(Category, {});
+                    for (const cat of matched) {
+                        categoryMap.set(cat.name.toLowerCase(), cat);
+                    }
+                }
+            }
+
             // Validate mapping columns against available columns
             const invalidColumns = validateMappingColumns(mapping, availableColumns);
             if (invalidColumns.length > 0) {
@@ -192,7 +210,14 @@ export class TransactionService {
                 }
 
                 if (mapping.category) {
-                    tx.categoryLabel = String(raw[mapping.category] ?? '');
+                    const label = String(raw[mapping.category] ?? '');
+                    tx.categoryLabel = label;
+                    if (label) {
+                        const matched = categoryMap.get(label.toLowerCase());
+                        if (matched) {
+                            tx.category = matched;
+                        }
+                    }
                 }
 
                 if (mapping.description) {
@@ -227,5 +252,50 @@ export class TransactionService {
                 transactionCount: transactionEntities.length,
             };
         });
+    }
+
+    /**
+     * Assigns (or unassigns) a category to a transaction.
+     * Pass null to remove the category assignment.
+     * Verifies the transaction belongs to the user.
+     */
+    async assignCategoryToTransaction(
+        transactionId: string,
+        categoryId: string | null,
+        user: User,
+    ): Promise<void> {
+        const db = getDB();
+
+        const tx = await db
+            .createQueryBuilder(Transaction, 'tx')
+            .innerJoin('tx.account', 'account')
+            .innerJoin('account.users', 'u')
+            .where('tx.id = :transactionId', { transactionId })
+            .andWhere('u.id = :userId', { userId: user.id })
+            .getOne();
+
+        if (!tx) {
+            throw new ApiError('Transaction not found', 404);
+        }
+
+        if (categoryId) {
+            const category = await db.findOne(Category, { where: { id: categoryId } });
+            if (!category) {
+                throw new ApiError('Category not found', 404);
+            }
+            await db
+                .createQueryBuilder()
+                .update(Transaction)
+                .set({ category })
+                .where('id = :id', { id: tx.id })
+                .execute();
+        } else {
+            await db
+                .createQueryBuilder()
+                .update(Transaction)
+                .set({ category: null })
+                .where('id = :id', { id: tx.id })
+                .execute();
+        }
     }
 }
