@@ -1,4 +1,4 @@
-import TransactionTable from '../components/transactionTable/TransactionTable';
+import TransactionDataGrid from '../components/transactionTable/TransactionDataGrid';
 import { useAuth } from '../context/AuthContext';
 import { Box, Typography, Container, Paper } from '@mui/material';
 
@@ -14,7 +14,7 @@ export function HomePage() {
         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 2 }}>
           <Typography variant="h4">Welcome, {user?.name}!</Typography>
         </Box>
-        <TransactionTable />
+        <TransactionDataGrid />
       </Paper>
     </Container>
   );

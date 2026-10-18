@@ -15,6 +15,7 @@ import { categoriesApi } from '../../../../api';
 export interface CategoryFilterHeaderProps {
   selectedCategoryIds: (string | null)[];
   onChange: (categoryIds: (string | null)[]) => void;
+  inDataGrid?: boolean;
 }
 
 /**
@@ -29,6 +30,7 @@ export interface CategoryFilterHeaderProps {
 export default function CategoryFilterHeader({
   selectedCategoryIds,
   onChange,
+  inDataGrid,
 }: CategoryFilterHeaderProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,6 +127,7 @@ export default function CategoryFilterHeader({
       label="Category"
       active={active}
       popoverContent={popoverContent}
+      inDataGrid={inDataGrid}
     />
   );
 }

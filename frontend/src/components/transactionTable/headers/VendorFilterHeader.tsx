@@ -5,6 +5,7 @@ import FilterableColumnHeader from './FilterableColumnHeader';
 export interface VendorFilterHeaderProps {
   vendors: string[];
   onChange: (vendors: string[]) => void;
+  inDataGrid?: boolean;
 }
 
 /**
@@ -15,7 +16,7 @@ export interface VendorFilterHeaderProps {
  * The resulting array of substrings is OR'd together on the backend against
  * the transaction's `vendorLabel` field.
  */
-export default function VendorFilterHeader({ vendors, onChange }: VendorFilterHeaderProps) {
+export default function VendorFilterHeader({ vendors, onChange, inDataGrid }: VendorFilterHeaderProps) {
   const [inputValue, setInputValue] = useState('');
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -89,6 +90,7 @@ export default function VendorFilterHeader({ vendors, onChange }: VendorFilterHe
       label="Vendor"
       active={active}
       popoverContent={popoverContent}
+      inDataGrid={inDataGrid}
     />
   );
 }
