@@ -8,13 +8,12 @@ export interface DateFilterHeaderProps {
   dateFrom?: string;
   dateTo?: string;
   onChange: (dateFrom?: string, dateTo?: string) => void;
-  inDataGrid?: boolean;
 }
 
 /**
  * Date column header with a filter popover offering Before / After / Range modes.
  */
-export default function DateFilterHeader({ dateFrom, dateTo, onChange, inDataGrid }: DateFilterHeaderProps) {
+export default function DateFilterHeader({ dateFrom, dateTo, onChange }: DateFilterHeaderProps) {
   const [mode, setMode] = useState<DateMode>(() => {
     if (dateFrom && dateTo) return 'range';
     if (dateFrom) return 'after';
@@ -97,7 +96,6 @@ export default function DateFilterHeader({ dateFrom, dateTo, onChange, inDataGri
       label="Date"
       active={active}
       popoverContent={popoverContent}
-      inDataGrid={inDataGrid}
     />
   );
 }

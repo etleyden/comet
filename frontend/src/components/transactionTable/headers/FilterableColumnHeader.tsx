@@ -11,8 +11,6 @@ export interface FilterableColumnHeaderProps {
   popoverContent: React.ReactNode;
   /** Optional fixed or min width for the column */
   width?: number | string;
-  /** Render a grid-compatible wrapper instead of a table cell. */
-  inDataGrid?: boolean;
 }
 
 /**
@@ -26,7 +24,6 @@ export default function FilterableColumnHeader({
   active = false,
   popoverContent,
   width,
-  inDataGrid = false,
 }: FilterableColumnHeaderProps) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
@@ -60,15 +57,10 @@ export default function FilterableColumnHeader({
     </Popover>
   );
 
-  return inDataGrid ? (
+  return (
     <Box sx={{ width: '100%', minWidth: 0 }}>
       {header}
       {popover}
     </Box>
-  ) : (
-    <TableCell sx={{ width }}>
-      {header}
-      {popover}
-    </TableCell>
   );
 }

@@ -5,7 +5,6 @@ export interface AmountFilterHeaderProps {
   amountMin?: number;
   amountMax?: number;
   onChange: (amountMin?: number, amountMax?: number) => void;
-  inDataGrid?: boolean;
 }
 
 /**
@@ -15,7 +14,6 @@ export default function AmountFilterHeader({
   amountMin,
   amountMax,
   onChange,
-  inDataGrid,
 }: AmountFilterHeaderProps) {
   const active = amountMin !== undefined || amountMax !== undefined;
 
@@ -63,7 +61,6 @@ export default function AmountFilterHeader({
       label="Amount"
       active={active}
       popoverContent={popoverContent}
-      inDataGrid={inDataGrid}
     />
   );
 }

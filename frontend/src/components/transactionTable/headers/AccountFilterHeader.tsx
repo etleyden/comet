@@ -14,7 +14,6 @@ import type { Account } from 'shared';
 export interface AccountFilterHeaderProps {
   selectedAccountIds: string[];
   onChange: (accountIds: string[]) => void;
-  inDataGrid?: boolean;
 }
 
 /**
@@ -23,7 +22,6 @@ export interface AccountFilterHeaderProps {
 export default function AccountFilterHeader({
   selectedAccountIds,
   onChange,
-  inDataGrid,
 }: AccountFilterHeaderProps) {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,7 +83,6 @@ export default function AccountFilterHeader({
       label="Account"
       active={active}
       popoverContent={popoverContent}
-      inDataGrid={inDataGrid}
     />
   );
 }

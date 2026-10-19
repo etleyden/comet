@@ -20,9 +20,18 @@ import {
 } from './headers';
 import VendorCell from './VendorCell';
 import CategoryCell from './CategoryCell';
-import type { TransactionTableProps } from './TransactionTable';
 
-export type TransactionDataGridProps = TransactionTableProps;
+export type TransactionDataGridProps = {
+    /**
+     * External filter applied on top of the header-driven filters.
+     * Use this to constrain the table to a specific context, e.g. a single
+     * account view. External filter values take precedence over header
+     * filters for overlapping keys.
+     *
+     * Callers should memoize this object to avoid unnecessary refetches.
+     */
+    filter?: TransactionFilters;
+}
 
 const FETCH_DEBOUNCE_MS = 300;
 
@@ -137,7 +146,6 @@ export default function TransactionDataGrid({
             sortable: false,
             renderHeader: () => (
                 <DateFilterHeader
-                    inDataGrid
                     dateFrom={headerFilter.dateFrom}
                     dateTo={headerFilter.dateTo}
                     onChange={(dateFrom, dateTo) => updateFilter({ dateFrom, dateTo })}
@@ -152,7 +160,6 @@ export default function TransactionDataGrid({
             sortable: false,
             renderHeader: () => (
                 <AccountFilterHeader
-                    inDataGrid
                     selectedAccountIds={headerFilter.accountIds ?? []}
                     onChange={accountIds =>
                         updateFilter({ accountIds: accountIds.length > 0 ? accountIds : undefined })
@@ -172,7 +179,6 @@ export default function TransactionDataGrid({
             sortable: false,
             renderHeader: () => (
                 <VendorFilterHeader
-                    inDataGrid
                     vendors={headerFilter.vendors ?? []}
                     onChange={vendors => updateFilter({ vendors: vendors.length > 0 ? vendors : undefined })}
                 />
@@ -194,7 +200,6 @@ export default function TransactionDataGrid({
             sortable: false,
             renderHeader: () => (
                 <CategoryFilterHeader
-                    inDataGrid
                     selectedCategoryIds={headerFilter.categoryIds ?? []}
                     onChange={categoryIds =>
                         updateFilter({ categoryIds: categoryIds.length > 0 ? categoryIds : undefined })
@@ -211,7 +216,6 @@ export default function TransactionDataGrid({
             sortable: false,
             renderHeader: () => (
                 <AmountFilterHeader
-                    inDataGrid
                     amountMin={headerFilter.amountMin}
                     amountMax={headerFilter.amountMax}
                     onChange={(amountMin, amountMax) => updateFilter({ amountMin, amountMax })}
