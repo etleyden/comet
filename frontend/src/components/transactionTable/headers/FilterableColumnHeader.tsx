@@ -28,32 +28,39 @@ export default function FilterableColumnHeader({
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const open = Boolean(anchorEl);
 
-  return (
-    <TableCell sx={{ width }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-        <IconButton
-          size="small"
-          onClick={(e) => setAnchorEl(e.currentTarget)}
-          color={active ? 'primary' : 'default'}
-          aria-label={`Filter ${label}`}
-        >
-          <FilterListIcon fontSize="small" />
-        </IconButton>
-        <Typography variant="subtitle2" fontWeight="bold" noWrap>
-          {label}
-        </Typography>
-      </Box>
-
-      <Popover
-        open={open}
-        anchorEl={anchorEl}
-        onClose={() => setAnchorEl(null)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-        transformOrigin={{ vertical: 'top', horizontal: 'left' }}
-        slotProps={{ paper: { sx: { p: 2, minWidth: 250 } } }}
+  const header = (
+    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, width: '100%', minWidth: 0 }}>
+      <IconButton
+        size="small"
+        onClick={e => setAnchorEl(e.currentTarget)}
+        color={active ? 'primary' : 'default'}
+        aria-label={`Filter ${label}`}
       >
-        {popoverContent}
-      </Popover>
-    </TableCell>
+        <FilterListIcon fontSize="small" />
+      </IconButton>
+      <Typography variant="subtitle2" fontWeight="bold" noWrap>
+        {label}
+      </Typography>
+    </Box>
+  );
+
+  const popover = (
+    <Popover
+      open={open}
+      anchorEl={anchorEl}
+      onClose={() => setAnchorEl(null)}
+      anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+      transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+      slotProps={{ paper: { sx: { p: 2, minWidth: 250 } } }}
+    >
+      {popoverContent}
+    </Popover>
+  );
+
+  return (
+    <Box sx={{ width: '100%', minWidth: 0 }}>
+      {header}
+      {popover}
+    </Box>
   );
 }
